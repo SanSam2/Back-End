@@ -1,6 +1,7 @@
 package org.example.sansam.chat.service;
 
 import jakarta.servlet.http.HttpSession;
+import org.example.sansam.chat.dto.ChatRoomRequestDTO;
 import org.example.sansam.chat.dto.ChatRoomResponseDTO;
 import org.example.sansam.chat.repository.ChatRoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,17 @@ public class ChatRoomService {
         return null;
     }
 
-    public List<ChatRoomResponseDTO> roomList() {
+    public List<ChatRoomResponseDTO> roomList(String keyword) {
         return null;
     }
 
     public ChatRoomResponseDTO roomLeave(String roomId, HttpSession session) {return  null;}
+
+    public List<ChatRoomResponseDTO> userRoomList(HttpSession session) {
+        return null;
+    }
+
+    public ChatRoomResponseDTO createRoom(ChatRoomRequestDTO chatRoomRequestDTO, HttpSession session) {
+        return null;
+    }
 }
