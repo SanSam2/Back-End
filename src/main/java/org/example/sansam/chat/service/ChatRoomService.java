@@ -22,4 +22,6 @@ public class ChatRoomService {
     public List<ChatRoomResponseDTO> roomList() {
         return null;
     }
+
+    public ChatRoomResponseDTO roomLeave(String roomId, HttpSession session) {return  null;}
 }
