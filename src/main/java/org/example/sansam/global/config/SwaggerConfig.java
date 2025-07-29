@@ -43,5 +43,51 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi productApi() {
+        return GroupedOpenApi.builder()
+                    .group("상품 API")
+                .pathsToMatch("/api/products/**")
+                .build();
+    }
 
+    @Bean
+    public GroupedOpenApi timedealApi() {
+        return GroupedOpenApi.builder()
+                .group("타임딜 API")
+                .pathsToMatch("/api/timedeals/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi reviewApi() {
+        return GroupedOpenApi.builder()
+                .group("리뷰 API")
+                .pathsToMatch("/api/reviews/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi wishApi() {
+        return GroupedOpenApi.builder()
+                .group("위시 API")
+                .pathsToMatch("/api/wishes/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi cartApi() {
+        return GroupedOpenApi.builder()
+                .group("장바구니 API")
+                .pathsToMatch("/api/carts/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi searchApi() {
+        return GroupedOpenApi.builder()
+                .group("검색 API")
+                .pathsToMatch("/api/search/**")
+                .build();
+    }
 }
