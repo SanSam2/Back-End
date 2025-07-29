@@ -1,6 +1,7 @@
 package org.example.sansam.chat.controller;
 
 import jakarta.servlet.http.HttpSession;
+import org.example.sansam.chat.dto.ChatRoomResponseDTO;
 import org.example.sansam.chat.service.ChatRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,17 @@ public class ChatRoomController {
 //            return new ResponseEntity<>(chatRoomResponseDTO, HttpStatus.OK);
             return new ResponseEntity<>(HttpStatus.OK);
 
+        }catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/{roomId}/leave")
+    public ResponseEntity<?> chatroomLeave(@PathVariable String roomId, HttpSession session) {
+        try{
+//            ChatRoomResponseDTO chatRoomResponseDTO = chatRoomService.roomLeave(roomId, session);
+//            return  new ResponseEntity<>(chatRoomResponseDTO, HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
