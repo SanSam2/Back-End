@@ -2,6 +2,7 @@ package org.example.sansam.notification.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.notification.service.EmailService;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/notify-email")
+@Tag(name = "Email", description = "이메일 발송 API")
+
 public class EmailController {
 
     private final EmailService emailService;
@@ -23,7 +26,7 @@ public class EmailController {
             })
 
     @PostMapping("/payment-complete")
-    public ResponseEntity<?> createPaymentCompleteEmail() {
+    public ResponseEntity<String> createPaymentCompleteEmail() {
         try {
 
             return ResponseEntity.ok().body("결제 완료 이메일 발송 성공");
@@ -33,7 +36,7 @@ public class EmailController {
     }
 
     @PostMapping("/payment-cancel")
-    public ResponseEntity<?> createPaymentCancelEmail() {
+    public ResponseEntity<String> createPaymentCancelEmail() {
         try {
 
             return ResponseEntity.ok().body("결제 취소 이메일 발송 성공");
@@ -43,7 +46,7 @@ public class EmailController {
     }
 
     @PostMapping("/welcome")
-    public ResponseEntity<?> createWelcomeEmail() {
+    public ResponseEntity<String> createWelcomeEmail() {
         try {
 
             return ResponseEntity.ok().body("회원 가입 환영 이메일 발송 성공");
