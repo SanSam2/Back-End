@@ -43,5 +43,80 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi productApi() {
+        return GroupedOpenApi.builder()
+                .group("상품 API")
+                .pathsToMatch("/api/products/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi wishApi() {
+        return GroupedOpenApi.builder()
+                .group("위시리스트 API")
+                .pathsToMatch("/api/wishes/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi cartApi() {
+        return GroupedOpenApi.builder()
+                .group("장바구니 API")
+                .pathsToMatch("/api/carts/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi timedealApi() {
+        return GroupedOpenApi.builder()
+                .group("타임딜 API")
+                .pathsToMatch("/api/timedeals/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi reviewApi() {
+        return GroupedOpenApi.builder()
+                .group("리뷰 API")
+                .pathsToMatch("/api/reviews/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi searchApi() {
+        return GroupedOpenApi.builder()
+                .group("검색 API")
+                .pathsToMatch("/api/search/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi emailnotifyApi() {
+        return GroupedOpenApi.builder()
+                .group("이메일 알림 API")
+                .pathsToMatch("/api/notify-email/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi notificationsApi() {
+        return GroupedOpenApi.builder()
+                .group("홈페이지 알림 API")
+                .pathsToMatch("/api/notifications/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi chatApi() {
+        return GroupedOpenApi.builder()
+                .group("채팅 API")
+                .pathsToMatch("/api/chatroom/**")
+                .build();
+    }
+
+
+
+
 
 }
