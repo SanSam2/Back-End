@@ -42,7 +42,7 @@ public class UserService {
                 .filter(user -> user.getPassword().equals(password));
     }
 
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
     }
 }
