@@ -5,29 +5,31 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import org.example.sansam.order.dto.OrderRequest;
-import org.example.sansam.order.dto.OrderResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.order.dto.PaymentCancelRequest;
 import org.example.sansam.payment.dto.TossCallBackRequest;
+import org.example.sansam.payment.dto.TossPaymentRequest;
+import org.example.sansam.payment.dto.TossPaymentResponse;
 import org.example.sansam.payment.service.PaymentService;
-import org.example.sansam.user.domain.User;
-import org.example.sansam.user.repository.UserRepository;
+import org.example.sansam.user.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
+
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/pay")
+@Slf4j
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final UserRepository userRepository;
+    private final UserService userService;
+
+
 
     @Operation(summary = "토스 결제 콜백 처리", description = "토스 서버로부터 받은 결제 성공/실패 응답을 처리합니다.")
     @ApiResponses({
@@ -50,26 +52,36 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류");
         }
     }
+
+
+
     @Operation(summary = "주문서 컨펌", description = "새로운 주문서를 승인하고, 결제로 넘어갈 수 있도록 합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "주문 생성 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
-    @PostMapping("/confirm")
-    public ResponseEntity<?> confirmPayment(@RequestBody OrderRequest orderRequest, String userEmail){
+    @GetMapping("/requestPayment")
+    public ResponseEntity<?> requestPayment(@RequestBody TossPaymentRequest paymentRequest, Long userId){
         try{
-            Optional<User> userOpt = userRepository.findByEmail(orderRequest.getUserEmail());
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자 없음");
-            }
-
-            User user = userOpt.get();
-
-            OrderResponse response=paymentService.confirmPayment(orderRequest, user);
+            TossPaymentResponse response=paymentService.requestPayment(paymentRequest, userId);
             return ResponseEntity.ok("결제 완료");
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @PostMapping("/confirmPayment")
+    public ResponseEntity<?> confirmPayment(@RequestBody TossCallBackRequest request){
+        TossPaymentResponse result = new TossPaymentResponse();
+        result.setPaymentKey(request.getPaymentKey());
+        result.setOrderId(String.valueOf(request.getOrderId())); //이거 맞는지 검토해봐야겠는디
+        result.setAmount(request.getAmount());
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "Success 결제 요청에 성공하였습니다.");
+        resultMap.put("data", result);
+
+        return ResponseEntity.ok(resultMap);
     }
 
 
@@ -93,8 +105,4 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
         }
     }
-
-
-
-
 }

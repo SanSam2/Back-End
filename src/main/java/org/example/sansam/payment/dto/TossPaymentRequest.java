@@ -10,7 +10,7 @@ import org.example.sansam.order.domain.Order;
 public class TossPaymentRequest {
 
     private String orderId;
-    private Long amount;
+    private int amount;
     private String orderName;
     private String customerName;
     private String successUrl;
@@ -18,7 +18,7 @@ public class TossPaymentRequest {
 
     public static TossPaymentRequest form(Order order){
 
-        Long amount = Long.getLong("100000");
+        int amount = order.getTotalAmount();
 
         return TossPaymentRequest.builder()
                 .orderId(String.valueOf(order.getId()))
