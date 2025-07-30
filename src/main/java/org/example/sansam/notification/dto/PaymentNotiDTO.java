@@ -11,4 +11,5 @@ public class PaymentNotiDTO {
     private Long id;
     private Long orderId;
     private Long finalPrice;
+    private String orderName;
 }

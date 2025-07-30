@@ -31,7 +31,6 @@ public class NotificationService {
     private final Map<Long, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
     private final NotificationsRepository notificationRepository;
     private final NotificationHistoryRepository notificationHistoryRepository;
-    private final ProductRepository productRepository;
     private static final Long DEFAULT_TIMEOUT = 60 * 60 * 1000L; // 기본 60분 connect 설정
     private final Timestamp now = Timestamp.valueOf(LocalDateTime.now());
 
@@ -59,33 +58,14 @@ public class NotificationService {
         return sseEmitter;
     }
 
-    //     각 알림이 필요한 시점에서 사용하는 알림 메시지 분기 메서드
-    public void sendDynamicNotification(Long userId, Object payload) {
-        if (payload instanceof UserNotiDTO) {
-            sendWelcomeNotification(userId, (UserNotiDTO) payload);
-        } else if (payload instanceof PaymentNotiDTO) {
-            sendPaymentCompleteNotification(userId, (PaymentNotiDTO) payload);
-        } else if (payload instanceof PaymentCancelNotiDTO) {
-            sendPaymentCancelNotification(userId, (PaymentCancelNotiDTO) payload);
-        } else if (payload instanceof CartNotiDTO) {
-            sendCartLowNotification(userId, (CartNotiDTO) payload);
-        } else if (payload instanceof WishListNotiDTO) {
-            sendWishListLowNotification(userId, (WishListNotiDTO) payload);
-        } else if (payload instanceof ReviewNotiDTO) {
-            sendReviewRequestNotification(userId, (ReviewNotiDTO) payload);
-        } else if (payload instanceof ChatNotiDTO) {
-            sendChatNotification(userId, (ChatNotiDTO) payload);
-        }
-    }
-
     // user 정보 받아와서 회원가입 환영 축하 알림 생성
-    public void sendWelcomeNotification(Long userId, UserNotiDTO data) {
-        if (data != null) {
+    public void sendWelcomeNotification(Long userId, String username) {
+
             try {
                 Optional<Notification> template = notificationRepository.findByNotificationId(1L);
 
                 String formattedMessage = template.map(Notification::getMessage)
-                        .map(msg -> String.format(msg, data.getUsername()))
+                        .map(msg -> String.format(msg, username))
                         .orElse("회원가입 환영 메시지 템플릿을 가져올 수 없습니다.");
 
                 NotificationHistory dto = NotificationHistory.builder()
@@ -104,17 +84,17 @@ public class NotificationService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+
     }
 
     // user 정보 받아와서 결제 완료 알림 생성
-    public void sendPaymentCompleteNotification(Long userId, PaymentNotiDTO data) {
-        if (data != null) {
+    public void sendPaymentCompleteNotification(Long userId, String orderName, Long orderPrice) {
+
             try {
                 Optional<Notification> template = notificationRepository.findByNotificationId(2L);
-//                Optional<Product> product = productRepository.
+//                Optional<Product> product = productRepository.findById()
                 String formattedMessage = template.map(Notification::getMessage)
-                        .map(msg -> String.format(msg, data.getFinalPrice()))
+                        .map(msg -> String.format(msg, orderName, orderPrice))
                         .orElse("결제 완료 메시지 템플릿을 가져올 수 없습니다.");
 
                 NotificationHistory dto = NotificationHistory.builder()
@@ -133,18 +113,17 @@ public class NotificationService {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+
     }
 
     // user 정보 받아와서 결제 취소 완료 알림 생성
-    public void sendPaymentCancelNotification(Long userId, PaymentCancelNotiDTO data) {
+    public void sendPaymentCancelNotification(Long userId, String orderName, Long refundPrice) {
 
-        if (data != null) {
             try {
                 Optional<Notification> template = notificationRepository.findByNotificationId(3L);
 
                 String formattedMessage = template.map(Notification::getMessage)
-                        .map(msg -> String.format(msg, data.getRefundPrice()))
+                        .map(msg -> String.format(msg, orderName, refundPrice))
                         .orElse("결제 취소 완료 메시지 템플릿을 가져올 수 없습니다.");
 
                 NotificationHistory dto = NotificationHistory.builder()
@@ -163,19 +142,18 @@ public class NotificationService {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+
 
     }
 
     // user 정보 받아와서 장바구니 상품 품절 임박 완료 알림 생성
-    public void sendCartLowNotification(Long userId, CartNotiDTO data) {
+    public void sendCartLowNotification(Long userId, String productName) {
 
-        if (data != null) {
             try {
                 Optional<Notification> template = notificationRepository.findByNotificationId(4L);
 
                 String formattedMessage = template.map(Notification::getMessage)
-                        .map(msg -> String.format(msg, data.getProductName()))
+                        .map(msg -> String.format(msg,productName))
                         .orElse("장바구니 상품 품절 임박 메시지 템플릿을 가져올 수 없습니다.");
 
                 NotificationHistory dto = NotificationHistory.builder()
@@ -194,19 +172,18 @@ public class NotificationService {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+
 
     }
 
     // user 정보 받아와서 위시리스트 상품 품절 임박 완료 알림 생성
-    public void sendWishListLowNotification(Long userId, WishListNotiDTO data) {
+    public void sendWishListLowNotification(Long userId, String productName) {
 
-        if (data != null) {
             try {
                 Optional<Notification> template = notificationRepository.findByNotificationId(5L);
 
                 String formattedMessage = template.map(Notification::getMessage)
-                        .map(msg -> String.format(msg, data.getProductName()))
+                        .map(msg -> String.format(msg, productName))
                         .orElse("위시리스트 상품 품절 임박 메시지 템플릿을 가져올 수 없습니다.");
 
                 NotificationHistory dto = NotificationHistory.builder()
@@ -225,19 +202,18 @@ public class NotificationService {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+
 
     }
 
     // user 정보 받아와서 리뷰 요청 완료 알림 생성
-    public void sendReviewRequestNotification(Long userId, ReviewNotiDTO data) {
+    public void sendReviewRequestNotification(Long userId, String username, String productName) {
 
-        if (data != null) {
             try {
                 Optional<Notification> template = notificationRepository.findByNotificationId(6L);
 
                 String formattedMessage = template.map(Notification::getMessage)
-                        .map(msg -> String.format(msg, data.getProductName()))
+                        .map(msg -> String.format(msg, username, productName))
                         .orElse("리뷰 요청 메시지 템플릿을 가져올 수 없습니다.");
 
                 NotificationHistory dto = NotificationHistory.builder()
@@ -256,22 +232,21 @@ public class NotificationService {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+
     }
 
-    public void sendChatNotification(Long userId, ChatNotiDTO data) {
+    public void sendChatNotification(Long userId, Long senderId, String senderName) {
 
-        if (data != null) {
             try {
                 Optional<Notification> template = notificationRepository.findByNotificationId(7L);
 
                 String formattedMessage = template.map(Notification::getMessage)
-                        .map(msg -> String.format(msg, data.getMessage()))
+                        .map(msg -> String.format(msg, senderName))
                         .orElse("채팅 알림 템플릿을 가져올 수 없습니다.");
 
                 NotificationHistory dto = NotificationHistory.builder()
                         .user_id(userId)
-                        .notification_id(6L)
+                        .notification_id(7L)
                         .createdAt(now)
                         .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
                         .message(formattedMessage)
@@ -285,6 +260,6 @@ public class NotificationService {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+
     }
 }

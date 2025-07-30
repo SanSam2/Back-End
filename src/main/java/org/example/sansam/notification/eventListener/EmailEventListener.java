@@ -1,7 +1,8 @@
-package org.example.sansam.notification.event;
+package org.example.sansam.notification.eventListener;
 
 
 import lombok.RequiredArgsConstructor;
+import org.example.sansam.notification.event.EmailEvent;
 import org.example.sansam.notification.service.EmailService;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
