@@ -54,8 +54,6 @@ public class OrderController {
     @GetMapping("/{orderId}") //주문 정보 단건 조회 (하나만 조회 = 주문 상세 조회)
     public ResponseEntity<?> getOrderById(){
         OrderRequest request= new OrderRequest(); //에러방지용 코드
-        Optional<User> userOptional = userRepository.findByEmail(request.getUserEmail()); //에러방지용 코드
-        User user = userOptional.get();//에러방지용 코드
 
         OrderResponse response = orderService.saveOrder(request);//에러방지용 코드
         try{

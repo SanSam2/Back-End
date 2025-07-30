@@ -9,7 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 public class OrderRequest {
 
-    private String userEmail;
+    private Long userId;
     private List<OrderItemDto> items;
     private String paymentKey; // Toss에서 받은 값
 }

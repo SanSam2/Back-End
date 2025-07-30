@@ -34,8 +34,7 @@ public class OrderService {
     public OrderResponse saveOrder(OrderRequest request){
         Order order = new Order();
 
-        String userEmail = request.getUserEmail();
-        User user = userService.findByEmail(userEmail)
+        User user = userService.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 이메일을 가진 사용자를 찾을 수 없습니다."));
 
         order.setOrderNumber(generateCustomOrderNumber());
