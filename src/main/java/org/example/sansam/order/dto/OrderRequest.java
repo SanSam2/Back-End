@@ -11,5 +11,4 @@ public class OrderRequest {
 
     private Long userId;
     private List<OrderItemDto> items;
-    private String paymentKey; // Toss에서 받은 값
 }

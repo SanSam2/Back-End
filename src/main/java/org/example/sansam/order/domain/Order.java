@@ -28,11 +28,12 @@ public class Order {
 //    @JoinColumn(name="status_id",nullable = false)
 //    private OrderStatus status;
 
+    private String orderName;
     private String orderNumber;
     private OrderStatus status;
 
     private String paymentKey; //프론트랑 협의 해봐야합니다..
-    private int totalAmount;
+    private Long totalAmount;
 
     private LocalDateTime createdAt;
     private LocalDateTime deliveredAt;
