@@ -15,7 +15,7 @@ public class OrderProduct {
     @Id
     @Column(name="order_product_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long orderProductId;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="order_id", nullable = false)
