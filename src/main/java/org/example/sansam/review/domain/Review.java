@@ -16,6 +16,7 @@ import org.example.sansam.user.domain.User;
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "reviews_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
