@@ -16,6 +16,7 @@ import org.example.sansam.user.domain.User;
 public class Wish {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "wish_id")
     private Long wishId;
 
     @ManyToOne(fetch = FetchType.LAZY)
