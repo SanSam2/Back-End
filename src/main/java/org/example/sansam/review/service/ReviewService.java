@@ -52,7 +52,7 @@ public class ReviewService {
     }
 
     public UpdateReviewResponse updateReview(UpdateReviewRequest request) {
-        Review review = reviewJpaRepository.findByProductIdAndUserId(request.getProductId(), request.getUserId());
+        Review review = reviewJpaRepository.findByProduct_ProductIdAndUser_UserId(request.getProductId(), request.getUserId());
         if (review == null) {
             throw new EntityNotFoundException("리뷰가 존재하지 않습니다.");
         }
@@ -71,7 +71,7 @@ public class ReviewService {
     }
 
     public void deleteReview(DeleteReviewRequest deleteReviewRequest) {
-        Review review = reviewJpaRepository.findByProductIdAndUserId(deleteReviewRequest.getProductId(), deleteReviewRequest.getUserId());
+        Review review = reviewJpaRepository.findByProduct_ProductIdAndUser_UserId(deleteReviewRequest.getProductId(), deleteReviewRequest.getUserId());
         reviewJpaRepository.delete(review);
 
         if (review.getFile() != null) {
@@ -85,7 +85,7 @@ public class ReviewService {
     }
 
     public List<SearchReviewListResponse> searchReviews(Long productId) {
-        List<Review> reviews = reviewJpaRepository.findAllByProductId(productId);
+        List<Review> reviews = reviewJpaRepository.findAllByProduct_ProductId(productId);
         return reviews.stream()
                 .map(SearchReviewListResponse::from)
                 .toList();
