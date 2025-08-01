@@ -11,5 +11,5 @@ public class UpdateReviewRequest {
     private String message;
     private int rating;
     private String url;
-
+    private Float size;
 }
