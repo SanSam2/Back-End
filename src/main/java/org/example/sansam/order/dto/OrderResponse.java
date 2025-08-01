@@ -11,15 +11,19 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class OrderResponse {
 
+
+
+    private Long orderId;
     private String orderNumber;
-    private String paymentKey;
-    private int totalAmount;
+    private String orderName;
+    private Long totalAmount;
     private String status;
     private LocalDateTime createdAt;
 
     public OrderResponse(Order order){
+        this.orderId = order.getId();
+        this.orderName= order.getOrderName();
         this.orderNumber = order.getOrderNumber();
-        this.paymentKey = order.getPaymentKey();
         this.totalAmount = order.getTotalAmount();
         this.status = order.getStatus().toString();
         this.createdAt = order.getCreatedAt();
