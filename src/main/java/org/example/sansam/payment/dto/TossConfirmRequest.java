@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class TossCallBackRequest {
+public class TossConfirmRequest {
 
     String paymentKey;
     Long orderId; //사실상 orderName이어야하는거 아닌가
