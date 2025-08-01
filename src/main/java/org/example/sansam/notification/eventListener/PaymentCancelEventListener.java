@@ -14,6 +14,6 @@ public class PaymentCancelEventListener {
 
     @EventListener
     public void handelPaymentCancelEvent(PaymentCancelEvent event) {
-        notificationService.sendPaymentCancelNotification(event.getUserId(), event.getOrderName(), event.getRefundPrice());
+        notificationService.sendPaymentCancelNotification(event.getUser(), event.getOrderName(), event.getRefundPrice());
     }
 }
