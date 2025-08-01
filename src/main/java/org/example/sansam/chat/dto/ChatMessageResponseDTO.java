@@ -16,15 +16,15 @@ public class ChatMessageResponseDTO {
 
     private Long id;
     private String message;
-    private Boolean isRead;
     private LocalDateTime createdAt;
+    private String userName;
 
-    public static ChatMessageResponseDTO fromEntity(ChatMessage chatMessage) {
+    public static ChatMessageResponseDTO fromEntity(ChatMessage chatMessage, String userName) {
         return ChatMessageResponseDTO.builder()
                 .id(chatMessage.getId())
                 .message(chatMessage.getMessage())
-                .isRead(chatMessage.getIsRead())
                 .createdAt(chatMessage.getCreatedAt())
+                .userName(userName)
                 .build();
     }
 }

@@ -2,6 +2,7 @@ package org.example.sansam.chat.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.sansam.user.domain.User;
 
 import java.time.LocalDateTime;
 
@@ -21,9 +22,6 @@ public class ChatMessage {
     @Column(length = 500)
     private String message;
 
-    @Column(name = "is_read")
-    private Boolean isRead;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -32,9 +30,7 @@ public class ChatMessage {
     private ChatRoom chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumns({
-            @JoinColumn(name = "sender_user_id", referencedColumnName = "user_id"),
-            @JoinColumn(name = "sender_chatroom_id", referencedColumnName = "chatroom_id")
-    })
-    private ChatMember sender;
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
+
 }

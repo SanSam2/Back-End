@@ -26,6 +26,9 @@ public class ChatRoom {
     @Column(name="created_at")
     private LocalDateTime createdAt;
 
+    @Column(name="lastMessage_at")
+    private LocalDateTime lastMessageAt;
+
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
     private List<ChatMessage> messages = new ArrayList<>();
 
