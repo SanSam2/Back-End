@@ -8,10 +8,11 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@Table(name = "tmpproducts")
 public class Products {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="products_id")
+    @Column(name="tmpproducts_id")
     Long productsId;
 
     private String name;
