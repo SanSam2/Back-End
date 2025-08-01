@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.example.sansam.notification.service.NotificationService;
 import org.example.sansam.notification.service.NotificationTestService;
-import org.example.sansam.user.domain.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -70,4 +69,31 @@ public class NotificationController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/cart-low")
+    public ResponseEntity<Void> sendTest3Notification(@RequestParam Long userId,
+                                                      @RequestParam String productName) {
+        notificationTestService.sendCartLowTestNotification(userId, productName);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/wishlist-low")
+    public ResponseEntity<Void> sendTest4Notification(@RequestParam Long userId,
+                                                      @RequestParam String productName) {
+        notificationTestService.sendWishListLowTestNotification(userId, productName);
+        return ResponseEntity.ok().build();
+    }
+
+//    @PostMapping("/review-request")
+//    public ResponseEntity<Void> sendTest5Notification(@RequestParam Long userId,
+//                                                      @RequestParam String productName) {
+//        notificationTestService.sendReviewRequestTestNotification(userId, productName);
+//        return ResponseEntity.ok().build();
+//    }
+
+    @PostMapping("/chat")
+    public ResponseEntity<Void> sendTest6Notification(@RequestParam Long userId,@RequestParam Long senderId,
+                                                      @RequestParam String senderName) {
+        notificationTestService.sendChatTestNotification(userId, senderId, senderName);
+        return ResponseEntity.ok().build();
+    }
 }
