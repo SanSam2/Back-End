@@ -14,6 +14,6 @@ public class CartLowEventListener {
 
     @EventListener
     public void handleCartLowEvent(CartLowEvent event){
-        notificationService.sendCartLowNotification(event.getUserId(), event.getProductName());
+        notificationService.sendCartLowNotification(event.getUser(), event.getProductName());
     }
 }

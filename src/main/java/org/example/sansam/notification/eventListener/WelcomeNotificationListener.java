@@ -13,6 +13,6 @@ public class WelcomeNotificationListener {
 
     @EventListener
     public void handelWelcomeNotificationEvent(WelcomeNotificationEvent event) {
-        notificationService.sendWelcomeNotification(event.getUserId(), event.getUsername());
+        notificationService.sendWelcomeNotification(event.getUser());
     }
 }
