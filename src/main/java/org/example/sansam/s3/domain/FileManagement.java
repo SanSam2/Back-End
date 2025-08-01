@@ -17,6 +17,7 @@ import java.util.List;
 public class FileManagement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "file_management_id")
     private Long id;
 
     @Column(name = "type_name", nullable = false)
