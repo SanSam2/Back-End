@@ -98,8 +98,8 @@ public class NotificationService {
 
             log.info("3");
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("welcome message")
                         .data(payload, MediaType.APPLICATION_JSON));
             }
@@ -136,8 +136,8 @@ public class NotificationService {
 
             String payload = objectMapper.writeValueAsString(dto);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("Welcome Message")
                         .data(payload, MediaType.APPLICATION_JSON));
             }
@@ -168,8 +168,8 @@ public class NotificationService {
 
             notificationHistoriesRepository.save(notification);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("Payment Complete Message")
                         .data(notification));
             }
@@ -200,8 +200,8 @@ public class NotificationService {
 
             notificationHistoriesRepository.save(notification);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("Payment Cancel Complete Message")
                         .data(notification));
             }
@@ -232,8 +232,8 @@ public class NotificationService {
 
             notificationHistoriesRepository.save(notification);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("Cart Product Stock Low Message")
                         .data(notification));
             }
@@ -265,8 +265,8 @@ public class NotificationService {
 
             notificationHistoriesRepository.save(notification);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("WishList Product Stock Low Message")
                         .data(notification));
             }
@@ -294,8 +294,8 @@ public class NotificationService {
                     .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
                     .build();
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("WishList Product Stock Low Message")
                         .data(notification));
             }
@@ -325,8 +325,8 @@ public class NotificationService {
 
             notificationHistoriesRepository.save(notification);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("Chat Notification Message")
                         .data(notification));
             }

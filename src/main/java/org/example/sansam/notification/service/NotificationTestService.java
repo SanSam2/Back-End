@@ -96,8 +96,8 @@ public class NotificationTestService {
 
             log.info("3");
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("welcomeMessage")
                         .data(payload, MediaType.APPLICATION_JSON));
             }
@@ -142,8 +142,8 @@ public class NotificationTestService {
             String payload = objectMapper.writeValueAsString(dto);
             log.info("payload: {}", payload);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("paymentComplete")
                         .data(payload, MediaType.APPLICATION_JSON));
                 log.info(payload, MediaType.APPLICATION_JSON);
@@ -187,8 +187,8 @@ public class NotificationTestService {
                     .build();
             String payload = objectMapper.writeValueAsString(dto);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("paymentCancel")
                         .data(payload, MediaType.APPLICATION_JSON));
             }
@@ -234,8 +234,8 @@ public class NotificationTestService {
             String payload = objectMapper.writeValueAsString(dto);
             log.info("payload: {}", payload);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("cartProductStockLow")
                         .data(payload, MediaType.APPLICATION_JSON));
             }
@@ -282,8 +282,8 @@ public class NotificationTestService {
             String payload = objectMapper.writeValueAsString(dto);
             log.info("payload: {}", payload);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("wishListProductStockLow")
                         .data(payload, MediaType.APPLICATION_JSON));
             }
@@ -326,8 +326,8 @@ public class NotificationTestService {
             String payload = objectMapper.writeValueAsString(dto);
             log.info("payload: {}", payload);
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("chatNotification")
                         .data(payload, MediaType.APPLICATION_JSON));
             }
@@ -352,8 +352,8 @@ public class NotificationTestService {
                     .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
                     .build();
 
-            if (sseEmitters.containsKey(user.getUserId())) {
-                sseEmitters.get(user.getUserId()).send(SseEmitter.event()
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("reviewRequestNotification")
                         .data(notification));
             }
