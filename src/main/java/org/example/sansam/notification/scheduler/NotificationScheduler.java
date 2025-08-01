@@ -1,7 +1,8 @@
-package org.example.sansam.notification.Cleaner;
+package org.example.sansam.notification.scheduler;
 
 import lombok.RequiredArgsConstructor;
-import org.example.sansam.notification.repository.NotificationHistoryRepository;
+import org.example.sansam.notification.repository.NotificationHistoriesRepository;
+import org.example.sansam.notification.service.NotificationService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -10,8 +11,9 @@ import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
-public class NotificationCleaner {
-    private final NotificationHistoryRepository notificationHistoryRepository;
+public class NotificationScheduler {
+    private final NotificationHistoriesRepository notificationHistoryRepository;
+    private final NotificationService notificationService;
 
     @Scheduled(cron = "0 0 3 * * *") // 매일 새벽 3시에 만료 알림 삭제
     public void deleteExpiredNotification() {

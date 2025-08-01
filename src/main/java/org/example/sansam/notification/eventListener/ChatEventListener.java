@@ -13,6 +13,6 @@ public class ChatEventListener {
 
     @EventListener
     public void handleChatEvent(ChatEvent event){
-        notificationService.sendChatNotification(event.getUserId(), event.getSenderId(), event.getSenderName());
+        notificationService.sendChatNotification(event.getUser(), event.getSenderId(), event.getSenderName());
     }
 }
