@@ -13,6 +13,7 @@ import org.example.sansam.order.repository.OrderRepository;
 //import org.example.sansam.order.tmp.OrderStatus;
 //import org.example.sansam.order.tmp.Product;
 //import org.example.sansam.order.tmp.ProductService;
+import org.example.sansam.order.tmp.OrderStatus;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.service.UserService;
 import org.springframework.stereotype.Service;
@@ -82,41 +83,42 @@ public class OrderService {
         if (itemCount == 0) throw new IllegalArgumentException("주문 상품이 비어있습니다.");
 
         Long firstProductId = items.get(0).getProductId();
-        Product firstProduct = productService.findById(firstProductId)
-                .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
-
-        if (itemCount == 1) {
-            return firstProduct.getName();
-        } else {
-            return firstProduct.getName() + " 외 " + (itemCount - 1) + "건";
-        }
+//        Product firstProduct = productService.findById(firstProductId)
+//                .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
+//
+//        if (itemCount == 1) {
+//            return firstProduct.getName();
+//        } else {
+//            return firstProduct.getName() + " 외 " + (itemCount - 1) + "건";
+//        }
+        return "hello";
     }
 
     //총금액 계산 메솓즈
     private Long calculateTotalAmount(List<OrderItemDto> items) {
         Long totalAmount = 0L;
-        for (OrderItemDto itemDto : items) {
-            Product product = productService.findById(itemDto.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
-
-            Long itemPrice = product.getPrice();
-            totalAmount += itemPrice * itemDto.getQuantity();
-        }
+//        for (OrderItemDto itemDto : items) {
+//            Product product = productService.findById(itemDto.getProductId())
+//                    .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
+//
+//            Long itemPrice = product.getPrice();
+//            totalAmount += itemPrice * itemDto.getQuantity();
+//        }
         return totalAmount;
     }
 
     private void fillOrderProducts(List<OrderItemDto> items, Order order) {
-        for (OrderItemDto itemDto : items) {
-            Product product = productService.findById(itemDto.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
-
-            OrderProduct orderProduct = new OrderProduct();
-            orderProduct.setOrder(order);
-            orderProduct.setProduct(product);
-            orderProduct.setQuantity((long) itemDto.getQuantity());
-
-            order.getOrderProducts().add(orderProduct);
-        }
+//        for (OrderItemDto itemDto : items) {
+//            Product product = productService.findById(itemDto.getProductId())
+//                    .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
+//
+//            OrderProduct orderProduct = new OrderProduct();
+//            orderProduct.setOrder(order);
+//            orderProduct.setProduct(product);
+//            orderProduct.setQuantity((long) itemDto.getQuantity());
+//
+//            order.getOrderProducts().add(orderProduct);
+//        }
     }
 
 
