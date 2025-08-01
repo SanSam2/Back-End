@@ -1,7 +1,7 @@
 package org.example.sansam.timedeal.dto;
 
 import lombok.*;
-import org.example.sansam.search.dto.ProductResponse;
+import org.example.sansam.product.dto.ProductResponse;
 
 @Getter
 @Setter
