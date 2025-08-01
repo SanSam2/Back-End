@@ -12,7 +12,6 @@ import org.example.sansam.notification.repository.NotificationsRepository;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -25,7 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NotificationService {
+public class NotificationTestService {
+
     private final NotificationsRepository notificationRepository;
     private final NotificationHistoriesRepository notificationHistoriesRepository;
     private final UserRepository userRepository;
@@ -74,8 +74,6 @@ public class NotificationService {
             Notification template = notificationRepository.findById(1L)
                     .orElseThrow(() -> new IllegalArgumentException("환영 알림 템플릿이 없습니다"));
 
-            log.info("1");
-
             NotificationHistories notification = NotificationHistories.builder()
                     .user(user)
                     .notification(template)
@@ -92,7 +90,6 @@ public class NotificationService {
 
             String payload = objectMapper.writeValueAsString(dto);
             log.info("payload: {}", payload);
-            log.info("2");
 
             notificationHistoriesRepository.save(notification);
 
@@ -111,74 +108,85 @@ public class NotificationService {
         }
 
     }
-    // user 정보 받아와서 회원가입 환영 축하 알림 생성
-    public void sendWelcomeNotification(User user) {
-
-        try {
-            Notification template = notificationRepository.findById(1L)
-                    .orElseThrow(() -> new IllegalArgumentException("환영 알림 템플릿이 없습니다"));
-
-            NotificationHistories notification = NotificationHistories.builder()
-                    .user(user)
-                    .notification(template)
-                    .title(String.format(template.getTitle(), user.getName()))
-                    .message(String.format(template.getMessage(), user.getName()))
-                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                    .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
-                    .build();
-
-            notificationHistoriesRepository.save(notification);
-
-            NotificationDTO dto = NotificationDTO.builder()
-                    .title(String.format(template.getTitle(), user.getName()))
-                    .message(template.getMessage())
-                    .build();
-
-            String payload = objectMapper.writeValueAsString(dto);
-
-            if (sseEmitters.containsKey(user.getId())) {
-                sseEmitters.get(user.getId()).send(SseEmitter.event()
-                        .name("Welcome Message")
-                        .data(payload, MediaType.APPLICATION_JSON));
-            }
-            log.info("환영 알림 전송 완료 - 사용자: {}", user.getName());
-
-        } catch (Exception e) {
-            log.error("환영 알림 전송 실패 - 사용자: {}", user.getName(), e);
-            throw new NotificationException("환영 알림 전송 실패", e);
-        }
-
-    }
 
     // user 정보 받아와서 결제 완료 알림 생성
-    public void sendPaymentCompleteNotification(User user, String orderName, Long orderPrice) {
+    public void sendPaymentCompleteTestNotification(Long userId, String orderName, Long orderPrice) {
 
         try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(()-> new RuntimeException("회원이 없습니다."));
+
             Notification template = notificationRepository.findById(2L)
                     .orElseThrow(() -> new IllegalArgumentException("결제 완료 알림 템플릿이 없습니다."));
 
-
+            log.info("1");
             NotificationHistories notification = NotificationHistories.builder()
                     .user(user)
                     .notification(template)
-                    .message(String.format(template.getMessage(), orderName, orderPrice))
+                    .title(template.getTitle())
+                    .message(String.format(template.getMessage(), user.getName() ,orderName, orderPrice))
                     .createdAt(Timestamp.valueOf(LocalDateTime.now()))
                     .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
                     .build();
-
+            log.info("2");
             notificationHistoriesRepository.save(notification);
+            log.info("3");
+            NotificationDTO dto = NotificationDTO.builder()
+                    .title(template.getTitle())
+                    .message(String.format(template.getMessage(), user.getName() ,orderName, orderPrice))
+                    .build();
+
+            String payload = objectMapper.writeValueAsString(dto);
+            log.info("payload: {}", payload);
 
             if (sseEmitters.containsKey(user.getId())) {
                 sseEmitters.get(user.getId()).send(SseEmitter.event()
                         .name("Payment Complete Message")
+                        .data(payload, MediaType.APPLICATION_JSON));
+                log.info(payload, MediaType.APPLICATION_JSON);
+            }
+
+            log.info("결제 완료 알림 전송 완료 - 사용자: {}, 주문: {}, 금액: {}", user.getName(), orderName, orderPrice);
+        } catch (Exception e) {
+            log.error("결제 완료 알림 전송 실패 - 사용자: {}, 주문: {}, 금액: {}", userId, orderName, orderPrice, e);
+            throw new NotificationException("결제 완료 알림 전송 실패", e);
+        }
+
+    }
+
+    // user 정보 받아와서 결제 취소 완료 알림 생성
+    public void sendPaymentCancelTestNotification(Long userId, String orderName, Long refundPrice) {
+
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(()-> new RuntimeException("회원이 없습니다."));
+
+            Notification template = notificationRepository.findById(3L)
+                    .orElseThrow(() -> new IllegalArgumentException("결제 취소 알림 템플릿이 없습니다."));
+
+
+            NotificationHistories notification = NotificationHistories.builder()
+                    .user(user)
+                    .notification(template)
+                    .message(String.format(template.getMessage(), orderName, refundPrice))
+                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                    .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
+                    .build();
+
+            notificationHistoriesRepository.save(notification);
+
+            if (sseEmitters.containsKey(user.getId())) {
+                sseEmitters.get(user.getId()).send(SseEmitter.event()
+                        .name("Payment Cancel Complete Message")
                         .data(notification));
             }
 
-            log.info("결제 완료 알림 전송 완료 - 사용자: {}, 주문: {}", user.getName(), orderName);
+            log.info("결제 취소 알림 전송 완료 - 사용자: {}, 주문: {}", userId, orderName);
         } catch (Exception e) {
-            log.error("결제 완료 알림 전송 실패 - 사용자: {}, 주문: {}", user.getName(), orderName, e);
-            throw new NotificationException("결제 완료 알림 전송 실패", e);
+            log.error("결제 취소 알림 전송 실패 - 사용자: {}, 주문: {}", userId, orderName, e);
+            throw new NotificationException("결제 취소 알림 전송 실패", e);
         }
+
 
     }
 

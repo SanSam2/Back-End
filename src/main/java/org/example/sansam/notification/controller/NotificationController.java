@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.example.sansam.notification.service.NotificationService;
+import org.example.sansam.notification.service.NotificationTestService;
 import org.example.sansam.user.domain.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,20 +26,48 @@ public class NotificationController {
                     @ApiResponse(responseCode = "400", description = "잘못된 요청"),
                     @ApiResponse(responseCode = "500", description = "서버 에러")})
 
-    @GetMapping("/subscribe")
-    public ResponseEntity<SseEmitter> subscribe(@RequestBody User user) {
+    @GetMapping(value = "/subscribe", produces = "text/event-stream; charset=UTF-8")
+    public ResponseEntity<SseEmitter> subscribe(@RequestParam Long userId) {
         try {
-            SseEmitter emitter = notificationService.connect(user.getId());
+            log.info("SSE 구독 요청 - userId: {}", userId);
+            SseEmitter emitter = notificationService.connect(userId);
             return ResponseEntity.ok(emitter);
         } catch (EmitterException e) {
             // 커스텀 예외로 명확하게 알 수 있게
-            log.error("SSE 연결 실패 - userId: {}", user.getId(), e);
+            log.error("SSE 연결 실패 - userId: {}", userId, e);
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
         } catch (Exception e) {
-            log.error("알 수 없는 SSE 연결 오류 - userId: {}", user.getId(), e);
+            log.error("알 수 없는 SSE 연결 오류 - userId: {}", userId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
+
+
+
+
+
+
+    private final NotificationTestService notificationTestService;
+
+
+    @PostMapping("/welcome")
+    public ResponseEntity<Void> sendTestNotification(@RequestParam Long userId,
+                                                     @RequestParam String username) {
+        notificationTestService.sendWelcomeTestNotification(userId, username);
+        return ResponseEntity.ok().build();
+    }
+    @PostMapping("/payment-complete")
+    public ResponseEntity<Void> sendTest1Notification(@RequestParam Long userId,
+                                                     @RequestParam String orderName, @RequestParam Long orderPrice) {
+        notificationTestService.sendPaymentCompleteTestNotification(userId, orderName, orderPrice);
+        return ResponseEntity.ok().build();
+    }
+    @PostMapping("/payment-cancel")
+    public ResponseEntity<Void> sendTest2Notification(@RequestParam Long userId,
+                                                      @RequestParam String orderName, @RequestParam Long refundPrice) {
+        notificationTestService.sendPaymentCancelTestNotification(userId, orderName, refundPrice);
+        return ResponseEntity.ok().build();
+    }
 
 }
