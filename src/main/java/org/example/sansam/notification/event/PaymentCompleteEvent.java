@@ -2,12 +2,12 @@ package org.example.sansam.notification.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.example.sansam.notification.dto.PaymentNotiDTO;
+import org.example.sansam.user.domain.User;
 
 @Getter
 @AllArgsConstructor
 public class PaymentCompleteEvent {
-    private final Long userId;
+    private final User user;
     private final String orderName;
     private final Long orderPrice;
 }
