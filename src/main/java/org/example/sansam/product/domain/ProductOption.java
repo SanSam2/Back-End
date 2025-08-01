@@ -15,6 +15,7 @@ import java.util.List;
 public class ProductOption {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_option_id")
     private Long id;
 
     @Column(length = 50, nullable = false)
