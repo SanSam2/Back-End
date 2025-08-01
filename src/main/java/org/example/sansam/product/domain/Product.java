@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.sansam.s3.domain.FileManagement;
 
 import java.time.LocalDateTime;
 
@@ -19,9 +20,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "category_id", nullable = false)
-//    private Category category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @Column(name = "brand_name", nullable = false)
     private String brandName;
@@ -29,9 +30,9 @@ public class Product {
     @Column(name = "product_name", nullable = false)
     private String productName;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "status_id", nullable = false)
-//    private Status status;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "status_id", nullable = false)
+    private Status status;
 
     private Long price;
 
@@ -44,7 +45,7 @@ public class Product {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "file_management_id")
-//    private FileManagement fileManagement;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_management_id")
+    private FileManagement fileManagement;
 }

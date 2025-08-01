@@ -1,6 +1,7 @@
-package org.example.sansam.search.dto;
+package org.example.sansam.product.dto;
 
 import lombok.*;
+import org.example.sansam.cart.dto.SearchCartResponse;
 
 import java.util.List;
 
@@ -17,6 +18,10 @@ public class ProductResponse {
     private Integer price;
     private String description;
     private String imageUrl;
-    private List<ProductDetailResponse> options;
+    private ProductDetailResponse option;
     private boolean wish;
+    private Long reviewCount;
+    private List<String> colorList;
+    private List<String> sizeList;
+    //사이즈
 }
