@@ -11,4 +11,5 @@ public class AddReviewRequest {
     private String message;
     private int rating;
     private String url;
+    private Float size;
 }
