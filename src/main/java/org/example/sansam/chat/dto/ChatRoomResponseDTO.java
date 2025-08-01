@@ -17,6 +17,7 @@ public class ChatRoomResponseDTO {
     private Long id;
     private String roomName;
     private LocalDateTime createdAt;
+    private LocalDateTime lastMessageAt;
 
 
     public static ChatRoomResponseDTO fromEntity(ChatRoom chatRoom) {
@@ -24,6 +25,7 @@ public class ChatRoomResponseDTO {
                 .id(chatRoom.getId())
                 .roomName(chatRoom.getRoomName())
                 .createdAt(chatRoom.getCreatedAt())
+                .lastMessageAt(chatRoom.getLastMessageAt())
                 .build();
     }
 }

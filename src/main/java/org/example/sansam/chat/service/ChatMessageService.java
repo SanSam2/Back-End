@@ -1,30 +1,94 @@
 package org.example.sansam.chat.service;
 
-import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+import org.example.sansam.chat.domain.ChatMessage;
+import org.example.sansam.chat.domain.ChatRoom;
 import org.example.sansam.chat.dto.ChatMessageRequestDTO;
 import org.example.sansam.chat.dto.ChatMessageResponseDTO;
-import org.example.sansam.chat.dto.ChatRoomResponseDTO;
-import org.example.sansam.chat.repository.ChatMessageRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
+import org.example.sansam.chat.repository.ChatMessageRepository;
+import org.example.sansam.chat.repository.ChatRoomRepository;
+import org.example.sansam.user.domain.User;
+import org.example.sansam.user.repository.UserRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ChatMessageService {
 
-    @Autowired
-    private ChatMessageRepository chatMessageRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatRoomRepository chatRoomRepository;
+    private final UserRepository userRepository;
 
-    public List<ChatMessageResponseDTO> getMessages(String roomId) {
-        return null;
+    // 채팅방 메세지 페이징 처리
+    @Transactional(readOnly = true)
+    public List<ChatMessageResponseDTO> getMessages(Long roomId, Long lastMessageId, int size) {
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채팅방입니다."));
+
+        Pageable pageable = PageRequest.of(0, size);
+
+        List<ChatMessage> messages;
+        if (lastMessageId == null) {
+            messages = chatMessageRepository.findTopByChatRoomOrderByCreatedAtDesc(chatRoom, pageable);
+        } else {
+            messages = chatMessageRepository.findByChatRoomAndIdLessThanOrderByCreatedAtDesc(chatRoom, lastMessageId, pageable);
+        }
+
+        List<ChatMessageResponseDTO> chatMessageResponseDTOS = messages.stream()
+                .map(msg -> ChatMessageResponseDTO.fromEntity(msg, msg.getSender().getName()))
+                .collect(Collectors.toList());
+        Collections.reverse(chatMessageResponseDTOS);
+
+        return chatMessageResponseDTOS;
     }
 
-    public void deleteMessage(String messageId, HttpSession session) {
+    // 메세지 전송시, 데이터 베이스에 추가
+    @Transactional
+    public ChatMessageResponseDTO addMessage(ChatMessageRequestDTO chatMessageRequestDTO, Long userId, Long roomId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("존재하지 않는 유저입니다. "));
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+
+        ChatMessage chatMessage = ChatMessage.builder()
+                .chatRoom(chatRoom)
+                .sender(user)
+                .message(chatMessageRequestDTO.getMessage())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        chatMessageRepository.save(chatMessage);
+        chatRoom.setLastMessageAt(chatMessage.getCreatedAt());
+
+        return ChatMessageResponseDTO.fromEntity(chatMessage,user.getName());
     }
 
-    public ChatRoomResponseDTO addMessage(String roomId, ChatMessageRequestDTO chatMessageRequestDTO,
-                                          HttpSession session) {
-        return null;
+    // 메세지 삭제
+    @Transactional
+    public void deleteMessage(Long messageId, Long userId) {
+
+        ChatMessage chatMessage = chatMessageRepository.findById(messageId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("존재하지 않는 메세지입니다."));
+
+        if (!chatMessage.getSender().getId().equals(userId)) {
+            throw new IllegalArgumentException("본인의 메시지만 삭제할 수 있습니다.");
+        }
+
+        chatMessageRepository.delete(chatMessage);
     }
+
 }
