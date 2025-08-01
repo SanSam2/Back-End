@@ -1,9 +1,10 @@
-//package org.example.sansam.order.tmp;
-//
-//public enum OrderStatus {
-//    payComplete,
-//    orderComplete,
-//    payCancel,
-//    payFailed,
-//    waiting
-//}
+package org.example.sansam.order.tmp;
+
+public enum OrderStatus {
+    payComplete,
+    orderComplete,
+    payCancel,
+    payFailed,
+    waiting
+}
+
