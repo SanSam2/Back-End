@@ -25,4 +25,9 @@ public class Category {
 
     @Column(name="small_name")
     private String smallName;
+
+    @Override
+    public String toString() {
+        return bigName + " > " + middleName + " > " + smallName;
+    }
 }

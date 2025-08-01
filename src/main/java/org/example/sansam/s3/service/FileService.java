@@ -10,6 +10,8 @@ import org.example.sansam.s3.repository.FileJpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -43,5 +45,10 @@ public class FileService {
                 .orElseThrow(() -> new EntityNotFoundException("파일 정보를 찾을 수 없습니다."));
 
         return saveFile;
+    }
+
+    public String getImageUrl(Long fileManagementId) {
+        FileDetail fileDetail = fileDetailJpaRepository.findByFileManagement(fileJpaRepository.findById(fileManagementId));
+        return fileDetail.getUrl();
     }
 }

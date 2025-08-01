@@ -3,7 +3,7 @@ package org.example.sansam.search.controller;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.example.sansam.search.dto.ProductResponse;
+import org.example.sansam.product.dto.ProductResponse;
 import org.example.sansam.search.dto.RecommendRequest;
 import org.example.sansam.search.dto.SearchListResponse;
 import org.springframework.data.domain.Page;
@@ -31,19 +31,6 @@ public class SearchController {
         try {
             Page<SearchListResponse> products = Page.empty();;
             return ResponseEntity.ok(products);
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        }
-    }
-
-    //상품 상세 조회
-    @GetMapping("/{productId}")
-    public ResponseEntity<?> getProduct(@PathVariable Long productId) {
-        try {
-            ProductResponse product = new ProductResponse();
-            return ResponseEntity.ok(product);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body("상품을 찾을 수 없습니다.");
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
         }
