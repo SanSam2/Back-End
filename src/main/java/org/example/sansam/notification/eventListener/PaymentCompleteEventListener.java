@@ -14,6 +14,6 @@ public class PaymentCompleteEventListener {
 
     @EventListener
     public void handelPaymentCompleteEvent(PaymentCompleteEvent event) {
-        notificationService.sendPaymentCompleteNotification(event.getUserId(), event.getOrderName(), event.getOrderPrice());
+        notificationService.sendPaymentCompleteNotification(event.getUser(), event.getOrderName(), event.getOrderPrice());
     }
 }

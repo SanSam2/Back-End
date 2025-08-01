@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.sansam.user.domain.User;
 
 import java.sql.Timestamp;
 
@@ -13,18 +14,20 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "notification_history")
-public class NotificationHistory {
+@Table(name = "notification_histories")
+public class NotificationHistories {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length=50, nullable=false, unique=true)
-    private Long user_id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable=false, unique=true)
+    private User user;
 
-    @Column(length=50, nullable=false)
-    private Long notification_id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "notification_id", nullable=false)
+    private Notification notification;
 
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
@@ -35,6 +38,10 @@ public class NotificationHistory {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
     private String message;
 
 }

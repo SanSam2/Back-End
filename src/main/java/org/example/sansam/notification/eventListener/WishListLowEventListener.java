@@ -14,6 +14,6 @@ public class WishListLowEventListener {
 
     @EventListener
     public void handelWishListLowEvent(WishListLowEvent event){
-        notificationService.sendWishListLowNotification(event.getUserId(), event.getProductName());
+        notificationService.sendWishListLowNotification(event.getUser(), event.getProductName());
     }
 }
