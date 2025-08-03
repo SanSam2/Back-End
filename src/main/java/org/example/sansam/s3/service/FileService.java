@@ -57,7 +57,6 @@ public class FileService {
             throw new EntityNotFoundException("파일 상세 정보를 찾을 수 없습니다.");
         }
 
-        // 메인 이미지가 있다면 그것을 반환하고, 없다면 첫 번째 이미지 반환
         return fileDetails.stream()
                 .filter(FileDetail::getIsMain)
                 .findFirst()
