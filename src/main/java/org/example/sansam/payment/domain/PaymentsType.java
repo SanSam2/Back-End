@@ -11,6 +11,7 @@ import lombok.Setter;
 public class PaymentsType {
 
     @Id
+    @Column(name="payments_type_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

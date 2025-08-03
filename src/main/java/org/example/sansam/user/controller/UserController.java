@@ -75,11 +75,11 @@ public class UserController {
                             schema = @Schema(implementation = LoginResponse.class),
                             examples = @ExampleObject(value = """
                             {
-                              "id": 2,
-                              "email": "user@example.com",
-                              "name": "홍길동",
-                              "password" : "1234",
-                              "role": "USER"
+                                "id":1,
+                                "email":"sansam@example.com",
+                                "name":"강슬빈",
+                                "password":"1234",
+                                "role":"ADMIN"
                             }
                             """))),
             @ApiResponse(responseCode = "401", description = "인증 실패 (잘못된 이메일 또는 비밀번호)",

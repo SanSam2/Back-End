@@ -19,7 +19,8 @@ public class NotificationHistories {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long notificationHistoryId;
+    @Column(name = "notification_histories_id")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable=false, unique=true)

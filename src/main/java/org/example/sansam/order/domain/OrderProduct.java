@@ -4,7 +4,7 @@ package org.example.sansam.order.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.example.sansam.product.domain.Product;
+import org.example.sansam.order.tmp.Products;
 
 @Entity
 @Table(name = "order_product")
@@ -13,6 +13,7 @@ import org.example.sansam.product.domain.Product;
 public class OrderProduct {
 
     @Id
+    @Column(name="order_product_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -21,8 +22,8 @@ public class OrderProduct {
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id",nullable = false)
-    private Product product;
+    @JoinColumn(name = "products_id",nullable = false)
+    private Products product;
 
     private Long quantity;
 }

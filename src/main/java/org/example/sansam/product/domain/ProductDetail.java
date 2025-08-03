@@ -16,6 +16,7 @@ public class ProductDetail {
     @Id
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_detail_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

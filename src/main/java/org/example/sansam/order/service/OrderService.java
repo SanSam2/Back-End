@@ -3,17 +3,15 @@ package org.example.sansam.order.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sansam.global.globaldto.OrderInfoDto;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.domain.OrderProduct;
 import org.example.sansam.order.dto.OrderItemDto;
 import org.example.sansam.order.dto.OrderRequest;
 import org.example.sansam.order.dto.OrderResponse;
 import org.example.sansam.order.repository.OrderRepository;
-//import org.example.sansam.order.tmp.OrderStatus;
-//import org.example.sansam.order.tmp.Product;
-//import org.example.sansam.order.tmp.ProductService;
 import org.example.sansam.order.tmp.OrderStatus;
+import org.example.sansam.order.tmp.ProductTmpService;
+import org.example.sansam.order.tmp.Products;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.service.UserService;
 import org.springframework.stereotype.Service;
@@ -32,7 +30,7 @@ public class OrderService {
 
     //타 도메인에서 받아올때는 Service에서 받아오도록 설정
     private final UserService userService;
-//    private final ProductService productService;
+    private final ProductTmpService productService;
 
 
     public OrderResponse saveOrder(OrderRequest request){
@@ -51,7 +49,7 @@ public class OrderService {
         order.setStatus(OrderStatus.waiting); // 초기 상태 준비로 설정
         order.setOrderName(buildOrderName(request.getItems()));
 
-
+        saveOrderProducts(request.getItems(), order);
         Order savedOrder = orderRepository.save(order);
         return new OrderResponse(savedOrder);
     }
@@ -83,42 +81,54 @@ public class OrderService {
         if (itemCount == 0) throw new IllegalArgumentException("주문 상품이 비어있습니다.");
 
         Long firstProductId = items.get(0).getProductId();
-//        Product firstProduct = productService.findById(firstProductId)
-//                .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
-//
-//        if (itemCount == 1) {
-//            return firstProduct.getName();
-//        } else {
-//            return firstProduct.getName() + " 외 " + (itemCount - 1) + "건";
-//        }
-        return "hello";
+        Products firstProduct = productService.findById(firstProductId)
+                .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
+
+        if (itemCount == 1) {
+            return firstProduct.getName();
+        } else {
+            return firstProduct.getName() + " 외 " + (itemCount - 1) + "건";
+        }
     }
 
     //총금액 계산 메솓즈
     private Long calculateTotalAmount(List<OrderItemDto> items) {
         Long totalAmount = 0L;
-//        for (OrderItemDto itemDto : items) {
-//            Product product = productService.findById(itemDto.getProductId())
-//                    .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
-//
-//            Long itemPrice = product.getPrice();
-//            totalAmount += itemPrice * itemDto.getQuantity();
-//        }
+        for (OrderItemDto itemDto : items) {
+            Products product = productService.findById(itemDto.getProductId())
+                    .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
+
+            Long itemPrice = product.getPrice();
+            totalAmount += itemPrice * itemDto.getQuantity();
+        }
         return totalAmount;
     }
 
-    private void fillOrderProducts(List<OrderItemDto> items, Order order) {
-//        for (OrderItemDto itemDto : items) {
-//            Product product = productService.findById(itemDto.getProductId())
-//                    .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
-//
-//            OrderProduct orderProduct = new OrderProduct();
-//            orderProduct.setOrder(order);
-//            orderProduct.setProduct(product);
-//            orderProduct.setQuantity((long) itemDto.getQuantity());
-//
-//            order.getOrderProducts().add(orderProduct);
-//        }
+    private void saveOrderProducts(List<OrderItemDto> items, Order order) {
+        for (OrderItemDto itemDto : items) {
+            Products product = productService.findById(itemDto.getProductId())
+                    .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
+
+            OrderProduct orderProduct = new OrderProduct();
+            orderProduct.setOrder(order);
+            orderProduct.setProduct(product);
+            orderProduct.setQuantity((long) itemDto.getQuantity());
+
+            order.getOrderProducts().add(orderProduct);
+        }
+    }
+
+    public List<OrderResponse> getAllOrdersByUserId(Long userId) {
+        List<Order> orderList = orderRepository.findByUser_Id(userId);
+        List<OrderResponse> orderResponses = new ArrayList<>();
+        if (orderList.isEmpty()) {
+            throw new IllegalArgumentException("상품이 존재하지 않습니다.");
+        }
+
+        for (Order order : orderList) {
+            orderResponses.add(new OrderResponse(order));
+        }
+        return orderResponses;
     }
 
 
@@ -143,5 +153,13 @@ public class OrderService {
     }
 
 
+    public Optional<OrderResponse> getOrderByOrderId(Long orderId) {
 
+        // 주문 아이디로 해당 주문 조회하기
+        Optional<Order>order = orderRepository.findById(orderId);
+
+
+
+        return null;
+    }
 }

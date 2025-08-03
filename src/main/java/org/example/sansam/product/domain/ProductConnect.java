@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 public class ProductConnect {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_connect_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
