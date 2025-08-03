@@ -11,6 +11,5 @@ public class SearchStockResponse {
     private Long productId;
     private String size;
     private String color;
-    private String productStatus;
-    private int quantity;
+    private Long quantity;
 }

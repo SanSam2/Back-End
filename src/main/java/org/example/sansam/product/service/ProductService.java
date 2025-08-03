@@ -13,6 +13,10 @@ import org.example.sansam.wish.repository.WishJpaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.time.LocalDateTime;
+
+import static org.example.sansam.product.domain.ProductStatus.AVAILABLE;
+import static org.example.sansam.product.domain.ProductStatus.SOLDOUT;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,7 @@ public class ProductService {
     private final WishJpaRepository wishJpaRepository;
     private final FileService fileService;
 
+    //상품 상세 조회 -모든 옵션
     private Map<String, ProductDetailResponse> getProductOption(Product product, Set<String> colors, Set<String> sizes) {
         Map<String, ProductDetailResponse> colorOptionMap = new LinkedHashMap<>();
         Map<String, String> colorImageMap = new HashMap<>();
@@ -62,6 +67,7 @@ public class ProductService {
         return colorOptionMap;
     }
 
+    //default option 조회
     public ProductResponse getProduct(Long productId, Long userId) {
         Product product = productJpaRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
@@ -87,6 +93,7 @@ public class ProductService {
                 product.getPrice(),
                 product.getDescription(),
                 product.getFileManagement() != null ? product.getFileManagement().getFileUrl() : null,
+                product.getStatus().name(),
                 defaultDetail,
                 isWish,
                 reviewCount,
@@ -95,6 +102,7 @@ public class ProductService {
         );
     }
 
+    //option 선택
     public ProductDetailResponse getOptionByColor(Long productId, String color) {
         Product product = productJpaRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
@@ -103,5 +111,63 @@ public class ProductService {
 
         return Optional.ofNullable(colorOptionMap.get(color))
                 .orElseThrow(() -> new EntityNotFoundException("해당 색상의 상품을 찾을 수 없습니다."));
+    }
+
+    public SearchStockResponse checkStock(SearchStockRequest request) {
+        Product product = productJpaRepository.findById(request.getProductId())
+                .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
+        Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
+        List<OptionResponse> optionResponses = colorOptionMap.get(request.getColor()).getOptions();
+        Long quantity = 0L;
+        for(OptionResponse option : optionResponses) {
+            if(option.getSize().equals(request.getSize())) {
+                quantity = option.getQuantity();
+            }
+        }
+
+        return new SearchStockResponse(
+                request.getProductId(),
+                request.getSize(),
+                request.getColor(),
+                quantity
+        );
+    }
+
+    //상품 상태 체크 - 상품 조회 전 실행, 품절처리 및 상태 변경
+    public ProducStatusResponse checkProductStatus(Long productId) {
+        Product product = productJpaRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
+
+        Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
+        boolean statusChanged = false;
+
+        if (ProductStatus.NEW.equals(product.getStatus())) {
+            LocalDateTime deadlineDate = product.getCreatedAt().plusDays(14);
+            if (LocalDateTime.now().isAfter(deadlineDate)) {
+                product.setStatus(ProductStatus.AVAILABLE);
+                statusChanged = true;
+            }
+        }
+
+        boolean isAllSoldOut = colorOptionMap.values().stream()
+                .allMatch(detail -> detail.getOptions().stream()
+                        .allMatch(option -> option.getQuantity() <= 0));
+
+        if (isAllSoldOut && !ProductStatus.SOLDOUT.equals(product.getStatus())) {
+            product.setStatus(ProductStatus.SOLDOUT);
+            statusChanged = true;
+        }else if(!isAllSoldOut && ProductStatus.SOLDOUT.equals(product.getStatus())) {
+            product.setStatus(AVAILABLE);
+            statusChanged = true;
+        }
+
+        if (statusChanged) {
+            productJpaRepository.save(product);
+        }
+
+        return new ProducStatusResponse(
+                product.getProductName(),
+                product.getStatus().name()
+        );
     }
 }
