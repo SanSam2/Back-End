@@ -1,8 +1,6 @@
 package org.example.sansam.product.controller;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.example.sansam.product.domain.ProductDetail;
 import org.example.sansam.product.dto.*;
 import org.example.sansam.product.service.ProductService;
 import org.springframework.http.ResponseEntity;
@@ -25,23 +23,11 @@ public class ProductController {
         }
     }
 
-    //상품 재고 조회 - 품절 시 반환값 ㅒ
+    //상품 재고 조회 - 품절 시 반환값
     @GetMapping("/search-stock")
     public ResponseEntity<?> searchStock(@RequestBody SearchStockRequest searchStockRequest) {
         try {
             SearchStockResponse response = new SearchStockResponse();
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        }
-    }
-
-
-    //상품 재고 차감
-    @PatchMapping("/decrease-stock")
-    public ResponseEntity<?> decreaseStock(@RequestBody DecreaseStockRequest decreaseStockRequest) {
-        try {
-            SearchStockRequest response = new SearchStockRequest();
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
@@ -54,12 +40,13 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProduct(productId, searchRequest));
     }
 
-//    @GetMapping("/{productId}/option")
-//    public ResponseEntity<ProductDetailResponse> getColorOption(
-//            @PathVariable Long productId,
-//            @RequestParam String color
-//    ) {
-//        return ResponseEntity.ok(productService.getProductByColor(productId, color));
-//    }
+    //상품 상세 조회 - 옵션 선택
+    @GetMapping("/{productId}")
+    public ResponseEntity<ProductDetailResponse> getColorOption(
+            @PathVariable Long productId,
+            @RequestParam String color
+    ) {
+        return ResponseEntity.ok(productService.getOptionByColor(productId, color));
+    }
 
 }
