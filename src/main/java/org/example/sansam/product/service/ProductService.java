@@ -1,13 +1,13 @@
 package org.example.sansam.product.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.product.domain.*;
 import org.example.sansam.product.dto.*;
 import org.example.sansam.product.repository.ProductConnectJpaRepository;
 import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
-import org.example.sansam.review.repository.ReviewJpaRepository;
 import org.example.sansam.s3.service.FileService;
 import org.example.sansam.wish.repository.WishJpaRepository;
 import org.springframework.stereotype.Service;
@@ -113,15 +113,20 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 색상의 상품을 찾을 수 없습니다."));
     }
 
+    //재고 조회 - 옵션 별
     public SearchStockResponse checkStock(SearchStockRequest request) {
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
         List<OptionResponse> optionResponses = colorOptionMap.get(request.getColor()).getOptions();
+        if(optionResponses == null) {
+            throw new EntityNotFoundException("해당 색상의 상품을 찾을 수 없습니다.");
+        }
         Long quantity = 0L;
         for(OptionResponse option : optionResponses) {
             if(option.getSize().equals(request.getSize())) {
                 quantity = option.getQuantity();
+                break;
             }
         }
 
@@ -134,7 +139,7 @@ public class ProductService {
     }
 
     //상품 상태 체크 - 상품 조회 전 실행, 품절처리 및 상태 변경
-    public ProducStatusResponse checkProductStatus(Long productId) {
+    public ProductStatusResponse checkProductStatus(Long productId) {
         Product product = productJpaRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
 
@@ -149,14 +154,12 @@ public class ProductService {
             }
         }
 
-        boolean isAllSoldOut = colorOptionMap.values().stream()
-                .allMatch(detail -> detail.getOptions().stream()
-                        .allMatch(option -> option.getQuantity() <= 0));
+        boolean isAllSoldOut = chaeckAllOptionsSoldOut(colorOptionMap);
 
-        if (isAllSoldOut && !ProductStatus.SOLDOUT.equals(product.getStatus())) {
-            product.setStatus(ProductStatus.SOLDOUT);
+        if (isAllSoldOut && !SOLDOUT.equals(product.getStatus())) {
+            product.setStatus(SOLDOUT);
             statusChanged = true;
-        }else if(!isAllSoldOut && ProductStatus.SOLDOUT.equals(product.getStatus())) {
+        } else if(!isAllSoldOut && SOLDOUT.equals(product.getStatus())) {
             product.setStatus(AVAILABLE);
             statusChanged = true;
         }
@@ -165,9 +168,73 @@ public class ProductService {
             productJpaRepository.save(product);
         }
 
-        return new ProducStatusResponse(
+        return new ProductStatusResponse(
                 product.getProductName(),
                 product.getStatus().name()
+        );
+    }
+
+    private boolean chaeckAllOptionsSoldOut(Map<String, ProductDetailResponse> colorOptionMap) {
+        return colorOptionMap.values().stream()
+                .allMatch(detail -> detail.getOptions().stream()
+                        .allMatch(option -> option.getQuantity() <= 0));
+    }
+
+    //재고 변경
+    @Transactional
+    public SearchStockResponse changStock(ChangStockRequest request) {
+        Product product = productJpaRepository.findById(request.getProductId())
+                .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
+        Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
+        ProductDetailResponse detailResponse = colorOptionMap.get(request.getColor());
+        List<ProductDetail> productDetails = product.getProductDetails();
+        ProductDetail findDetail = null;
+        for (ProductDetail detail : productDetails) {
+            List<ProductConnect> productConnects = detail.getProductConnects();
+            boolean color = false;
+            boolean size = false;
+            for (ProductConnect connect : productConnects) {
+                if (connect.getOption().getType().equals("color")) {
+                    if (connect.getOption().getName().equals(request.getColor())) {
+                        color = true;
+                    } else {
+                        color = false;
+                    }
+                } else if (connect.getOption().getType().equals("size")) {
+                    if (connect.getOption().getName().equals(request.getSize())) {
+                        size = true;
+                    } else {
+                        size = false;
+                    }
+                }
+            }
+            if (color && size) {
+                findDetail = detail;
+                break;
+            }
+        }
+        if(findDetail == null) {
+            throw new EntityNotFoundException("해당 옵션의 상품을 찾을 수 없습니다.");
+        }
+
+        Long stock = findDetail.getQuantity();
+        if (request.getStatus().equals(ProductStatus.PLUS)) {
+            stock += request.getNum();
+            findDetail.setQuantity(stock);
+        } else if (request.getStatus().equals(ProductStatus.MINUS)) {
+            if (stock < request.getNum()) {
+                return null; // 재고가 부족한 경우
+            }
+            stock -= request.getNum();
+            findDetail.setQuantity(stock);
+        }
+
+        productDetailJpaRepository.save(findDetail);
+        return new SearchStockResponse(
+                product.getId(),
+                request.getSize(),
+                request.getColor(),
+                findDetail.getQuantity()
         );
     }
 }
