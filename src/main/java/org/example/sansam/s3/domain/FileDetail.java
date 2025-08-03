@@ -13,6 +13,7 @@ import lombok.*;
 public class FileDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "file_details_id")
     private Long id;
 
     private String name;

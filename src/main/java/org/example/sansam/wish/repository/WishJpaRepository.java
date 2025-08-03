@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface WishJpaRepository extends JpaRepository<Wish, Long> {
-    Wish findByUser_UserIdAndProduct_ProductId(Long userId, Long productId);
+    Wish findByUserIdAndProductId(Long userId, Long productId);
 }

@@ -17,6 +17,7 @@ import java.util.List;
 public class Order {
 
     @Id
+    @Column(name="orders_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
