@@ -12,11 +12,12 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     private final ProductService productService;
-    // 상품 품절 처리
-    @PatchMapping ("/soldout")
-    public ResponseEntity<?> markSoldOut(@RequestBody SoldoutRequest soldoutRequest) {
+    // 상품 사이즈, 컬러 조회 시 대문자로.
+    // 상품 상태값 처리
+    @PatchMapping ("/{productId}/status")
+    public ResponseEntity<?> changStatus(@PathVariable Long productId) {
         try {
-            SoldoutResponse response = new SoldoutResponse();
+            ProducStatusResponse response = productService.checkProductStatus(productId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
@@ -27,7 +28,7 @@ public class ProductController {
     @GetMapping("/search-stock")
     public ResponseEntity<?> searchStock(@RequestBody SearchStockRequest searchStockRequest) {
         try {
-            SearchStockResponse response = new SearchStockResponse();
+            SearchStockResponse response = productService.checkStock(searchStockRequest);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
