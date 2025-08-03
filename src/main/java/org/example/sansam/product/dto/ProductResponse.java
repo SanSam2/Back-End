@@ -15,13 +15,12 @@ public class ProductResponse {
     private String productName;
     private String categoryName;
     private String brandName;
-    private Integer price;
+    private Long price;
     private String description;
     private String imageUrl;
-    private ProductDetailResponse option;
+    private ProductDetailResponse detailResponse;
     private boolean wish;
     private Long reviewCount;
     private List<String> colorList;
     private List<String> sizeList;
-    //사이즈
 }
