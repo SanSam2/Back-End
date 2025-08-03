@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ProductDetailResponse {
-    private String size;
+    private String color;
     private String url;
     private List<OptionResponse> options;
 }
