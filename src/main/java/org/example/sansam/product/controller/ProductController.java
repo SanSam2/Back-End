@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     private final ProductService productService;
-    // 상품 사이즈, 컬러 조회 시 대문자로.
+    // 상품 사이즈, 컬러 조회 시 대문자로 조회
     // 상품 상태값 처리
     @PatchMapping ("/{productId}/status")
-    public ResponseEntity<?> changStatus(@PathVariable Long productId) {
+    public ResponseEntity<?> changeStatus(@PathVariable Long productId) {
         try {
-            ProducStatusResponse response = productService.checkProductStatus(productId);
+            ProductStatusResponse response = productService.checkProductStatus(productId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
@@ -29,6 +29,17 @@ public class ProductController {
     public ResponseEntity<?> searchStock(@RequestBody SearchStockRequest searchStockRequest) {
         try {
             SearchStockResponse response = productService.checkStock(searchStockRequest);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
+
+    //상품 재고 추가, 차감
+    @PostMapping ("/stock")
+    public ResponseEntity<?> changeStock(@RequestBody ChangStockRequest changStockRequest) {
+        try {
+            SearchStockResponse response = productService.changStock(changStockRequest);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
