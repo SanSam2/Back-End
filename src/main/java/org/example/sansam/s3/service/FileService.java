@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -48,7 +49,20 @@ public class FileService {
     }
 
     public String getImageUrl(Long fileManagementId) {
-        FileDetail fileDetail = fileDetailJpaRepository.findByFileManagement(fileJpaRepository.findById(fileManagementId));
-        return fileDetail.getUrl();
+        FileManagement fileManagement = fileJpaRepository.findById(fileManagementId)
+                .orElseThrow(() -> new EntityNotFoundException("파일 관리 정보를 찾을 수 없습니다."));
+
+        List<FileDetail> fileDetails = fileDetailJpaRepository.findByFileManagement(fileManagement);
+        if (fileDetails.isEmpty()) {
+            throw new EntityNotFoundException("파일 상세 정보를 찾을 수 없습니다.");
+        }
+
+        // 메인 이미지가 있다면 그것을 반환하고, 없다면 첫 번째 이미지 반환
+        return fileDetails.stream()
+                .filter(FileDetail::getIsMain)
+                .findFirst()
+                .orElse(fileDetails.get(0))
+                .getUrl();
     }
+
 }
