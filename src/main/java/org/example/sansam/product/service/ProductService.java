@@ -22,13 +22,8 @@ public class ProductService {
     private final WishJpaRepository wishJpaRepository;
     private final FileService fileService;
 
-    public ProductResponse getProduct(Long productId, SearchRequest request) {
-        Product product = productJpaRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
-
+    private Map<String, ProductDetailResponse> getProductOption(Product product, Set<String> colors, Set<String> sizes) {
         Map<String, ProductDetailResponse> colorOptionMap = new LinkedHashMap<>();
-        Set<String> colors = new LinkedHashSet<>();
-        Set<String> sizes = new LinkedHashSet<>();
         Map<String, String> colorImageMap = new HashMap<>();
 
         List<ProductDetail> details = productDetailJpaRepository.findByProduct(product);
@@ -42,10 +37,10 @@ public class ProductService {
                 ProductOption option = connect.getOption();
                 if ("color".equals(option.getType())) {
                     color = option.getName();
-                    colors.add(color);
+                    if (colors != null) colors.add(color);
                 } else if ("size".equals(option.getType())) {
                     size = option.getName();
-                    sizes.add(size);
+                    if (sizes != null) sizes.add(size);
                 }
             }
 
@@ -63,6 +58,17 @@ public class ProductService {
             productDetailResponse.getOptions().add(new OptionResponse(size, detail.getQuantity()));
         }
 
+        return colorOptionMap;
+    }
+
+    public ProductResponse getProduct(Long productId, Long userId) {
+        Product product = productJpaRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
+
+        Set<String> colors = new LinkedHashSet<>();
+        Set<String> sizes = new LinkedHashSet<>();
+        Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, colors, sizes);
+
         String defaultColor = colors.stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("색상이 존재하지 않습니다."));
@@ -70,7 +76,7 @@ public class ProductService {
         ProductDetailResponse defaultDetail = colorOptionMap.get(defaultColor);
 
         boolean isWish = wishJpaRepository
-                .findByUserIdAndProductId(request.getUserId(), productId).isPresent();
+                .findByUserIdAndProductId(userId, productId).isPresent();
 
         Long reviewCount = (long) product.getReviewList().size();
 
@@ -81,7 +87,7 @@ public class ProductService {
                 product.getBrandName(),
                 product.getPrice(),
                 product.getDescription(),
-                product.getFileManagement().getFileUrl(),
+                product.getFileManagement() != null ? product.getFileManagement().getFileUrl() : null,
                 defaultDetail,
                 isWish,
                 reviewCount,
@@ -90,43 +96,11 @@ public class ProductService {
         );
     }
 
-
     public ProductDetailResponse getOptionByColor(Long productId, String color) {
         Product product = productJpaRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
 
-        Map<String, ProductDetailResponse> colorOptionMap = new LinkedHashMap<>();
-        Map<String, String> colorImageMap = new HashMap<>();
-
-        List<ProductDetail> details = productDetailJpaRepository.findByProduct(product);
-
-        for (ProductDetail detail : details) {
-            List<ProductConnect> productConnects = detail.getProductConnects();
-            String col = null;
-            String size = null;
-
-            for (ProductConnect connect : productConnects) {
-                ProductOption option = connect.getOption();
-                if ("color".equals(option.getType())) {
-                    col = option.getName();
-                } else if ("size".equals(option.getType())) {
-                    size = option.getName();
-                }
-            }
-
-            if (col == null || size == null) continue;
-
-            colorImageMap.computeIfAbsent(col, c ->
-                    fileService.getImageUrl(detail.getFileManagementId())
-            );
-
-            ProductDetailResponse productDetailResponse = colorOptionMap.computeIfAbsent(
-                    col,
-                    currentCol -> new ProductDetailResponse(currentCol, colorImageMap.get(currentCol), new ArrayList<>())
-            );
-
-            productDetailResponse.getOptions().add(new OptionResponse(size, detail.getQuantity()));
-        }
+        Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
 
         return Optional.ofNullable(colorOptionMap.get(color))
                 .orElseThrow(() -> new EntityNotFoundException("해당 색상의 상품을 찾을 수 없습니다."));
