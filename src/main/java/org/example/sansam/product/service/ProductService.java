@@ -7,6 +7,7 @@ import org.example.sansam.product.dto.*;
 import org.example.sansam.product.repository.ProductConnectJpaRepository;
 import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
+import org.example.sansam.review.repository.ReviewJpaRepository;
 import org.example.sansam.s3.service.FileService;
 import org.example.sansam.wish.repository.WishJpaRepository;
 import org.springframework.stereotype.Service;
@@ -74,11 +75,9 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalStateException("색상이 존재하지 않습니다."));
 
         ProductDetailResponse defaultDetail = colorOptionMap.get(defaultColor);
-
         boolean isWish = wishJpaRepository
                 .findByUserIdAndProductId(userId, productId).isPresent();
-
-        Long reviewCount = (long) product.getReviewList().size();
+        Long reviewCount = productJpaRepository.countReviewsByProductId(productId);
 
         return new ProductResponse(
                 product.getId(),
