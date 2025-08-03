@@ -2,23 +2,22 @@ package org.example.sansam.notification.eventListener;
 
 
 import lombok.RequiredArgsConstructor;
-import org.example.sansam.notification.event.EmailEvent;
+import lombok.extern.slf4j.Slf4j;
+import org.example.sansam.notification.event.UserWelcomeEmailEvent;
 import org.example.sansam.notification.service.EmailService;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
-public class EmailEventListener {
+public class UserWelcomeEmailListener {
     private final EmailService emailService;
 
+    @Async
     @EventListener
-    public void handelEmailEvent(EmailEvent event) {
-
-        try {
-//            emailService.sendWelcomeEmail(event.getToEmail() ,event.getTitle(), event.getBody());
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void handleUserSignUp(UserWelcomeEmailEvent event) {
+        emailService.sendWelcomeEmail(event.getUser());
     }
 }

@@ -6,13 +6,15 @@ import org.example.sansam.notification.service.NotificationService;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
 @Component
 @AllArgsConstructor
 public class ChatEventListener {
     private final NotificationService notificationService;
 
     @EventListener
-    public void handleChatEvent(ChatEvent event){
+    public void handleChatEvent(ChatEvent event) throws IOException {
         notificationService.sendChatNotification(event.getUser(), event.getSenderId(), event.getSenderName());
     }
 }
