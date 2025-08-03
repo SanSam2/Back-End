@@ -35,13 +35,13 @@ public class ProductController {
     }
 
     //상품 상세 조회
-    @PostMapping("/{productId}")
-    public ResponseEntity<ProductResponse> getDefaultOption(@PathVariable Long productId, @RequestBody SearchRequest searchRequest) {
-        return ResponseEntity.ok(productService.getProduct(productId, searchRequest));
+    @GetMapping("/{productId}")
+    public ResponseEntity<ProductResponse> getDefaultOption(@PathVariable Long productId, @RequestParam Long userId) {
+        return ResponseEntity.ok(productService.getProduct(productId, userId));
     }
 
     //상품 상세 조회 - 옵션 선택
-    @GetMapping("/{productId}")
+    @GetMapping("/{productId}/option")
     public ResponseEntity<ProductDetailResponse> getColorOption(
             @PathVariable Long productId,
             @RequestParam String color
