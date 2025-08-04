@@ -34,10 +34,11 @@ public class NotificationController {
             log.info("SSE 구독 요청 - userId: {}", userId);
             SseEmitter emitter = notificationService.connect(userId);
             return ResponseEntity.ok(emitter);
+
         } catch (EmitterException e) {
-            // 커스텀 예외로 명확하게 알 수 있게
             log.error("SSE 연결 실패 - userId: {}", userId, e);
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+
         } catch (Exception e) {
             log.error("알 수 없는 SSE 연결 오류 - userId: {}", userId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -51,32 +52,32 @@ public class NotificationController {
             List<NotificationDTO> histories = notificationService.getNotificationHistories(userId);
 
             if (histories.isEmpty()) {
-                return ResponseEntity.noContent().build(); // 204 + body 없음
+                return ResponseEntity.noContent().build();
             }
-
-            return ResponseEntity.ok(histories); // 200 + body 있음
-        }catch (Exception e) {
+            return ResponseEntity.ok(histories);
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     // 종 모양의 아이콘 위에 읽지 않은 알림 개수 카운트
     @GetMapping("/unread-count/{userId}")
-    public ResponseEntity<?> getUnreadNotificationCount(@PathVariable Long userId){
+    public ResponseEntity<?> getUnreadNotificationCount(@PathVariable Long userId) {
         try {
             Long notificationCount = notificationService.getUnreadNotificationCount(userId);
 
             return ResponseEntity.ok(notificationCount);
-        }catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류로 조회 실패");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("읽지 않은 알림 카운트 실패");
         }
     }
 
     // 알림 읽으면 isRead = true
-    @PatchMapping("/read/{notificationId}")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long notificationId){
+    @PatchMapping("/read/{notificationHistoriesId}")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long notificationHistoriesId) {
         try {
-            notificationService.markAsRead(notificationId);
+            notificationService.markAsRead(notificationHistoriesId);
+
             return ResponseEntity.ok().build();
         } catch (CustomException e) {
             return ResponseEntity.status(e.getErrorCode().getStatus())
@@ -88,13 +89,13 @@ public class NotificationController {
 
     // 알림 모두 읽기 isRead = true
     @PatchMapping("/read-all/{userId}")
-    public ResponseEntity<Void> markAllAsRead(@PathVariable Long userId){
+    public ResponseEntity<Void> markAllAsRead(@PathVariable Long userId) {
         try {
             notificationService.markAllAsRead(userId);
+
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
 }
