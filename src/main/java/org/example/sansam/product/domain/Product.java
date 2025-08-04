@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.sansam.review.domain.Review;
 import org.example.sansam.s3.domain.FileManagement;
+import org.example.sansam.wish.domain.Wish;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -56,4 +57,7 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<ProductDetail> productDetails;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<Wish> wishList;
 }
