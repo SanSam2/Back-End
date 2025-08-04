@@ -39,7 +39,7 @@ public class ProductController {
     @PostMapping ("/stock")
     public ResponseEntity<?> changeStock(@RequestBody ChangStockRequest changStockRequest) {
         try {
-            SearchStockResponse response = productService.changStock(changStockRequest);
+            SearchStockResponse response = productService.changeStock(changStockRequest);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());

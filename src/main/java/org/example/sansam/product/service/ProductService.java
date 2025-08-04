@@ -160,6 +160,7 @@ public class ProductService {
 
         if (isAllSoldOut && !SOLDOUT.equals(product.getStatus())) {
             product.setStatus(SOLDOUT);
+            statusChanged = true;
         } else if(!isAllSoldOut && SOLDOUT.equals(product.getStatus())) {
             product.setStatus(AVAILABLE);
             statusChanged = true;
@@ -197,7 +198,7 @@ public class ProductService {
 
     //재고 변경
     @Transactional
-    public SearchStockResponse changStock(ChangStockRequest request) throws Exception {
+    public SearchStockResponse changeStock(ChangStockRequest request) throws IllegalArgumentException {
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
@@ -207,16 +208,13 @@ public class ProductService {
                 .filter(detail -> matchProductDetail(detail, request.getColor(), request.getSize()))
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
-        if(findDetail == null) {
-            throw new EntityNotFoundException("해당 옵션의 상품을 찾을 수 없습니다.");
-        }
 
         Long stock = findDetail.getQuantity();
         if (request.getStatus().equals(ProductStatus.PLUS)) {
             findDetail.setQuantity(stock + request.getNum());
         } else if (request.getStatus().equals(ProductStatus.MINUS)) {
             if (stock < request.getNum()) {
-                throw new Exception("재고가 부족합니다. 현재 재고: " + stock);
+                throw new IllegalArgumentException("재고가 부족합니다. 현재 재고: " + stock);
             }
             findDetail.setQuantity(stock - request.getNum());
         }
