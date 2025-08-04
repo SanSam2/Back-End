@@ -1,0 +1,12 @@
+package org.example.sansam.wish.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class AddWishRequest {
+    private Long userId;
+    private Long productId;
+    private String url;
+}

@@ -1,0 +1,24 @@
+package org.example.sansam.product.domain;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "product_connect")
+@Getter
+@NoArgsConstructor
+public class ProductConnect {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_connect_id")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "option_id", nullable = false)
+    private ProductOption option;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_detail_id", nullable = false)
+    private ProductDetail productDetail;
+}
