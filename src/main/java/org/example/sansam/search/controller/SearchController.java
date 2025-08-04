@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.sansam.product.dto.ProductResponse;
 import org.example.sansam.search.dto.RecommendRequest;
 import org.example.sansam.search.dto.SearchListResponse;
+import org.example.sansam.search.service.SearchService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -19,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/search")
 public class SearchController {
+    private final SearchService searchService;
     //상품 검색, 상품 상세 조회, 상품 추천
 
     //상품 검색,정렬
@@ -26,11 +28,14 @@ public class SearchController {
     public ResponseEntity<?> searchList(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
-            @PageableDefault(size = 20) Pageable pageable
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
+            @RequestParam(required = false, defaultValue = "createdAt") String sort
     ) {
         try {
-            Page<SearchListResponse> products = Page.empty();;
-            return ResponseEntity.ok(products);
+            Page<SearchListResponse> products = searchService.searchProductList(keyword, category, userId, page, size, sort);
+            return ResponseEntity.ok(products.getContent());
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
         }
