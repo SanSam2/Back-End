@@ -27,6 +27,8 @@ public class ProductService {
     private final WishJpaRepository wishJpaRepository;
     private final FileService fileService;
 
+    private static final int NEW_PRODUCT_PERIOD_DAYS = 14;
+
     //상품 상세 조회 -모든 옵션
     private Map<String, ProductDetailResponse> getProductOption(Product product, Set<String> colors, Set<String> sizes) {
         Map<String, ProductDetailResponse> colorOptionMap = new LinkedHashMap<>();
@@ -147,18 +149,17 @@ public class ProductService {
         boolean statusChanged = false;
 
         if (ProductStatus.NEW.equals(product.getStatus())) {
-            LocalDateTime deadlineDate = product.getCreatedAt().plusDays(14);
+            LocalDateTime deadlineDate = product.getCreatedAt().plusDays(NEW_PRODUCT_PERIOD_DAYS);
             if (LocalDateTime.now().isAfter(deadlineDate)) {
                 product.setStatus(ProductStatus.AVAILABLE);
                 statusChanged = true;
             }
         }
 
-        boolean isAllSoldOut = chaeckAllOptionsSoldOut(colorOptionMap);
+        boolean isAllSoldOut = checkAllOptionsSoldOut(colorOptionMap);
 
         if (isAllSoldOut && !SOLDOUT.equals(product.getStatus())) {
             product.setStatus(SOLDOUT);
-            statusChanged = true;
         } else if(!isAllSoldOut && SOLDOUT.equals(product.getStatus())) {
             product.setStatus(AVAILABLE);
             statusChanged = true;
@@ -174,59 +175,50 @@ public class ProductService {
         );
     }
 
-    private boolean chaeckAllOptionsSoldOut(Map<String, ProductDetailResponse> colorOptionMap) {
+    private boolean checkAllOptionsSoldOut(Map<String, ProductDetailResponse> colorOptionMap) {
         return colorOptionMap.values().stream()
                 .allMatch(detail -> detail.getOptions().stream()
                         .allMatch(option -> option.getQuantity() <= 0));
     }
 
+    private boolean matchProductDetail(ProductDetail detail, String targetColor, String targetSize) {
+        boolean color = false;
+        boolean size = false;
+        for (ProductConnect connect : detail.getProductConnects()) {
+            ProductOption option = connect.getOption();
+            if (option.getType().equals("color") ) {
+                color = option.getName().equals(targetColor);
+            } else if (option.getType().equals("size")) {
+                size = option.getName().equals(targetSize);
+            }
+        }
+        return color && size;
+    }
+
     //재고 변경
     @Transactional
-    public SearchStockResponse changStock(ChangStockRequest request) {
+    public SearchStockResponse changStock(ChangStockRequest request) throws Exception {
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
         ProductDetailResponse detailResponse = colorOptionMap.get(request.getColor());
         List<ProductDetail> productDetails = product.getProductDetails();
-        ProductDetail findDetail = null;
-        for (ProductDetail detail : productDetails) {
-            List<ProductConnect> productConnects = detail.getProductConnects();
-            boolean color = false;
-            boolean size = false;
-            for (ProductConnect connect : productConnects) {
-                if (connect.getOption().getType().equals("color")) {
-                    if (connect.getOption().getName().equals(request.getColor())) {
-                        color = true;
-                    } else {
-                        color = false;
-                    }
-                } else if (connect.getOption().getType().equals("size")) {
-                    if (connect.getOption().getName().equals(request.getSize())) {
-                        size = true;
-                    } else {
-                        size = false;
-                    }
-                }
-            }
-            if (color && size) {
-                findDetail = detail;
-                break;
-            }
-        }
+        ProductDetail findDetail = productDetails.stream()
+                .filter(detail -> matchProductDetail(detail, request.getColor(), request.getSize()))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         if(findDetail == null) {
             throw new EntityNotFoundException("해당 옵션의 상품을 찾을 수 없습니다.");
         }
 
         Long stock = findDetail.getQuantity();
         if (request.getStatus().equals(ProductStatus.PLUS)) {
-            stock += request.getNum();
-            findDetail.setQuantity(stock);
+            findDetail.setQuantity(stock + request.getNum());
         } else if (request.getStatus().equals(ProductStatus.MINUS)) {
             if (stock < request.getNum()) {
-                return null; // 재고가 부족한 경우
+                throw new Exception("재고가 부족합니다. 현재 재고: " + stock);
             }
-            stock -= request.getNum();
-            findDetail.setQuantity(stock);
+            findDetail.setQuantity(stock - request.getNum());
         }
 
         productDetailJpaRepository.save(findDetail);
