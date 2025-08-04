@@ -7,9 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SoldoutResponse {
+public class ProductStatusResponse {
     private String productName;
-    private String size;
-    private String color;
     private String productStatus;
 }
