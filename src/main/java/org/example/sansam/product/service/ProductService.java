@@ -84,8 +84,10 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalStateException("색상이 존재하지 않습니다."));
 
         ProductDetailResponse defaultDetail = colorOptionMap.get(defaultColor);
-        boolean isWish = wishJpaRepository
-                .findByUserIdAndProductId(userId, productId).isPresent();
+        boolean isWish = false;
+        if(userId != null) {
+            isWish = wishJpaRepository.findByUserIdAndProductId(userId, productId).isPresent();
+        }
         Long reviewCount = productJpaRepository.countReviewsByProductId(productId);
 
         productJpaRepository.save(product);
