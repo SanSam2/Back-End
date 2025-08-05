@@ -98,4 +98,15 @@ public class NotificationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    // 알림 개별 삭제
+    @DeleteMapping("/delete/{userId}/{notificationHistoriesId}")
+    public  ResponseEntity<Void> deleteNotification(@PathVariable Long userId, @PathVariable Long notificationHistoriesId) {
+        try {
+            notificationService.deleteNotificationHistory(userId, notificationHistoriesId);
+            return ResponseEntity.ok().build();
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }

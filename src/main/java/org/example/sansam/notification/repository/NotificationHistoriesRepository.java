@@ -20,6 +20,8 @@ public interface NotificationHistoriesRepository extends JpaRepository<Notificat
 
     List<NotificationHistories> findAllByUser_Id(Long userId);
 
+    void deleteByUser_IdAndNotification_Id(Long userId, Long notificationId);
+
     Long countByUser_IdAndIsReadFalse(Long userId);
     List<NotificationHistories> findAllByUser_IdAndIsReadFalse(Long userId);
 }
