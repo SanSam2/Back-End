@@ -15,8 +15,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,10 +36,19 @@ public class SearchService {
         Pageable pageable = PageRequest.of(page, size, getSort(sort));
 
         Page<Product> products = productJpaRepository.findByCategoryOrKeyword(keyword, category, pageable);
-
+        Set<Long> wishedProductIds = new HashSet<>();
+        if (userId != null) {
+            List<Long> productsIds = products.getContent().stream()
+                    .map(Product::getId)
+                    .collect(Collectors.toList());
+            wishedProductIds = wishJpaRepository.findByUserIdAndProductIdIn(userId, productsIds)
+                    .stream()
+                    .map(wish -> wish.getId())
+                    .collect(Collectors.toSet());
+        }
+        final Set<Long> finalWishedProductIds = wishedProductIds;
         return products.map(product -> {
-            boolean isWished = userId != null &&
-                    wishJpaRepository.findByUserIdAndProductId(userId, product.getId()).isPresent();
+            boolean isWished = finalWishedProductIds.contains(product.getId());
 
             String imageUrl = Optional.ofNullable(product.getFileManagement())
                     .map(file -> fileService.getImageUrl(file.getId()))

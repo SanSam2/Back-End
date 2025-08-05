@@ -2,6 +2,8 @@ package org.example.sansam.search.controller;
 
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.product.dto.ProductResponse;
 import org.example.sansam.search.dto.RecommendRequest;
@@ -34,7 +36,7 @@ public class SearchController {
     ) {
         try {
             Page<SearchListResponse> products = searchService.searchProductList(keyword, category, userId, page, size, sort);
-            return ResponseEntity.ok(products.getContent());
+            return ResponseEntity.ok(products);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
         }
