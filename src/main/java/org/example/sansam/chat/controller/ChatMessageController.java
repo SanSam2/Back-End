@@ -1,16 +1,14 @@
 package org.example.sansam.chat.controller;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.chat.dto.ChatMessageRequestDTO;
 import org.example.sansam.chat.dto.ChatMessageResponseDTO;
 import org.example.sansam.chat.service.ChatMessageService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,9 +40,9 @@ public class ChatMessageController {
     @MessageMapping("/chat/{roomId}/message")
     public void handleMessage(@DestinationVariable Long roomId,
                               ChatMessageRequestDTO chatMessageRequestDTO,
-                              HttpSession session) {
+                              SimpMessageHeaderAccessor headerAccessor) {
         try {
-            Long userId = (Long) session.getAttribute("userId");
+            Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
             if (userId == null) {
                 throw new IllegalStateException("User not authenticated");
             }
@@ -61,17 +59,13 @@ public class ChatMessageController {
 
     // 본인 메세지 삭제
     @DeleteMapping("/{messageId}/message")
-    public ResponseEntity<?> deleteRoomMessage(@PathVariable Long messageId, HttpSession session) {
-        try{
-            Long userId = (Long) session.getAttribute("userId");
-            if (userId == null) {
-                throw new IllegalStateException("User not authenticated");
-            }
-
-            chatMessageService.deleteMessage(messageId, userId);
-            return new ResponseEntity<>(HttpStatus.OK);
-        }catch (Exception e){
-            return ResponseEntity.status(400).body(e.getMessage());
+    public ResponseEntity<?> deleteRoomMessage(@PathVariable Long messageId, SimpMessageHeaderAccessor headerAccessor) {
+        Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
+        if (userId == null) {
+            throw new IllegalStateException("User not authenticated");
         }
+
+        chatMessageService.deleteMessage(messageId, userId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
