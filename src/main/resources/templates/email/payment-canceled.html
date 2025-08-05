@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>결제 취소 안내</title>
+</head>
+<body style="font-family: 'Apple SD Gothic Neo', 'Nanum Gothic', sans-serif; background-color: #f9f9f9; margin: 0; padding: 40px 20px;">
+<div style="max-width: 600px; margin: auto; background-color: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+    <img src="https://img.icons8.com/external-justicon-lineal-color-justicon/64/external-ginseng-korea-justicon-lineal-color-justicon.png"
+         alt="산삼몰 로고"
+         style="width: 30px; margin-bottom: 30px;" />
+
+    <h2 style="color: #2c3e50; font-size: 24px; margin-bottom: 10px;">
+        <span th:text="${name}"></span>님, 결제가 취소되었습니다.
+    </h2>
+
+    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+        <span style="font-weight: bold; color: #2d8cf0;" th:text="${orderName}">[주문 상품]</span>에 대한 결제가 취소 처리되었습니다.
+    </p>
+
+    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+        총 환불 금액은 <span style="font-weight: bold; color: #2d8cf0;" th:text="${refundPrice} + '원'">28,000원</span>입니다.
+    </p>
+
+    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+        카드사별 환불 시점은 다소 차이가 있을 수 있으며, 자세한 사항은 고객센터로 문의해주세요.
+    </p>
+
+    <div style="margin-top: 40px; font-size: 12px; color: #999; text-align: center;">
+        본 메일은 발신전용이며, 궁금하신 점은 고객센터로 문의 주세요.<br/>
+        &copy; 2025 Sansam Mall. All rights reserved.
+    </div>
+</div>
+</body>
+</html>
