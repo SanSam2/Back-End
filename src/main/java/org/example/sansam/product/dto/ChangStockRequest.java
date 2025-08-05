@@ -10,6 +10,5 @@ public class ChangStockRequest {
     private Long productId;
     private String size;
     private String color;
-    private ProductStatus status;
     private int num;
 }

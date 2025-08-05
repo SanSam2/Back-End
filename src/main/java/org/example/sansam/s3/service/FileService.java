@@ -41,7 +41,6 @@ public class FileService {
                 .build();
 
         Long id = fileDetailJpaRepository.save(fileDetail).getId();
-
         FileManagement saveFile = fileJpaRepository.findById(fileId)
                 .orElseThrow(() -> new EntityNotFoundException("파일 정보를 찾을 수 없습니다."));
 
@@ -51,7 +50,6 @@ public class FileService {
     public String getImageUrl(Long fileManagementId) {
         FileManagement fileManagement = fileJpaRepository.findById(fileManagementId)
                 .orElseThrow(() -> new EntityNotFoundException("파일 관리 정보를 찾을 수 없습니다."));
-
         List<FileDetail> fileDetails = fileDetailJpaRepository.findByFileManagement(fileManagement);
         if (fileDetails.isEmpty()) {
             throw new EntityNotFoundException("파일 상세 정보를 찾을 수 없습니다.");
