@@ -10,7 +10,7 @@ import lombok.*;
 public class SearchListResponse {
     private Long productId;
     private String productName;
-    private int price;
+    private Long price;
     private String url;
     private boolean wish;
 }
