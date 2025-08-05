@@ -31,7 +31,7 @@ public interface ProductJpaRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p left JOIN p.wishList w GROUP BY p.id ORDER BY COUNT(w) DESC")
     List<Product> findTopWishListProduct();
 
-    @Query(value = "SELECT * FROM products p ORDER BY p.view_count DESC LIMIT 10", nativeQuery = true)
+    @Query(value = "select p from Products p Order By p.viewCount desc limit 10", nativeQuery = true)
     List<Product> findProductsOrderByViewCountDesc();
 
     List<Product> findByCategoryOrderByViewCountDesc(Category category);
