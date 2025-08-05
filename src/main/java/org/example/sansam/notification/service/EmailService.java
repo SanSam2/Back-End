@@ -37,7 +37,7 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setTo(user.getEmail());
-        helper.setSubject("[산삼몰 회원가입을 축하드립니다!!!]");
+        helper.setSubject("[Or de Firenz 회원가입을 축하드립니다.]");
 
         Context context = new Context();
         context.setVariable("name", user.getName());
@@ -64,7 +64,7 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setTo(user.getEmail());
-        helper.setSubject("[산삼몰 결제 완료 안내]");
+        helper.setSubject("[Or de Firenz 결제 완료 안내]");
 
         Context context = new Context();
         context.setVariable("name", user.getName());
@@ -93,7 +93,7 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setTo(user.getEmail());
-        helper.setSubject("[산삼몰 결제 취소 완료 안내]");
+        helper.setSubject("[Or de Firenz 결제 취소 완료 안내]");
 
         Context context = new Context();
         context.setVariable("name", user.getName());
