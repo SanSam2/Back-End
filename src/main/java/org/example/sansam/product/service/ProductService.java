@@ -29,7 +29,6 @@ public class ProductService {
 
     private static final int NEW_PRODUCT_PERIOD_DAYS = 14;
 
-    //상품 상세 조회 -모든 옵션
     private Map<String, ProductDetailResponse> getProductOption(Product product, Set<String> colors, Set<String> sizes) {
         Map<String, ProductDetailResponse> colorOptionMap = new LinkedHashMap<>();
         Map<String, String> colorImageMap = new HashMap<>();
@@ -70,9 +69,11 @@ public class ProductService {
     }
 
     //default option 조회
+    @Transactional
     public ProductResponse getProduct(Long productId, Long userId) {
         Product product = productJpaRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
+        product.setViewCount(product.getViewCount() + 1);
 
         Set<String> colors = new LinkedHashSet<>();
         Set<String> sizes = new LinkedHashSet<>();
@@ -87,6 +88,7 @@ public class ProductService {
                 .findByUserIdAndProductId(userId, productId).isPresent();
         Long reviewCount = productJpaRepository.countReviewsByProductId(productId);
 
+        productJpaRepository.save(product);
         return new ProductResponse(
                 product.getId(),
                 product.getProductName(),
