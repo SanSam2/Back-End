@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.sansam.user.domain.User;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "chat_member")
 @Getter
@@ -26,4 +28,5 @@ public class ChatMember {
     @JoinColumn(name = "chatroom_id")
     private ChatRoom chatRoom;
 
+    private LocalDateTime lastReadAt;
 }
