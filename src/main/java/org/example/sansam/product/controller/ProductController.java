@@ -48,7 +48,7 @@ public class ProductController {
 
     //상품 상세 조회
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponse> getDefaultOption(@PathVariable Long productId, @RequestParam Long userId) {
+    public ResponseEntity<ProductResponse> getDefaultOption(@PathVariable Long productId, @RequestParam(required = false) Long userId) {
         return ResponseEntity.ok(productService.getProduct(productId, userId));
     }
 
