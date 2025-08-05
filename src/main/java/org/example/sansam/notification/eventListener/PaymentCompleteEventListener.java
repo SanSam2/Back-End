@@ -15,7 +15,7 @@ public class PaymentCompleteEventListener {
     private final NotificationService notificationService;
 
     @EventListener
-    public void handelPaymentCompleteEvent(PaymentCompleteEvent event) throws IOException {
+    public void handelPaymentCompleteEvent(PaymentCompleteEvent event) {
         notificationService.sendPaymentCompleteNotification(event.getUser(), event.getOrderName(), event.getOrderPrice());
     }
 }

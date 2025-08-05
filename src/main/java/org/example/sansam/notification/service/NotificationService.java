@@ -88,21 +88,20 @@ public class NotificationService {
     }
 
     public void deleteNotificationHistory(Long userId, Long notificationHistoriesId) {
-        notificationHistoriesRepository.deleteByUser_IdAndNotification_Id(userId, notificationHistoriesId);
+        notificationHistoriesRepository.deleteByUser_IdAndId(userId, notificationHistoriesId);
     }
-
 
     public void sendWelcomeNotification(User user) {
         sendNotification(user, NotificationType.WELCOME, user.getName(), "");
     }
 
     public void sendPaymentCompleteNotification(User user, String orderName, Long orderPrice) {
-        String messageParam = orderName + "," + orderPrice;
+        String messageParam = user.getName() + ","  + orderName + "," + orderPrice;
         sendNotification(user, NotificationType.PAYMENT_COMPLETE, "", messageParam);
     }
 
     public void sendPaymentCancelNotification(User user, String orderName, Long refundPrice) {
-        String messageParam = orderName + "," + refundPrice;
+        String messageParam = user.getName()+ "," + orderName + "," + refundPrice;
         sendNotification(user, NotificationType.PAYMENT_CANCEL, "", messageParam);
     }
 
@@ -115,7 +114,8 @@ public class NotificationService {
     }
 
     public void sendReviewRequestNotification(User user, String orderName) {
-        sendNotification(user, NotificationType.REVIEW_REQUEST, "", orderName);
+        String messageParam = user.getName() + "," + orderName;
+        sendNotification(user, NotificationType.REVIEW_REQUEST, "", messageParam);
     }
 
     public void sendChatNotification(User user, String senderName, String message) {
@@ -151,10 +151,34 @@ public class NotificationService {
 
     private String formatMessage(String template, String param) {
         try {
-            return String.format(template, param);
+            int placeholderCount = countPlaceholders(template);
+            String[] parts = param.split(",", -1); // 빈 문자열도 유지
+
+            if (parts.length < placeholderCount) {
+                throw new CustomException(ErrorCode.NOTIFICATION_TEMPLATE_FORMAT_ERROR);
+            }
+
+            // 파라미터 수에 맞춰 잘라내기
+            Object[] args = new Object[placeholderCount];
+            for (int i = 0; i < placeholderCount; i++) {
+                args[i] = parts[i];
+            }
+
+            return String.format(template, args);
         } catch (IllegalFormatException e) {
             throw new CustomException(ErrorCode.NOTIFICATION_TEMPLATE_FORMAT_ERROR);
         }
+    }
+
+    private int countPlaceholders(String template) {
+        int count = 0;
+        int idx = 0;
+
+        while ((idx = template.indexOf("%s", idx)) != -1) {
+            count++;
+            idx += 2;
+        }
+        return count;
     }
 
     private NotificationHistories saveNotificationHistory(User user, Notification template, String title, String message) {
@@ -195,6 +219,7 @@ public class NotificationService {
             if (emitter == null) {
                 throw new CustomException(ErrorCode.EMITTER_NOT_FOUND);
             }
+            log.info("payload: {}, eventName: {}", payload, eventName);
             emitter.send(SseEmitter.event()
                     .name(eventName)
                     .data(payload, MediaType.APPLICATION_JSON));
