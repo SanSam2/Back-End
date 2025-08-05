@@ -1,24 +1,26 @@
 package org.example.sansam.notification.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.notification.domain.Notification;
 import org.example.sansam.notification.domain.NotificationHistories;
 import org.example.sansam.notification.dto.NotificationDTO;
-import org.example.sansam.notification.exception.NotificationException;
+import org.example.sansam.notification.exception.CustomException;
+import org.example.sansam.notification.exception.ErrorCode;
 import org.example.sansam.notification.repository.NotificationHistoriesRepository;
 import org.example.sansam.notification.repository.NotificationsRepository;
 import org.example.sansam.user.domain.User;
-import org.example.sansam.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NotificationService {
     private final NotificationsRepository notificationRepository;
     private final NotificationHistoriesRepository notificationHistoriesRepository;
-    private final UserRepository userRepository;
     private final Map<Long, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
     @Autowired
     private ObjectMapper objectMapper;
@@ -38,302 +39,101 @@ public class NotificationService {
     // === Public Methods (외부 호출용 API) ===
 
     public SseEmitter connect(Long userId) {
-        try {
-            SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
-            sseEmitters.put(userId, emitter);
+        SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
+        sseEmitters.put(userId, emitter);
 
-            emitter.onCompletion(() -> {
-                sseEmitters.remove(userId);
-                log.info("SSE 연결 완료. 사용자 ID: {}", userId);
-            });
+        emitter.onCompletion(() -> sseEmitters.remove(userId));
+        emitter.onTimeout(() -> sseEmitters.remove(userId));
+        emitter.onError(ex -> sseEmitters.remove(userId));
 
-            emitter.onTimeout(() -> {
-                sseEmitters.remove(userId);
-                log.warn("SSE 연결 타임아웃. 사용자 ID: {}", userId);
-            });
-
-            emitter.onError(ex -> {
-                sseEmitters.remove(userId);
-                log.error("SSE 연결 에러. 사용자 ID: {}, 에러: {}", userId, ex.getMessage());
-            });
-
-            return emitter;
-        } catch (Exception e) {
-            log.error("SSE 연결 생성 실패. 사용자 ID: {}", userId, e);
-            throw new NotificationException("알림 연결 설정 실패", e);
-        }
-
-    }
-    // Test
-    public void sendWelcomeTestNotification(Long userId, String name) {
-
-        try {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(()-> new RuntimeException("회원이 없습니다."));
-
-            Notification template = notificationRepository.findById(1L)
-                    .orElseThrow(() -> new IllegalArgumentException("환영 알림 템플릿이 없습니다"));
-
-            log.info("1");
-
-            NotificationHistories notification = NotificationHistories.builder()
-                    .user(user)
-                    .notification(template)
-                    .title(String.format(template.getTitle(), user.getName()))
-                    .message(template.getMessage())
-                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                    .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
-                    .build();
-
-            NotificationDTO dto = NotificationDTO.builder()
-                    .title(String.format(template.getTitle(), user.getName()))
-                    .message(template.getMessage())
-                    .build();
-
-            String payload = objectMapper.writeValueAsString(dto);
-            log.info("payload: {}", payload);
-            log.info("2");
-
-            notificationHistoriesRepository.save(notification);
-
-            log.info("3");
-
-            if (sseEmitters.containsKey(user.getId())) {
-                sseEmitters.get(user.getId()).send(SseEmitter.event()
-                        .name("welcome message")
-                        .data(payload, MediaType.APPLICATION_JSON));
-            }
-            log.info("환영 알림 전송 완료 - 사용자: {}", name);
-
-        } catch (Exception e) {
-            log.error("환영 알림 전송 실패 - 사용자: {}", name, e);
-            throw new NotificationException("환영 알림 전송 실패", e);
-        }
-
-    }
-    // user 정보 받아와서 회원가입 환영 축하 알림 생성
-    public void sendWelcomeNotification(User user) {
-
-        try {
-            Notification template = notificationRepository.findById(1L)
-                    .orElseThrow(() -> new IllegalArgumentException("환영 알림 템플릿이 없습니다"));
-
-            NotificationHistories notification = NotificationHistories.builder()
-                    .user(user)
-                    .notification(template)
-                    .title(String.format(template.getTitle(), user.getName()))
-                    .message(String.format(template.getMessage(), user.getName()))
-                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                    .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
-                    .build();
-
-            notificationHistoriesRepository.save(notification);
-
-            NotificationDTO dto = NotificationDTO.builder()
-                    .title(String.format(template.getTitle(), user.getName()))
-                    .message(template.getMessage())
-                    .build();
-
-            String payload = objectMapper.writeValueAsString(dto);
-
-            if (sseEmitters.containsKey(user.getId())) {
-                sseEmitters.get(user.getId()).send(SseEmitter.event()
-                        .name("Welcome Message")
-                        .data(payload, MediaType.APPLICATION_JSON));
-            }
-            log.info("환영 알림 전송 완료 - 사용자: {}", user.getName());
-
-        } catch (Exception e) {
-            log.error("환영 알림 전송 실패 - 사용자: {}", user.getName(), e);
-            throw new NotificationException("환영 알림 전송 실패", e);
-        }
-
+        return emitter;
     }
 
-    // user 정보 받아와서 결제 완료 알림 생성
-    public void sendPaymentCompleteNotification(User user, String orderName, Long orderPrice) {
-
-        try {
-            Notification template = notificationRepository.findById(2L)
-                    .orElseThrow(() -> new IllegalArgumentException("결제 완료 알림 템플릿이 없습니다."));
-
-
-            NotificationHistories notification = NotificationHistories.builder()
-                    .user(user)
-                    .notification(template)
-                    .message(String.format(template.getMessage(), orderName, orderPrice))
-                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                    .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
-                    .build();
-
-            notificationHistoriesRepository.save(notification);
-
-            if (sseEmitters.containsKey(user.getId())) {
-                sseEmitters.get(user.getId()).send(SseEmitter.event()
-                        .name("Payment Complete Message")
-                        .data(notification));
-            }
-
-            log.info("결제 완료 알림 전송 완료 - 사용자: {}, 주문: {}", user.getName(), orderName);
-        } catch (Exception e) {
-            log.error("결제 완료 알림 전송 실패 - 사용자: {}, 주문: {}", user.getName(), orderName, e);
-            throw new NotificationException("결제 완료 알림 전송 실패", e);
-        }
-
+    public List<NotificationDTO> getNotificationHistories(Long userId) {
+        return notificationHistoriesRepository.findAllByUser_Id(userId)
+                .stream().map(NotificationDTO::from).toList();
     }
 
-    // user 정보 받아와서 결제 취소 완료 알림 생성
-    public void sendPaymentCancelNotification(User user, String orderName, Long refundPrice) {
-
-        try {
-            Notification template = notificationRepository.findById(3L)
-                    .orElseThrow(() -> new IllegalArgumentException("결제 취소 알림 템플릿이 없습니다."));
-
-
-            NotificationHistories notification = NotificationHistories.builder()
-                    .user(user)
-                    .notification(template)
-                    .message(String.format(template.getMessage(), orderName, refundPrice))
-                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                    .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
-                    .build();
-
-            notificationHistoriesRepository.save(notification);
-
-            if (sseEmitters.containsKey(user.getId())) {
-                sseEmitters.get(user.getId()).send(SseEmitter.event()
-                        .name("Payment Cancel Complete Message")
-                        .data(notification));
-            }
-
-            log.info("결제 취소 알림 전송 완료 - 사용자: {}, 주문: {}", user.getName(), orderName);
-        } catch (Exception e) {
-            log.error("결제 취소 알림 전송 실패 - 사용자: {}, 주문: {}", user.getName(), orderName, e);
-            throw new NotificationException("결제 취소 알림 전송 실패", e);
-        }
-
-
+    public Long getUnreadNotificationCount(Long userId) {
+        return notificationHistoriesRepository.countByUser_IdAndIsReadFalse(userId);
     }
 
-    // user 정보 받아와서 장바구니 상품 품절 임박 완료 알림 생성
-    public void sendCartLowNotification(User user, String productName) {
+    @Transactional
+    public void markAsRead(Long notificationId) {
+        NotificationHistories notification = notificationHistoriesRepository.findById(notificationId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMITTER_NOT_FOUND));
 
-        try {
-            Notification template = notificationRepository.findById(4L)
-                    .orElseThrow(() -> new IllegalArgumentException("재고 알림 템플릿이 없습니다."));
-
-            NotificationHistories notification = NotificationHistories.builder()
-                    .user(user)
-                    .notification(template)
-                    .message(String.format(template.getMessage(), productName))
-                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                    .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
-                    .build();
-
-            notificationHistoriesRepository.save(notification);
-
-            if (sseEmitters.containsKey(user.getId())) {
-                sseEmitters.get(user.getId()).send(SseEmitter.event()
-                        .name("Cart Product Stock Low Message")
-                        .data(notification));
-            }
-
-            log.info("장바구니 재고 알림 전송 완료 - 사용자: {}, 상품: {}", user.getName(), productName);
-
-        } catch (Exception e) {
-            log.error("장바구니 재고 알림 전송 실패 - 사용자: {}, 상품: {}", user.getName(), productName, e);
-            throw new NotificationException("장바구니 재고 알림 전송 실패", e);
-        }
-
-
-    }
-
-    // user 정보 받아와서 위시리스트 상품 품절 임박 완료 알림 생성
-    public void sendWishListLowNotification(User user, String productName) {
-
-        try {
-            Notification template = notificationRepository.findById(5L)
-                    .orElseThrow(() -> new IllegalArgumentException("위시리스트 알림 템플릿이 없습니다."));
-
-            NotificationHistories notification = NotificationHistories.builder()
-                    .user(user)
-                    .notification(template)
-                    .message(String.format(template.getMessage(), productName))
-                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                    .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
-                    .build();
-
-            notificationHistoriesRepository.save(notification);
-
-            if (sseEmitters.containsKey(user.getId())) {
-                sseEmitters.get(user.getId()).send(SseEmitter.event()
-                        .name("WishList Product Stock Low Message")
-                        .data(notification));
-            }
-
-            log.info("위시리스트 재고 알림 전송 완료 - 사용자: {}, 상품: {}", user.getName(), productName);
-        } catch (Exception e) {
-            log.error("위시리스트 재고 알림 전송 실패 - 사용자: {}, 상품: {}", user.getName(), productName, e);
-            throw new NotificationException("위시리스트 재고 알림 전송 실패", e);
+        if (!notification.isRead()) {
+            notification.setRead(true);
         }
     }
 
+    @Transactional
+    public void markAllAsRead(Long userId) {
+        List<NotificationHistories> unreadNotifications =
+                notificationHistoriesRepository.findAllByUser_IdAndIsReadFalse(userId);
 
-    // user 정보 받아와서 리뷰 요청 완료 알림 생성
-    public void sendReviewRequestNotification(User user, String productName) {
-        try {
-            Notification template = notificationRepository.findById(6L)
-                    .orElseThrow(() -> new IllegalArgumentException("리뷰 요청 알림 템플릿이 없습니다."));
-
-
-            NotificationHistories notification = NotificationHistories.builder()
-                    .user(user)
-                    .notification(template)
-                    .message(String.format(template.getMessage(),user.getName(), productName))
-                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                    .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
-                    .build();
-
-            if (sseEmitters.containsKey(user.getId())) {
-                sseEmitters.get(user.getId()).send(SseEmitter.event()
-                        .name("WishList Product Stock Low Message")
-                        .data(notification));
-            }
-
-            log.info("리뷰 요청 알림 전송 완료 - 사용자: {}, 상품: {}", user.getName(), productName);
-        } catch (Exception e) {
-//            log.error("리뷰 요청 알림 전송 실패 - 사용자: {}, 상품: {}", user.getName(), productName, e);
-            throw new NotificationException("리뷰 요청 알림 전송 실패", e);
-        }
-
+        unreadNotifications.forEach(n -> n.setRead(true));
     }
 
-    public void sendChatNotification(User user, Long senderId, String senderName) {
+    public void sendNotification(User user, Long templateId, String titleParam, String messageParam, String eventName) throws IOException {
+        Notification template = notificationRepository.findById(templateId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_TEMPLATE_NOT_FOUND));
 
-        try {
-            Notification template = notificationRepository.findById(7L)
-                    .orElseThrow(() -> new IllegalArgumentException("채팅 알림 템플릿이 없습니다."));
+        String title = String.format(template.getTitle(), titleParam);
+        String message = String.format(template.getMessage(), messageParam);
 
-            NotificationHistories notification = NotificationHistories.builder()
-                    .user(user)
-                    .notification(template)
-                    .message(String.format(template.getMessage(), senderName))
-                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                    .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
-                    .isRead(false)
-                    .build();
+        NotificationHistories notification = NotificationHistories.builder()
+                .user(user)
+                .notification(template)
+                .title(title)
+                .message(message)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
+                .isRead(false)
+                .build();
 
-            notificationHistoriesRepository.save(notification);
+        NotificationHistories saved = notificationHistoriesRepository.save(notification);
 
-            if (sseEmitters.containsKey(user.getId())) {
-                sseEmitters.get(user.getId()).send(SseEmitter.event()
-                        .name("Chat Notification Message")
-                        .data(notification));
-            }
-            log.info("채팅 알림 전송 완료 - 사용자: {}, 발신자: {}", user.getName(), senderName);
-        } catch (Exception e) {
-            log.error("채팅 알림 전송 실패 - 사용자: {}, 발신자: {}", user.getName(), senderName, e);
-            throw new NotificationException("채팅 알림 전송 실패", e);
+        NotificationDTO dto = NotificationDTO.from(saved);
+
+        String payload = objectMapper.writeValueAsString(dto);
+
+        if (sseEmitters.containsKey(user.getId())) {
+            sseEmitters.get(user.getId()).send(SseEmitter.event()
+                    .name(eventName)
+                    .data(payload, MediaType.APPLICATION_JSON));
         }
+
+        log.info("알림 전송 완료 - 사용자: {}, 이벤트: {}", user.getName(), eventName);
     }
+
+    public void sendWelcomeNotification(User user) throws IOException {
+        sendNotification(user, 1L, user.getName(), "", "welcomeMessage");
+    }
+
+    public void sendPaymentCompleteNotification(User user, String orderName, Long orderPrice) throws IOException {
+        sendNotification(user, 2L, user.getName(), orderName + "," + orderPrice, "paymentComplete");
+    }
+
+    public void sendPaymentCancelNotification(User user, String orderName, Long refundPrice) throws IOException {
+        sendNotification(user, 3L, user.getName(), orderName + "," + refundPrice, "paymentCancel");
+    }
+
+    public void sendCartLowNotification(User user, String productName) throws IOException {
+        sendNotification(user, 4L, productName, productName, "cartProductStockLowMessage");
+    }
+
+    public void sendWishListLowNotification(User user, String productName) throws IOException {
+        sendNotification(user, 5L, productName, productName, "wishListProductStockLow");
+    }
+
+    public void sendReviewRequestNotification(User user, String orderName) throws IOException {
+        sendNotification(user, 6L, user.getName(), orderName, "reviewRequestMessage");
+    }
+
+    public void sendChatNotification(User user, Long senderId, String senderName) throws IOException {
+        sendNotification(user, 7L, "", senderName, "chatNotificationMessage");
+    }
+
 }
