@@ -50,7 +50,6 @@ public class NotificationController {
     public ResponseEntity<List<NotificationDTO>> getNotificationList(@PathVariable Long userId) {
         try {
             List<NotificationDTO> histories = notificationService.getNotificationHistories(userId);
-
             if (histories.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
