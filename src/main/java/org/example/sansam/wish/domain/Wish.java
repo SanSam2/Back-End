@@ -6,6 +6,8 @@ import lombok.*;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.user.domain.User;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "wishes")
 @Getter
@@ -26,6 +28,9 @@ public class Wish {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @Builder
     public Wish(User user, Product product) {

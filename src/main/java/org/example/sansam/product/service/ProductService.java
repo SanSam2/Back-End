@@ -196,9 +196,8 @@ public class ProductService {
         return color && size;
     }
 
-    //재고 변경
-    @Transactional
-    public SearchStockResponse changeStock(ChangStockRequest request) throws IllegalArgumentException {
+    //재고 조회
+    public ProductDetail searchProductDetail(ChangStockRequest request) {
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
@@ -209,22 +208,46 @@ public class ProductService {
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
 
-        Long stock = findDetail.getQuantity();
-        if (request.getStatus().equals(ProductStatus.PLUS)) {
-            findDetail.setQuantity(stock + request.getNum());
-        } else if (request.getStatus().equals(ProductStatus.MINUS)) {
-            if (stock < request.getNum()) {
-                throw new IllegalArgumentException("재고가 부족합니다. 현재 재고: " + stock);
-            }
-            findDetail.setQuantity(stock - request.getNum());
-        }
+        return findDetail;
+    }
 
-        productDetailJpaRepository.save(findDetail);
+    //재고 추가
+    @Transactional
+    public SearchStockResponse addStock(ChangStockRequest request) throws IllegalArgumentException {
+        ProductDetail productDetail = searchProductDetail(request);
+        Product product = productJpaRepository.findById(request.getProductId())
+                .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
+        Long stock = productDetail.getQuantity();
+        productDetail.setQuantity(stock + request.getNum());
+
+        productDetailJpaRepository.save(productDetail);
         return new SearchStockResponse(
                 product.getId(),
                 request.getSize(),
                 request.getColor(),
-                findDetail.getQuantity()
+                productDetail.getQuantity()
+        );
+    }
+
+    //재고 감소
+    @Transactional
+    public SearchStockResponse decreaseStock(ChangStockRequest request) throws IllegalArgumentException {
+        ProductDetail productDetail = searchProductDetail(request);
+        Product product = productJpaRepository.findById(request.getProductId())
+                .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
+
+        Long stock = productDetail.getQuantity();
+        if (stock < request.getNum()) {
+            throw new IllegalArgumentException("재고가 부족합니다. 현재 재고: " + stock);
+        }
+        productDetail.setQuantity(stock - request.getNum());
+
+        productDetailJpaRepository.save(productDetail);
+        return new SearchStockResponse(
+                product.getId(),
+                request.getSize(),
+                request.getColor(),
+                productDetail.getQuantity()
         );
     }
 }
