@@ -8,12 +8,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.notification.domain.Notification;
 import org.example.sansam.notification.domain.NotificationHistories;
 import org.example.sansam.notification.dto.NotificationDTO;
+import org.example.sansam.notification.event.ChatEvent;
 import org.example.sansam.notification.exception.CustomException;
 import org.example.sansam.notification.exception.ErrorCode;
 import org.example.sansam.notification.repository.NotificationHistoriesRepository;
 import org.example.sansam.notification.repository.NotificationsRepository;
+import org.example.sansam.notification.template.NotificationType;
 import org.example.sansam.user.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.core.task.TaskTimeoutException;
 import org.springframework.http.MediaType;
 import org.springframework.retry.annotation.Backoff;
@@ -83,46 +87,53 @@ public class NotificationService {
         unreadNotifications.forEach(n -> n.setRead(true));
     }
 
+    public void deleteNotificationHistory(Long userId, Long notificationHistoriesId) {
+        notificationHistoriesRepository.deleteByUser_IdAndNotification_Id(userId, notificationHistoriesId);
+    }
+
+
     public void sendWelcomeNotification(User user) {
-        sendNotification(user, 1L, user.getName(), "", "welcomeMessage");
+        sendNotification(user, NotificationType.WELCOME, user.getName(), "");
     }
 
     public void sendPaymentCompleteNotification(User user, String orderName, Long orderPrice) {
-        sendNotification(user, 2L, "", orderName + "," + orderPrice, "paymentComplete");
+        String messageParam = orderName + "," + orderPrice;
+        sendNotification(user, NotificationType.PAYMENT_COMPLETE, "", messageParam);
     }
 
     public void sendPaymentCancelNotification(User user, String orderName, Long refundPrice) {
-        sendNotification(user, 3L, "", orderName + "," + refundPrice, "paymentCancel");
+        String messageParam = orderName + "," + refundPrice;
+        sendNotification(user, NotificationType.PAYMENT_CANCEL, "", messageParam);
     }
 
     public void sendCartLowNotification(User user, String productName) {
-        sendNotification(user, 4L, "", productName, "cartProductStockLowMessage");
+        sendNotification(user, NotificationType.CART_LOW, "", productName);
     }
 
     public void sendWishListLowNotification(User user, String productName) {
-        sendNotification(user, 5L, "", productName, "wishListProductStockLow");
+        sendNotification(user, NotificationType.WISH_LOW, "", productName);
     }
 
     public void sendReviewRequestNotification(User user, String orderName) {
-        sendNotification(user, 6L, "", orderName, "reviewRequestMessage");
+        sendNotification(user, NotificationType.REVIEW_REQUEST, "", orderName);
     }
 
     public void sendChatNotification(User user, String senderName, String message) {
-        sendNotification(user, 7L, senderName, message, "chatNotificationMessage");
+        sendNotification(user, NotificationType.CHAT, senderName, message);
     }
 
     // private 메서드
 
-    private void sendNotification(User user, Long templateId, String titleParam, String messageParam, String eventName) {
-        Notification template = getTemplateOrThrow(templateId);
+    private void sendNotification(User user, NotificationType type, String titleParam, String messageParam) {
+        Notification template = getTemplateOrThrow(type.getTemplateId());
         String title = formatTitle(template.getTitle(), titleParam);
         String message = formatMessage(template.getMessage(), messageParam);
 
         NotificationHistories saved = saveNotificationHistory(user, template, title, message);
         String payload = serializeToJson(NotificationDTO.from(saved));
-        sendViaSSEAsync(user.getId(), payload, eventName);
+        sendViaSSEAsync(user.getId(), payload, type.getEventName());
 
-        log.info("알림 전송 완료 - 사용자: {}, 이벤트: {}", user.getName(), eventName);
+        log.info("알림 전송 완료 - 사용자: {}, 이벤트: {}", user.getName(), type.getEventName());
     }
 
     private Notification getTemplateOrThrow(Long templateId) {
@@ -174,7 +185,7 @@ public class NotificationService {
 
     @Async
     @Retryable(
-            value = {TaskTimeoutException.class, IOException.class},    // 이 리스트에 명시된 예외가 발생했을 때만 재시도
+            include = {TaskRejectedException.class, IOException.class},    // 이 리스트에 명시된 예외가 발생했을 때만 재시도
             maxAttempts = 3,    // 최대 시도 횟수 (최초 실행 포함) 실패 시 예외 그대로 던짐
             backoff = @Backoff(delay = 1000, multiplier = 2)    // 대기시간 1000, 2000, 4000ms
     )
