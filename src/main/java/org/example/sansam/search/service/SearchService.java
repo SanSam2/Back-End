@@ -1,10 +1,13 @@
 package org.example.sansam.search.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.product.domain.Product;
+import org.example.sansam.product.dto.SearchStockResponse;
 import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.s3.service.FileService;
 import org.example.sansam.search.dto.SearchListResponse;
+import org.example.sansam.wish.domain.Wish;
 import org.example.sansam.wish.repository.WishJpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,7 +15,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +46,7 @@ public class SearchService {
             return SearchListResponse.builder()
                     .productId(product.getId())
                     .productName(product.getProductName())
-                    .price(product.getPrice().intValue())
+                    .price(product.getPrice())
                     .url(imageUrl)
                     .wish(isWished)
                     .build();
@@ -54,5 +59,46 @@ public class SearchService {
             case "priceLow" -> Sort.by(Sort.Direction.ASC, "price");
             default -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
+    }
+
+    private List<SearchListResponse> productToDto(List<Product> products,Long userId) {
+        return products.stream()
+                .map(product -> {
+                    boolean wished = (userId != null) &&
+                            wishJpaRepository.findByUserIdAndProductId(userId, product.getId()).isPresent();
+                    String imageUrl = (product.getFileManagement() != null)
+                            ? fileService.getImageUrl(product.getFileManagement().getId())
+                            : null;
+
+                    return SearchListResponse.builder()
+                            .productId(product.getId())
+                            .productName(product.getProductName())
+                            .price(product.getPrice()) // DTO가 int면 변환
+                            .url(imageUrl)
+                            .wish(wished)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<SearchListResponse> getProductsByLike(Long userId) {
+        List<Product> products = productJpaRepository.findTopWishListProduct();
+        return productToDto(products, userId);
+    }
+
+    //상품 추천 - 위시에 상품이 있는 경우 -> 위시에 있는 상품과 같은 카테고리에 있는 상품 랜덤 추천 / 상품 위시에 없거나 유저 로그인X 시 -> 상품 조회순으로 표시
+    public List<SearchListResponse> getProductsByRecommend(Long userId) {
+        Wish wish = wishJpaRepository.findTopByUserIdOrderByCreated_atDesc(userId);
+        List<Product> products;
+        if(wish == null) {
+            products = productJpaRepository.findTopWishListProduct();
+            System.out.println("기본 조회수순");
+        }else {
+            Product product = productJpaRepository.findById(wish.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
+            products = productJpaRepository.findByCategoryOrderByViewCountDesc(product.getCategory());
+            System.out.println("추천순");
+        }
+        return productToDto(products,userId);
     }
 }

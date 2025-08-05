@@ -22,7 +22,6 @@ import java.util.List;
 public class SearchController {
     private final SearchService searchService;
     //상품 검색, 상품 상세 조회, 상품 추천
-
     //상품 검색,정렬
     @GetMapping
     public ResponseEntity<?> searchList(
@@ -43,9 +42,9 @@ public class SearchController {
 
     //상품 좋아요순 조회 - 메인
     @GetMapping("/like")
-    public ResponseEntity<?> getProductsByLike() {
+    public ResponseEntity<?> getProductsByLike(@RequestParam(required = false) Long userId) {
         try {
-            List<SearchListResponse> products = new ArrayList<>();;
+            List<SearchListResponse> products = searchService.getProductsByLike(userId);
             return ResponseEntity.ok(products);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
@@ -53,10 +52,10 @@ public class SearchController {
     }
 
     //상품 추천순 조회 - 메인
-    @PostMapping("/recommend")
-    public ResponseEntity<?> getProductsByRecommend(@RequestBody RecommendRequest recommendRequest) {
+    @GetMapping("/recommend")
+    public ResponseEntity<?> getProductsByRecommend(@RequestParam(required = false) Long userId) {
         try {
-            List<SearchListResponse> products = new ArrayList<>();;
+            List<SearchListResponse> products = searchService.getProductsByRecommend(userId);
             return ResponseEntity.ok(products);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
