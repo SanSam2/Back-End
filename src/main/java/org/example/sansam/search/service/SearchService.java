@@ -15,10 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,19 +34,10 @@ public class SearchService {
         Pageable pageable = PageRequest.of(page, size, getSort(sort));
 
         Page<Product> products = productJpaRepository.findByCategoryOrKeyword(keyword, category, pageable);
-        Set<Long> wishedProductIds = new HashSet<>();
-        if (userId != null) {
-            List<Long> productsIds = products.getContent().stream()
-                    .map(Product::getId)
-                    .collect(Collectors.toList());
-            wishedProductIds = wishJpaRepository.findByUserIdAndProductIdIn(userId, productsIds)
-                    .stream()
-                    .map(wish -> wish.getProduct().getId())
-                    .collect(Collectors.toSet());
-        }
-        final Set<Long> finalWishedProductIds = wishedProductIds;
+
         return products.map(product -> {
-            boolean isWished = finalWishedProductIds.contains(product.getId());
+            boolean isWished = userId != null &&
+                    wishJpaRepository.findByUserIdAndProductId(userId, product.getId()).isPresent();
 
             String imageUrl = Optional.ofNullable(product.getFileManagement())
                     .map(file -> fileService.getImageUrl(file.getId()))
@@ -73,20 +62,10 @@ public class SearchService {
     }
 
     private List<SearchListResponse> productToDto(List<Product> products,Long userId) {
-        Set<Long> wishedProductIds = new HashSet<>();
-        if (userId != null && !products.isEmpty()) {
-            List<Long> productsIds = products.stream()
-                    .map(Product::getId)
-                    .collect(Collectors.toList());
-            wishedProductIds = wishJpaRepository.findByUserIdAndProductIdIn(userId, productsIds)
-                    .stream()
-                    .map(wish -> wish.getProduct().getId())
-                    .collect(Collectors.toSet());
-        }
-        final Set<Long> finalWishedProductIds = wishedProductIds;
         return products.stream()
                 .map(product -> {
-                    boolean wished = finalWishedProductIds.contains(product.getId());
+                    boolean wished = (userId != null) &&
+                            wishJpaRepository.findByUserIdAndProductId(userId, product.getId()).isPresent();
                     String imageUrl = (product.getFileManagement() != null)
                             ? fileService.getImageUrl(product.getFileManagement().getId())
                             : null;
@@ -109,17 +88,16 @@ public class SearchService {
 
     //상품 추천 - 위시에 상품이 있는 경우 -> 위시에 있는 상품과 같은 카테고리에 있는 상품 랜덤 추천 / 상품 위시에 없거나 유저 로그인X 시 -> 상품 조회순으로 표시
     public List<SearchListResponse> getProductsByRecommend(Long userId) {
-        if (userId == null) {
-            return productToDto(productJpaRepository.findTopWishListProduct(), null);
-        }
         Wish wish = wishJpaRepository.findTopByUserIdOrderByCreated_atDesc(userId);
         List<Product> products;
-        if(wish == null ) {
+        if(wish == null) {
             products = productJpaRepository.findTopWishListProduct();
+            System.out.println("기본 조회수순");
         }else {
-            Product product = productJpaRepository.findById(wish.getProduct().getId())
+            Product product = productJpaRepository.findById(wish.getId())
                     .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
             products = productJpaRepository.findByCategoryOrderByViewCountDesc(product.getCategory());
+            System.out.println("추천순");
         }
         return productToDto(products,userId);
     }
