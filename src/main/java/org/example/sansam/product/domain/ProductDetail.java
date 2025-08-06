@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.sansam.s3.domain.FileManagement;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,8 +31,9 @@ public class ProductDetail {
     @Column(name = "map_name")
     private String mapName;
 
-    @Column(name = "file_management_id", nullable = false)
-    private Long fileManagementId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_management_id")
+    private FileManagement fileManagement;
 
     @OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL)
     private List<ProductConnect> productConnects = new ArrayList<>();

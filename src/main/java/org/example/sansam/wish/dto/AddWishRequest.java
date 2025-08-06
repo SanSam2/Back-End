@@ -8,5 +8,4 @@ import lombok.Setter;
 public class AddWishRequest {
     private Long userId;
     private Long productId;
-    private String url;
 }
