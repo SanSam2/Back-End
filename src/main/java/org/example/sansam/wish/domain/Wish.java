@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.user.domain.User;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "wishes")
@@ -26,6 +29,10 @@ public class Wish {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @Builder
     public Wish(User user, Product product) {

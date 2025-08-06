@@ -12,11 +12,12 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     private final ProductService productService;
-    // 상품 품절 처리
-    @PatchMapping ("/soldout")
-    public ResponseEntity<?> markSoldOut(@RequestBody SoldoutRequest soldoutRequest) {
+    // 상품 사이즈, 컬러 조회 시 대문자로 조회
+    // 상품 상태값 처리
+    @PatchMapping ("/{productId}/status")
+    public ResponseEntity<?> changeStatus(@PathVariable Long productId) {
         try {
-            SoldoutResponse response = new SoldoutResponse();
+            ProductStatusResponse response = productService.checkProductStatus(productId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
@@ -27,7 +28,18 @@ public class ProductController {
     @GetMapping("/search-stock")
     public ResponseEntity<?> searchStock(@RequestBody SearchStockRequest searchStockRequest) {
         try {
-            SearchStockResponse response = new SearchStockResponse();
+            SearchStockResponse response = productService.checkStock(searchStockRequest);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
+
+    //상품 재고 추가, 차감
+    @PostMapping ("/stock")
+    public ResponseEntity<?> changeStock(@RequestBody ChangStockRequest changStockRequest) {
+        try {
+            SearchStockResponse response = productService.decreaseStock(changStockRequest);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
@@ -36,7 +48,7 @@ public class ProductController {
 
     //상품 상세 조회
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponse> getDefaultOption(@PathVariable Long productId, @RequestParam Long userId) {
+    public ResponseEntity<ProductResponse> getDefaultOption(@PathVariable Long productId, @RequestParam(required = false) Long userId) {
         return ResponseEntity.ok(productService.getProduct(productId, userId));
     }
 

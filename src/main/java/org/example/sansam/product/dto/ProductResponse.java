@@ -18,6 +18,7 @@ public class ProductResponse {
     private Long price;
     private String description;
     private String imageUrl;
+    private String status;
     private ProductDetailResponse detailResponse;
     private boolean wish;
     private Long reviewCount;

@@ -4,13 +4,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.example.sansam.notification.dto.NotificationDTO;
+import org.example.sansam.notification.exception.CustomException;
 import org.example.sansam.notification.service.NotificationService;
-import org.example.sansam.notification.service.NotificationTestService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.yaml.snakeyaml.emitter.EmitterException;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,75 +28,84 @@ public class NotificationController {
                     @ApiResponse(responseCode = "400", description = "잘못된 요청"),
                     @ApiResponse(responseCode = "500", description = "서버 에러")})
 
-    @GetMapping(value = "/subscribe", produces = "text/event-stream; charset=UTF-8")
-    public ResponseEntity<SseEmitter> subscribe(@RequestParam Long userId) {
+    @GetMapping(value = "/subscribe/{userId}", produces = "text/event-stream; charset=UTF-8")
+    public ResponseEntity<SseEmitter> subscribe(@PathVariable Long userId) {
         try {
             log.info("SSE 구독 요청 - userId: {}", userId);
             SseEmitter emitter = notificationService.connect(userId);
             return ResponseEntity.ok(emitter);
+
         } catch (EmitterException e) {
-            // 커스텀 예외로 명확하게 알 수 있게
             log.error("SSE 연결 실패 - userId: {}", userId, e);
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+
         } catch (Exception e) {
             log.error("알 수 없는 SSE 연결 오류 - userId: {}", userId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-
-
-
-
-
-
-    private final NotificationTestService notificationTestService;
-
-
-    @PostMapping("/welcome")
-    public ResponseEntity<Void> sendTestNotification(@RequestParam Long userId,
-                                                     @RequestParam String username) {
-        notificationTestService.sendWelcomeTestNotification(userId, username);
-        return ResponseEntity.ok().build();
-    }
-    @PostMapping("/payment-complete")
-    public ResponseEntity<Void> sendTest1Notification(@RequestParam Long userId,
-                                                     @RequestParam String orderName, @RequestParam Long orderPrice) {
-        notificationTestService.sendPaymentCompleteTestNotification(userId, orderName, orderPrice);
-        return ResponseEntity.ok().build();
-    }
-    @PostMapping("/payment-cancel")
-    public ResponseEntity<Void> sendTest2Notification(@RequestParam Long userId,
-                                                      @RequestParam String orderName, @RequestParam Long refundPrice) {
-        notificationTestService.sendPaymentCancelTestNotification(userId, orderName, refundPrice);
-        return ResponseEntity.ok().build();
+    // 로그인 후 알림 기록 가져오기
+    @GetMapping("/list/{userId}")
+    public ResponseEntity<List<NotificationDTO>> getNotificationList(@PathVariable Long userId) {
+        try {
+            List<NotificationDTO> histories = notificationService.getNotificationHistories(userId);
+            if (histories.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(histories);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    @PostMapping("/cart-low")
-    public ResponseEntity<Void> sendTest3Notification(@RequestParam Long userId,
-                                                      @RequestParam String productName) {
-        notificationTestService.sendCartLowTestNotification(userId, productName);
-        return ResponseEntity.ok().build();
+    // 종 모양의 아이콘 위에 읽지 않은 알림 개수 카운트
+    @GetMapping("/unread-count/{userId}")
+    public ResponseEntity<?> getUnreadNotificationCount(@PathVariable Long userId) {
+        try {
+            Long notificationCount = notificationService.getUnreadNotificationCount(userId);
+
+            return ResponseEntity.ok(notificationCount);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("읽지 않은 알림 카운트 실패");
+        }
     }
 
-    @PostMapping("/wishlist-low")
-    public ResponseEntity<Void> sendTest4Notification(@RequestParam Long userId,
-                                                      @RequestParam String productName) {
-        notificationTestService.sendWishListLowTestNotification(userId, productName);
-        return ResponseEntity.ok().build();
+    // 알림 읽으면 isRead = true
+    @PatchMapping("/read/{notificationHistoriesId}")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long notificationHistoriesId) {
+        try {
+            notificationService.markAsRead(notificationHistoriesId);
+
+            return ResponseEntity.ok().build();
+        } catch (CustomException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-//    @PostMapping("/review-request")
-//    public ResponseEntity<Void> sendTest5Notification(@RequestParam Long userId,
-//                                                      @RequestParam String productName) {
-//        notificationTestService.sendReviewRequestTestNotification(userId, productName);
-//        return ResponseEntity.ok().build();
-//    }
+    // 알림 모두 읽기 isRead = true
+    @PatchMapping("/read-all/{userId}")
+    public ResponseEntity<Void> markAllAsRead(@PathVariable Long userId) {
+        try {
+            notificationService.markAllAsRead(userId);
 
-    @PostMapping("/chat")
-    public ResponseEntity<Void> sendTest6Notification(@RequestParam Long userId,@RequestParam Long senderId,
-                                                      @RequestParam String senderName) {
-        notificationTestService.sendChatTestNotification(userId, senderId, senderName);
-        return ResponseEntity.ok().build();
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // 알림 개별 삭제
+    @DeleteMapping("/delete/{userId}/{notificationHistoriesId}")
+    public  ResponseEntity<Void> deleteNotification(@PathVariable Long userId, @PathVariable Long notificationHistoriesId) {
+        try {
+            notificationService.deleteNotificationHistory(userId, notificationHistoriesId);
+            return ResponseEntity.ok().build();
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
