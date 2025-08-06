@@ -41,23 +41,49 @@ public class NotificationService {
     private final NotificationsRepository notificationRepository;
     private final NotificationHistoriesRepository notificationHistoriesRepository;
     private final Map<Long, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
-    private static final long DEFAULT_TIMEOUT = 60L * 1000 * 60;
+    private static final long DEFAULT_TIMEOUT = 60L * 1000 * 5; // 5분 설정, 리소스 점유 시간 절감
     @Autowired
     private ObjectMapper objectMapper;
 
     // public 메서드
 
     public SseEmitter connect(Long userId) {
-        sseEmitters.remove(userId); // 이전 연결 제거
 
-        SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
-        sseEmitters.put(userId, emitter);
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("Invalid userId: " + userId);
+        }
 
-        emitter.onCompletion(() -> sseEmitters.remove(userId));
-        emitter.onTimeout(() -> sseEmitters.remove(userId));
-        emitter.onError(ex -> sseEmitters.remove(userId));
+        // 동시성 제어
+        synchronized (sseEmitters) {
+            SseEmitter existingEmitter = sseEmitters.get(userId);
+            if (existingEmitter != null) {
+                log.info("기존 SSE 연결 제거 - userId: {}", userId);
+                existingEmitter.complete(); // 이전 연결 정리
+                sseEmitters.remove(userId);
+            }
 
-        return emitter;
+            SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
+            sseEmitters.put(userId, emitter);
+            log.info("새 SSE 연결 생성 - userId: {}, 연결 수: {}", userId, sseEmitters.size());
+
+            // 연결 종료 시 emitter 제거
+            emitter.onCompletion(() -> {
+                log.info("SSE 연결 종료 - userId: {}", userId);
+                sseEmitters.remove(userId);
+            });
+
+            emitter.onTimeout(() -> {
+                log.warn("SSE 연결 타임아웃 - userId: {}", userId);
+                sseEmitters.remove(userId);
+            });
+
+            emitter.onError(ex -> {
+                log.error("SSE 연결 에러 - userId: {}, error: {}", userId, ex.getMessage());
+                sseEmitters.remove(userId);
+            });
+
+            return emitter;
+        }
     }
 
     public List<NotificationDTO> getNotificationHistories(Long userId) {

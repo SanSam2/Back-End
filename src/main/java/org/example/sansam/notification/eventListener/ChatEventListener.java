@@ -14,7 +14,7 @@ public class ChatEventListener {
     private final NotificationService notificationService;
 
     @EventListener
-    public void handleChatEvent(ChatEvent event) throws IOException {
+    public void handleChatEvent(ChatEvent event) {
         notificationService.sendChatNotification(event.getUser(), event.getSenderName(), event.getMessage());
     }
 }
