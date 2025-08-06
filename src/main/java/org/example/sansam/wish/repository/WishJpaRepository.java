@@ -1,8 +1,8 @@
 package org.example.sansam.wish.repository;
 
-import lombok.Getter;
-import org.example.sansam.user.domain.User;
 import org.example.sansam.wish.domain.Wish;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,4 +19,9 @@ public interface WishJpaRepository extends JpaRepository<Wish, Long> {
     Wish findTopByUserIdOrderByCreated_atDesc(Long userId);
 
     List<Wish> findByUserIdAndProductIdIn(Long userId, List<Long> productIds);
+
+    @Query("SELECT w FROM Wish w WHERE w.user.id = :userId ORDER BY w.createdAt DESC")
+    Page<Wish> findWishesByUserId(@Param("userId") Long userId, Pageable pageable);
+
+
 }
