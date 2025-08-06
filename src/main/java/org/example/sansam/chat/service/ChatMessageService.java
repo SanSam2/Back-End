@@ -45,7 +45,7 @@ public class ChatMessageService {
         }
 
         List<ChatMessageResponseDTO> chatMessageResponseDTOS = messages.stream()
-                .map(msg -> ChatMessageResponseDTO.fromEntity(msg, msg.getSender().getName()))
+                .map(msg -> ChatMessageResponseDTO.fromEntity(msg, msg.getSender().getName(), roomId))
                 .collect(Collectors.toList());
         Collections.reverse(chatMessageResponseDTOS);
 
@@ -73,7 +73,7 @@ public class ChatMessageService {
         chatMessageRepository.save(chatMessage);
         chatRoom.setLastMessageAt(chatMessage.getCreatedAt());
 
-        return ChatMessageResponseDTO.fromEntity(chatMessage,user.getName());
+        return ChatMessageResponseDTO.fromEntity(chatMessage,user.getName(), roomId);
     }
 
     // 메세지 삭제
