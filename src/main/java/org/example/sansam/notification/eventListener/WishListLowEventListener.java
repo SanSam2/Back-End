@@ -15,7 +15,7 @@ public class WishListLowEventListener {
     private final NotificationService notificationService;
 
     @EventListener
-    public void handelWishListLowEvent(WishListLowEvent event) throws IOException {
+    public void handelWishListLowEvent(WishListLowEvent event) {
         notificationService.sendWishListLowNotification(event.getUser(), event.getProductName());
     }
 }

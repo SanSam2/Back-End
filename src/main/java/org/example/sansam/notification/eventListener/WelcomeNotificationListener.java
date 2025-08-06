@@ -14,7 +14,7 @@ public class WelcomeNotificationListener {
     private NotificationService notificationService;
 
     @EventListener
-    public void handelWelcomeNotificationEvent(WelcomeNotificationEvent event) throws IOException {
+    public void handelWelcomeNotificationEvent(WelcomeNotificationEvent event) {
         notificationService.sendWelcomeNotification(event.getUser());
     }
 }
