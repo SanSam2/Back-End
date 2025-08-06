@@ -55,9 +55,7 @@ public class WishService {
         return wishes.map(wish -> SearchWishResponse.builder()
                 .productId(wish.getProduct().getId())
                 .productName(wish.getProduct().getProductName())
-                .url(Optional.ofNullable(wish.getProduct().getFileManagement())
-                        .map(FileManagement::getFileUrl)
-                        .orElse(null))
+                .url(wish.getProduct().getFileManagement().getMainFileDetail().getUrl())
                 .build());
     }
 }
