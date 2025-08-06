@@ -14,7 +14,7 @@ public class ReviewRequestEventListener {
     private final NotificationService notificationService;
 
     @EventListener
-    public void handleReviewRequestEvent(ReviewRequestEvent event) throws IOException {
+    public void handleReviewRequestEvent(ReviewRequestEvent event) {
         notificationService.sendReviewRequestNotification(event.getUser(), event.getOrderName());
     }
 }

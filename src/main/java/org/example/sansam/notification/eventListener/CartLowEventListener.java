@@ -17,7 +17,7 @@ public class CartLowEventListener {
 
     @Async
     @EventListener
-    public void handleCartLowEvent(CartLowEvent event) throws IOException {
+    public void handleCartLowEvent(CartLowEvent event) {
         notificationService.sendCartLowNotification(event.getUser(), event.getProductName());
     }
 }
