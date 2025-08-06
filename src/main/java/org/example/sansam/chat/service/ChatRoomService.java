@@ -40,8 +40,7 @@ public class ChatRoomService {
     // 유저가 입장하고 있는 방 리스트
     @Transactional(readOnly = true)
     public Page<UserRoomResponseDTO> userRoomList(Long userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size,
-                Sort.by("lastMessageAt").descending());
+        Pageable pageable = PageRequest.of(page, size);
 
         // 1) 이 유저가 속한 Room 목록 조회
         Page<ChatRoom> chatRooms =
