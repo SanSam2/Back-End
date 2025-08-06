@@ -23,7 +23,6 @@ import static org.example.sansam.product.domain.ProductStatus.SOLDOUT;
 public class ProductService {
     private final ProductJpaRepository productJpaRepository;
     private final ProductDetailJpaRepository productDetailJpaRepository;
-    private final ProductConnectJpaRepository productConnectJpaRepository;
     private final WishJpaRepository wishJpaRepository;
     private final FileService fileService;
 
@@ -54,7 +53,7 @@ public class ProductService {
             if (color == null || size == null) continue;
 
             colorImageMap.computeIfAbsent(color, c ->
-                    fileService.getImageUrl(detail.getFileManagementId())
+                    fileService.getImageUrl(detail.getFileManagement().getId())
             );
 
             ProductDetailResponse productDetailResponse = colorOptionMap.computeIfAbsent(
