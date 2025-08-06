@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.sansam.chat.dto.ChatMessageRequestDTO;
 import org.example.sansam.chat.dto.ChatMessageResponseDTO;
 import org.example.sansam.chat.service.ChatMessageService;
+import org.example.sansam.user.dto.LoginResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -42,10 +43,11 @@ public class ChatMessageController {
                               ChatMessageRequestDTO chatMessageRequestDTO,
                               SimpMessageHeaderAccessor headerAccessor) {
         try {
-            Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
-            if (userId == null) {
+            LoginResponse loginUser = (LoginResponse) headerAccessor.getSessionAttributes().get("loginUser");
+            if (loginUser == null) {
                 throw new IllegalStateException("User not authenticated");
             }
+            Long userId = loginUser.getId();
 
             ChatMessageResponseDTO chatMessageResponseDTO = chatMessageService.addMessage(chatMessageRequestDTO, userId, roomId);
 
@@ -60,10 +62,11 @@ public class ChatMessageController {
     // 본인 메세지 삭제
     @DeleteMapping("/{messageId}/message")
     public ResponseEntity<?> deleteRoomMessage(@PathVariable Long messageId, SimpMessageHeaderAccessor headerAccessor) {
-        Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
-        if (userId == null) {
+        LoginResponse loginUser = (LoginResponse) headerAccessor.getSessionAttributes().get("loginUser");
+        if (loginUser == null) {
             throw new IllegalStateException("User not authenticated");
         }
+        Long userId = loginUser.getId();
 
         chatMessageService.deleteMessage(messageId, userId);
         return new ResponseEntity<>(HttpStatus.OK);

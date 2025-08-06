@@ -6,6 +6,7 @@ import org.example.sansam.chat.dto.ChatRoomRequestDTO;
 import org.example.sansam.chat.dto.ChatRoomResponseDTO;
 import org.example.sansam.chat.dto.UserRoomResponseDTO;
 import org.example.sansam.chat.service.ChatRoomService;
+import org.example.sansam.user.dto.LoginResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,10 +31,15 @@ public class ChatRoomController {
                                              @RequestParam(defaultValue = "20") int size) {
 
         try {
-            Long userId = (Long) session.getAttribute("userId");
-            if (userId == null) {
+            // 세션에서 loginUser 정보 가져오기
+            LoginResponse loginUser = (LoginResponse) session.getAttribute("loginUser");
+
+            // 로그인 정보 없으면 401
+            if (loginUser == null) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
+
+            Long userId = loginUser.getId();
 
             Page<UserRoomResponseDTO> rooms = chatRoomService.userRoomList(userId, page, size);
             return ResponseEntity.ok(rooms);
@@ -58,10 +64,12 @@ public class ChatRoomController {
     public ResponseEntity<?> createRoom(@RequestBody ChatRoomRequestDTO chatRoomRequestDTO, HttpSession session){
 
         try {
-            Long userId = (Long) session.getAttribute("userId");
-            if (userId == null) {
+            LoginResponse loginUser = (LoginResponse) session.getAttribute("loginUser");
+
+            if (loginUser == null) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
+            Long userId = loginUser.getId();
 
             ChatRoomResponseDTO chatRoomResponseDTO = chatRoomService.createRoom(chatRoomRequestDTO, userId);
             return  new ResponseEntity<>(chatRoomResponseDTO, HttpStatus.OK);
@@ -73,11 +81,15 @@ public class ChatRoomController {
     // 채팅방입장
     @PostMapping("/{roomId}/enter")
     public ResponseEntity<?> chatroomEnter(@PathVariable Long roomId, HttpSession session) {
+
         try {
-            Long userId = (Long) session.getAttribute("userId");
-            if (userId == null) {
+            LoginResponse loginUser = (LoginResponse) session.getAttribute("loginUser");
+
+            if (loginUser == null) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
+
+            Long userId = loginUser.getId();
 
             ChatRoomResponseDTO responseDTO = chatRoomService.enterRoom(roomId, userId);
 
@@ -95,11 +107,14 @@ public class ChatRoomController {
     @DeleteMapping("/{roomId}/leave")
     public ResponseEntity<?> chatroomLeave(@PathVariable Long roomId, HttpSession session) {
 
-        try{
-            Long userId = (Long) session.getAttribute("userId");
-            if (userId == null) {
+        try {
+            LoginResponse loginUser = (LoginResponse) session.getAttribute("loginUser");
+
+            if (loginUser == null) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
+
+            Long userId = loginUser.getId();
 
             chatRoomService.roomLeave(roomId, userId);
             return ResponseEntity.noContent().build();
