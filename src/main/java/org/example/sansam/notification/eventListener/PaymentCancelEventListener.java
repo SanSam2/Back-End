@@ -15,7 +15,7 @@ public class PaymentCancelEventListener {
     private final NotificationService notificationService;
 
     @EventListener
-    public void handelPaymentCancelEvent(PaymentCancelEvent event) throws IOException {
+    public void handelPaymentCancelEvent(PaymentCancelEvent event) {
         notificationService.sendPaymentCancelNotification(event.getUser(), event.getOrderName(), event.getRefundPrice());
     }
 }
