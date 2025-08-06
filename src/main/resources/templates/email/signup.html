@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입 환영</title>
+</head>
+<body style="font-family: 'Apple SD Gothic Neo', 'Nanum Gothic', sans-serif; background-color: #f9f9f9; margin: 0; padding: 40px 20px;">
+<div style="max-width: 600px; margin: auto; background-color: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+    <img src="https://img.icons8.com/external-justicon-lineal-color-justicon/64/external-ginseng-korea-justicon-lineal-color-justicon.png"
+         alt="Or de Firenz 로고"
+         style="width: 30px; margin-bottom: 30px;" />
+
+    <h2 style="color: #2c3e50; font-size: 24px; margin-bottom: 10px;">
+        <span th:text="${name}"></span>님, Or de Firenz에 오신 걸 환영합니다!
+    </h2>
+
+    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+        Or de Firenz에 가입해주셔서 감사합니다.<br/>
+        다양한 산삼 제품과 맞춤 혜택을 지금 바로 만나보세요!
+    </p>
+
+    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+        앞으로도 산삼몰의 다양한 서비스와 혜택으로 만족을 드릴 수 있도록 노력하겠습니다.
+    </p>
+
+    <div style="margin-top: 40px; font-size: 12px; color: #999; text-align: center;">
+        본 메일은 발신전용이며, 궁금하신 점은 고객센터로 문의 주세요.<br/>
+        &copy; 2025 Or de Firenz. All rights reserved.
+    </div>
+</div>
+</body>
+</html>

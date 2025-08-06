@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 @Entity
 @Table(name = "notifications")
 @Builder
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Notification {

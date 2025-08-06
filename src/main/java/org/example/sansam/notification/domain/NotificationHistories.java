@@ -1,15 +1,13 @@
 package org.example.sansam.notification.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.sansam.user.domain.User;
 
 import java.sql.Timestamp;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,7 +21,7 @@ public class NotificationHistories {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable=false, unique=true)
+    @JoinColumn(name = "user_id", nullable=false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)

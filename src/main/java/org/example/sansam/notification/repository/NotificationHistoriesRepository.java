@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Repository
 public interface NotificationHistoriesRepository extends JpaRepository<NotificationHistories, Long> {
@@ -16,4 +17,13 @@ public interface NotificationHistoriesRepository extends JpaRepository<Notificat
     @Transactional
     @Query("DELETE FROM NotificationHistories n WHERE n.expiredAt < :now")
     int deleteByExpiredAtBefore(Timestamp now);
+
+    List<NotificationHistories> findAllByUser_Id(Long userId);
+
+    @Modifying
+    @Transactional
+    void deleteByUser_IdAndId(Long userId, Long id);
+
+    Long countByUser_IdAndIsReadFalse(Long userId);
+    List<NotificationHistories> findAllByUser_IdAndIsReadFalse(Long userId);
 }

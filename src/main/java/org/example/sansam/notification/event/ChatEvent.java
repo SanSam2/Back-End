@@ -8,6 +8,6 @@ import org.example.sansam.user.domain.User;
 @AllArgsConstructor
 public class ChatEvent {
     private final User user;
-    private final Long senderId;
     private final String senderName;
+    private final String message;
 }

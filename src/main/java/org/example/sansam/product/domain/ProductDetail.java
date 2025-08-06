@@ -3,6 +3,7 @@ package org.example.sansam.product.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 @Entity
 @Table(name = "product_detail")
 @Getter
+@Setter
 @NoArgsConstructor
 public class ProductDetail {
     @Id
