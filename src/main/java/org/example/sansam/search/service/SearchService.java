@@ -103,12 +103,10 @@ public class SearchService {
         List<Product> products;
         if(wish == null) {
             products = productJpaRepository.findTopWishListProduct();
-            System.out.println("기본 조회수순");
         }else {
             Product product = productJpaRepository.findById(wish.getId())
                     .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
             products = productJpaRepository.findByCategoryOrderByViewCountDesc(product.getCategory());
-            System.out.println("추천순");
         }
         return productToDto(products,userId);
     }

@@ -58,7 +58,7 @@ public class ReviewService {
         }
 
         if (review.getFile() != null && review.getFile().getFileDetail() != null) {
-            String existUrl = review.getFile().getFileUrl();
+            String existUrl = review.getFile().getFileDetail().getUrl();
             s3Service.deleteImage(existUrl);
         }
         FileManagement file = fileService.AddFile(request.getUrl(), request.getSize());
