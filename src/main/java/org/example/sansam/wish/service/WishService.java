@@ -9,6 +9,7 @@ import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.example.sansam.wish.domain.Wish;
 import org.example.sansam.wish.dto.AddWishRequest;
+import org.example.sansam.wish.dto.DeleteWishItem;
 import org.example.sansam.wish.dto.DeleteWishRequest;
 import org.example.sansam.wish.dto.SearchWishResponse;
 import org.example.sansam.wish.repository.WishJpaRepository;
@@ -18,8 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 @AllArgsConstructor
 @Service
@@ -41,10 +41,12 @@ public class WishService {
     }
 
     public void deleteWish(DeleteWishRequest request) {
-        Wish wish = wishJpaRepository.findByUserIdAndProductId(request.getUserId(), request.getProductId())
-                .orElseThrow(() -> new EntityNotFoundException("위시를 찾을 수 없습니다."));
-
-        wishJpaRepository.delete(wish);
+        List<DeleteWishItem> deleteWishRequests = request.getDeleteWishItemList();
+        for(DeleteWishItem item : deleteWishRequests) {
+            Wish wish = wishJpaRepository.findByUserIdAndProductId(item.getUserId(), item.getProductId())
+                    .orElseThrow(() -> new EntityNotFoundException("위시를 찾을 수 없습니다."));
+            wishJpaRepository.delete(wish);
+        }
     }
 
     public Page<SearchWishResponse> searchWishList(Long userId, Integer page, Integer size) {
