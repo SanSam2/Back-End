@@ -8,7 +8,9 @@ import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.review.domain.Review;
 import org.example.sansam.review.dto.*;
 import org.example.sansam.review.repository.ReviewJpaRepository;
+import org.example.sansam.s3.domain.FileDetail;
 import org.example.sansam.s3.domain.FileManagement;
+import org.example.sansam.s3.repository.FileDetailJpaRepository;
 import org.example.sansam.s3.repository.FileJpaRepository;
 import org.example.sansam.s3.service.FileService;
 import org.example.sansam.s3.service.S3Service;
@@ -30,6 +32,7 @@ public class ReviewService {
     private final ProductJpaRepository productJpaRepository;
     private final FileJpaRepository fileJpaRepository;
     private final S3Service s3Service;
+    private final FileDetailJpaRepository fileDetailJpaRepository;
 
     public void createReview(AddReviewRequest request) {
         Review review = new Review();
@@ -37,7 +40,6 @@ public class ReviewService {
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다."));
-
 
         FileManagement file = fileService.AddFile(request.getUrl(), request.getSize());
         review = Review.builder()
@@ -56,18 +58,26 @@ public class ReviewService {
         if (review == null) {
             throw new EntityNotFoundException("리뷰가 존재하지 않습니다.");
         }
+       String url = null;
 
-        if (review.getFile() != null && review.getFile().getFileDetail() != null) {
-            String existUrl = review.getFile().getFileDetail().getUrl();
-            s3Service.deleteImage(existUrl);
+        if(request.getUrl() != null) {
+            Long detailId = fileService.getFileDetail(review.getFile());
+            FileDetail detail = fileDetailJpaRepository.findById(detailId)
+                    .orElseThrow(() -> new EntityNotFoundException("리뷰가 존재하지 않습니다."));
+            detail.setUrl(request.getUrl());
+            detail.setSize(request.getSize());
+            fileDetailJpaRepository.save(detail);
+            url = request.getUrl();
         }
-        FileManagement file = fileService.AddFile(request.getUrl(), request.getSize());
+
         review.setMessage(request.getMessage());
         review.setStarRating(request.getRating());
-        review.setFile(file);
         reviewJpaRepository.save(review);
-
-        return UpdateReviewResponse.from(review, file);
+        UpdateReviewResponse updateReviewResponse = UpdateReviewResponse.from(review);
+        if(url != null) {
+            updateReviewResponse.setUrl(url);
+        }
+        return updateReviewResponse;
     }
 
     public void deleteReview(DeleteReviewRequest deleteReviewRequest) {

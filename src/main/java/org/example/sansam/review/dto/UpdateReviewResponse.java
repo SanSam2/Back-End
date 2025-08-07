@@ -14,11 +14,10 @@ public class UpdateReviewResponse {
     private int starRating;
     private String url;
 
-    public static UpdateReviewResponse from(Review review, FileManagement file) {
+    public static UpdateReviewResponse from(Review review) {
         return UpdateReviewResponse.builder()
                 .message(review.getMessage())
                 .starRating(review.getStarRating())
-                .url(file.getFileDetail().getUrl())
                 .build();
     }
 }
