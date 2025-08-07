@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.sansam.product.dto.Option;
 import org.example.sansam.s3.domain.FileManagement;
 
 import java.time.LocalDateTime;
@@ -17,7 +18,6 @@ import java.util.List;
 @NoArgsConstructor
 public class ProductDetail {
     @Id
-
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_detail_id")
     private Long id;
@@ -37,4 +37,21 @@ public class ProductDetail {
 
     @OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL)
     private List<ProductConnect> productConnects = new ArrayList<>();
+
+    public Option getOptionName() {
+        String color = null;
+        String size = null;
+        for (ProductConnect connect : productConnects) {
+            ProductOption option = connect.getOption();
+            if (option.getType().equals("color") ) {
+                color = option.getName();
+            } else if (option.getType().equals("size")) {
+                size = option.getName();
+            }
+        }
+        System.out.println(color + " " + size);
+        return new Option(color, size);
+    }
+
+
 }

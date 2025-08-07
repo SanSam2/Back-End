@@ -1,6 +1,7 @@
 package org.example.sansam.cart.dto;
 import lombok.*;
 import org.example.sansam.product.dto.ProductResponse;
+import org.example.sansam.search.dto.SearchListResponse;
 
 @Getter
 @Setter
@@ -8,9 +9,9 @@ import org.example.sansam.product.dto.ProductResponse;
 @AllArgsConstructor
 @Builder
 public class SearchCartResponse {
-    private ProductResponse productResponse;
+    private SearchListResponse searchListResponse;
     private String size;
     private String color;
-    private Long quantity;
-    private String status; // 품절 상태
+    private Long quantity; //수량
+    private Long stock; //재고
 }

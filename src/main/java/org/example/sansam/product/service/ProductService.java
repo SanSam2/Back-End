@@ -84,7 +84,7 @@ public class ProductService {
 
         ProductDetailResponse defaultDetail = colorOptionMap.get(defaultColor);
         boolean isWish = false;
-        if(userId != null) {
+        if (userId != null) {
             isWish = wishJpaRepository.findByUserIdAndProductId(userId, productId).isPresent();
         }
         Long reviewCount = productJpaRepository.countReviewsByProductId(productId);
@@ -124,12 +124,12 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
         List<OptionResponse> optionResponses = colorOptionMap.get(request.getColor()).getOptions();
-        if(optionResponses == null) {
+        if (optionResponses == null) {
             throw new EntityNotFoundException("해당 색상의 상품을 찾을 수 없습니다.");
         }
         Long quantity = 0L;
-        for(OptionResponse option : optionResponses) {
-            if(option.getSize().equals(request.getSize())) {
+        for (OptionResponse option : optionResponses) {
+            if (option.getSize().equals(request.getSize())) {
                 quantity = option.getQuantity();
                 break;
             }
@@ -164,7 +164,7 @@ public class ProductService {
         if (isAllSoldOut && !SOLDOUT.equals(product.getStatus())) {
             product.setStatus(SOLDOUT);
             statusChanged = true;
-        } else if(!isAllSoldOut && SOLDOUT.equals(product.getStatus())) {
+        } else if (!isAllSoldOut && SOLDOUT.equals(product.getStatus())) {
             product.setStatus(AVAILABLE);
             statusChanged = true;
         }
@@ -190,7 +190,7 @@ public class ProductService {
         boolean size = false;
         for (ProductConnect connect : detail.getProductConnects()) {
             ProductOption option = connect.getOption();
-            if (option.getType().equals("color") ) {
+            if (option.getType().equals("color")) {
                 color = option.getName().equals(targetColor);
             } else if (option.getType().equals("size")) {
                 size = option.getName().equals(targetSize);
@@ -252,5 +252,30 @@ public class ProductService {
                 request.getColor(),
                 productDetail.getQuantity()
         );
+    }
+
+    public Long getDetailId(String color, String size, Long productId) {
+        List<ProductDetail> details = productDetailJpaRepository.findByProduct(productJpaRepository.findById(productId).orElseThrow());
+        for (ProductDetail detail : details) {
+            boolean tColor = false;
+            boolean tSize = false;
+            List<ProductConnect> productConnects = detail.getProductConnects();
+            for (ProductConnect connect : productConnects) {
+                ProductOption option = connect.getOption();
+                if (option.getType().equals("color")) {
+                    tColor = option.getName().equals(color) ? true : false;
+                } else if (option.getType().equals("size")) {
+                    tSize = option.getName().equals(size) ? true : false;
+                }
+                if (tColor && tSize) {
+                   break;
+                }
+            }
+            if (tColor && tSize) {
+                System.out.println(detail.getId().toString());
+                return detail.getId();
+            }
+        }
+        return null;
     }
 }
