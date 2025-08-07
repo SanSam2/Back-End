@@ -1,6 +1,7 @@
 package org.example.sansam.wish.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.product.repository.ProductJpaRepository;
@@ -9,6 +10,7 @@ import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.example.sansam.wish.domain.Wish;
 import org.example.sansam.wish.dto.AddWishRequest;
+import org.example.sansam.wish.dto.DeleteWishItem;
 import org.example.sansam.wish.dto.DeleteWishRequest;
 import org.example.sansam.wish.dto.SearchWishResponse;
 import org.example.sansam.wish.repository.WishJpaRepository;
@@ -18,8 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 @AllArgsConstructor
 @Service
@@ -40,11 +42,17 @@ public class WishService {
         }
     }
 
+    @Transactional
     public void deleteWish(DeleteWishRequest request) {
-        Wish wish = wishJpaRepository.findByUserIdAndProductId(request.getUserId(), request.getProductId())
-                .orElseThrow(() -> new EntityNotFoundException("위시를 찾을 수 없습니다."));
+        List<DeleteWishItem> deleteWishRequests = request.getDeleteWishItemList();
 
-        wishJpaRepository.delete(wish);
+        List<Wish> wishes = new ArrayList<>();
+        for(DeleteWishItem item : deleteWishRequests) {
+            Wish wish = wishJpaRepository.findByUserIdAndProductId(item.getUserId(), item.getProductId())
+                    .orElseThrow(() -> new EntityNotFoundException("위시를 찾을 수 없습니다."));
+            wishes.add(wish);
+        }
+        wishJpaRepository.deleteAll(wishes);
     }
 
     public Page<SearchWishResponse> searchWishList(Long userId, Integer page, Integer size) {
