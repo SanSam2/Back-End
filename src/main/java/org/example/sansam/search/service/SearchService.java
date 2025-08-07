@@ -64,14 +64,18 @@ public class SearchService {
         });
     }
 
-    private Sort getSort(String sort) {
-        return switch (sort) {
-            case "wishCount" -> Sort.by(Sort.Direction.DESC, "wishCount");
-            case "priceLow" -> Sort.by(Sort.Direction.ASC, "price");
-            default -> Sort.by(Sort.Direction.DESC, "createdAt");
-        };
+    private Sort getSort(String sortKey) {
+        switch (sortKey) {
+            case "price":
+                return Sort.by(Sort.Direction.ASC, "price");
+            case "viewCount":
+                return Sort.by(Sort.Direction.DESC, "viewCount");
+            case "createdAt":
+            default:
+                return Sort.by(Sort.Direction.DESC, "createdAt");
+        }
     }
-
+    
     private List<SearchListResponse> productToDto(List<Product> products,Long userId) {
         return products.stream()
                 .map(product -> {
