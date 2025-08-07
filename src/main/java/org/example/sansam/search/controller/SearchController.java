@@ -1,22 +1,13 @@
 package org.example.sansam.search.controller;
 
-
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
-import org.example.sansam.product.dto.ProductResponse;
-import org.example.sansam.search.dto.RecommendRequest;
 import org.example.sansam.search.dto.SearchItemResponse;
 import org.example.sansam.search.dto.SearchListResponse;
 import org.example.sansam.search.service.SearchService;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController

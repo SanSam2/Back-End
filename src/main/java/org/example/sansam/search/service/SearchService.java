@@ -111,14 +111,12 @@ public class SearchService {
     //상품 추천 - 위시에 상품이 있는 경우 -> 위시에 있는 상품과 같은 카테고리에 있는 상품 랜덤 추천 / 상품 위시에 없거나 유저 로그인X 시 -> 상품 조회순으로 표시
     public List<SearchListResponse> getProductsByRecommend(Long userId) {
         Wish wish = wishJpaRepository.findTopByUserIdOrderByCreated_atDesc(userId);
-        System.out.println(wish.getProduct().getProductName());
         List<Product> products;
         if(wish == null) {
             products = productJpaRepository.findTopWishListProduct();
         }else {
-            Product product = productJpaRepository.findById(wish.getId())
+            Product product = productJpaRepository.findById(wish.getProduct().getId())
                     .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
-            System.out.println(product.getCategory().toString());
             products = productJpaRepository.findByCategoryIdOrderByViewCountDesc(product.getCategory().getId());
         }
         return productToDto(products,userId);
