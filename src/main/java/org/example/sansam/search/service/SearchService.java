@@ -6,6 +6,7 @@ import org.example.sansam.product.domain.Product;
 import org.example.sansam.product.dto.SearchStockResponse;
 import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.s3.service.FileService;
+import org.example.sansam.search.dto.SearchItemResponse;
 import org.example.sansam.search.dto.SearchListResponse;
 import org.example.sansam.wish.domain.Wish;
 import org.example.sansam.wish.repository.WishJpaRepository;
@@ -29,24 +30,29 @@ public class SearchService {
     private final WishJpaRepository wishJpaRepository;
     private final FileService fileService;
 
-    public Page<SearchListResponse> searchProductList(
-            String keyword, String category, Long userId,
-            int page, int size, String sort
+    public Page<SearchItemResponse> searchProductList(
+            String keyword, String bigCategory, String middleCategory, String smallCategory,
+            Long userId, int page, int size, String sort
     ) {
         Pageable pageable = PageRequest.of(page, size, getSort(sort));
 
-        Page<Product> products = productJpaRepository.findByCategoryOrKeyword(keyword, category, pageable);
+        Page<Product> products = productJpaRepository.findByCategoryNamesOrKeyword(
+                keyword, bigCategory, middleCategory, smallCategory, pageable);
+
         Set<Long> wishedProductIds = new HashSet<>();
         if (userId != null) {
-            List<Long> productsIds = products.getContent().stream()
+            List<Long> productIds = products.getContent().stream()
                     .map(Product::getId)
                     .collect(Collectors.toList());
-            wishedProductIds = wishJpaRepository.findByUserIdAndProductIdIn(userId, productsIds)
+
+            wishedProductIds = wishJpaRepository.findByUserIdAndProductIdIn(userId, productIds)
                     .stream()
-                    .map(wish -> wish.getId())
+                    .map(wish -> wish.getProduct().getId())
                     .collect(Collectors.toSet());
         }
+
         final Set<Long> finalWishedProductIds = wishedProductIds;
+
         return products.map(product -> {
             boolean isWished = finalWishedProductIds.contains(product.getId());
 
@@ -54,12 +60,13 @@ public class SearchService {
                     .map(file -> fileService.getImageUrl(file.getId()))
                     .orElse(null);
 
-            return SearchListResponse.builder()
+            return SearchItemResponse.builder()
                     .productId(product.getId())
                     .productName(product.getProductName())
                     .price(product.getPrice())
                     .url(imageUrl)
                     .wish(isWished)
+                    .category(product.getCategory().toString())
                     .build();
         });
     }
@@ -75,7 +82,7 @@ public class SearchService {
                 return Sort.by(Sort.Direction.DESC, "createdAt");
         }
     }
-    
+
     private List<SearchListResponse> productToDto(List<Product> products,Long userId) {
         return products.stream()
                 .map(product -> {
@@ -104,13 +111,15 @@ public class SearchService {
     //상품 추천 - 위시에 상품이 있는 경우 -> 위시에 있는 상품과 같은 카테고리에 있는 상품 랜덤 추천 / 상품 위시에 없거나 유저 로그인X 시 -> 상품 조회순으로 표시
     public List<SearchListResponse> getProductsByRecommend(Long userId) {
         Wish wish = wishJpaRepository.findTopByUserIdOrderByCreated_atDesc(userId);
+        System.out.println(wish.getProduct().getProductName());
         List<Product> products;
         if(wish == null) {
             products = productJpaRepository.findTopWishListProduct();
         }else {
             Product product = productJpaRepository.findById(wish.getId())
                     .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
-            products = productJpaRepository.findByCategoryOrderByViewCountDesc(product.getCategory());
+            System.out.println(product.getCategory().toString());
+            products = productJpaRepository.findByCategoryIdOrderByViewCountDesc(product.getCategory().getId());
         }
         return productToDto(products,userId);
     }

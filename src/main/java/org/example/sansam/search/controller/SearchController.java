@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.product.dto.ProductResponse;
 import org.example.sansam.search.dto.RecommendRequest;
+import org.example.sansam.search.dto.SearchItemResponse;
 import org.example.sansam.search.dto.SearchListResponse;
 import org.example.sansam.search.service.SearchService;
 import org.springframework.data.domain.Page;
@@ -28,14 +29,17 @@ public class SearchController {
     @GetMapping
     public ResponseEntity<?> searchList(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String big,
+            @RequestParam(required = false) String middle,
+            @RequestParam(required = false) String small,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "createdAt") String sort
     ) {
         try {
-            Page<SearchListResponse> products = searchService.searchProductList(keyword, category, userId, page, size, sort);
+            Page<SearchItemResponse> products = searchService.searchProductList(
+                    keyword, big, middle, small, userId, page, size, sort);
             return ResponseEntity.ok(products);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());
