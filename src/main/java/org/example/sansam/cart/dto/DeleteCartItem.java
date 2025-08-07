@@ -5,8 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateCartRequest {
-    private Long userId;
+public class DeleteCartItem {
     private Long productId;
     private String color;
     private String size;
