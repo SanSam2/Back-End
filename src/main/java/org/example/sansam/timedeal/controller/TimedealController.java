@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,8 +22,7 @@ public class TimedealController {
     // 타임딜 리스트 조회, 상품 상세 조회
     // 타임딜 리스트 조회
     @GetMapping
-    public ResponseEntity<?> getTimeDeal(
-            @RequestParam("dateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTime) {
+    public ResponseEntity<?> getTimeDeals() {
         try {
             List<TimeDealResponse> response = new ArrayList<>();
             return ResponseEntity.ok(response);

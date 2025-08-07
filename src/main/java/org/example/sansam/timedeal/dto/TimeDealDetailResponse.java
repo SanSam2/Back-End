@@ -1,6 +1,7 @@
 package org.example.sansam.timedeal.dto;
 
 import lombok.*;
+import org.example.sansam.product.dto.ProductDetailResponse;
 import org.example.sansam.product.dto.ProductResponse;
 
 @Getter
@@ -9,7 +10,14 @@ import org.example.sansam.product.dto.ProductResponse;
 @NoArgsConstructor
 @Builder
 public class TimeDealDetailResponse {
-    private ProductResponse product;
+    private Long productId;
+    private String productName;
+    private String categoryName;
+    private String brandName;
+    private Long price;
+    private String description;
+    private String imageUrl;
+    private ProductDetailResponse detailResponse;
     private Long timeDealPrice;
-    private String status;
+    private String timeDealStatus;
 }
