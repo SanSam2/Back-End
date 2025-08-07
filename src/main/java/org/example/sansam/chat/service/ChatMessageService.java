@@ -11,6 +11,8 @@ import org.example.sansam.chat.repository.ChatMessageRepository;
 import org.example.sansam.chat.repository.ChatRoomRepository;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,7 +34,7 @@ public class ChatMessageService {
 
     // 채팅방 메세지 페이징 처리
     @Transactional(readOnly = true)
-    public List<ChatMessageResponseDTO> getMessages(Long roomId, Long lastMessageId, Long userId , int size) {
+    public Page<ChatMessageResponseDTO> getMessages(Long roomId, Long lastMessageId, Long userId , int size) {
 
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채팅방입니다."));
@@ -42,13 +44,11 @@ public class ChatMessageService {
         if (!isMember) {
             throw new SecurityException("채팅방에 접근할 권한이 없습니다.");
         }
-
-
         Pageable pageable = PageRequest.of(0, size);
 
-        List<ChatMessage> messages;
+        Page<ChatMessage> messages;
         if (lastMessageId == null) {
-            messages = chatMessageRepository.findTopByChatRoomOrderByCreatedAtDesc(chatRoom, pageable);
+            messages = chatMessageRepository.findByChatRoomOrderByCreatedAtDesc(chatRoom, pageable);
         } else {
             messages = chatMessageRepository.findByChatRoomAndIdLessThanOrderByCreatedAtDesc(chatRoom, lastMessageId, pageable);
         }
@@ -58,7 +58,7 @@ public class ChatMessageService {
                 .collect(Collectors.toList());
         Collections.reverse(chatMessageResponseDTOS);
 
-        return chatMessageResponseDTOS;
+        return new PageImpl<>(chatMessageResponseDTOS, pageable, messages.getTotalElements());
     }
 
     // 메세지 전송시, 데이터 베이스에 추가

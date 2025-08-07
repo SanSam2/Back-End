@@ -3,6 +3,7 @@ package org.example.sansam.chat.repository;
 import org.example.sansam.chat.domain.ChatMessage;
 import org.example.sansam.chat.domain.ChatRoom;
 import org.example.sansam.chat.dto.RoomCountDTO;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,9 +13,9 @@ import java.util.List;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
-    List<ChatMessage> findTopByChatRoomOrderByCreatedAtDesc(ChatRoom chatRoom, Pageable pageable);
+    Page<ChatMessage> findByChatRoomOrderByCreatedAtDesc(ChatRoom chatRoom, Pageable pageable);
 
-    List<ChatMessage> findByChatRoomAndIdLessThanOrderByCreatedAtDesc(ChatRoom chatRoom, Long lastMessageId, Pageable pageable);
+    Page<ChatMessage> findByChatRoomAndIdLessThanOrderByCreatedAtDesc(ChatRoom chatRoom, Long lastMessageId, Pageable pageable);
 
     @Query("""
       select new org.example.sansam.chat.dto.RoomCountDTO(
