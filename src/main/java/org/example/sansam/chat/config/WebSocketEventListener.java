@@ -1,6 +1,7 @@
 package org.example.sansam.chat.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.chat.service.ChatMemberService;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -14,6 +15,7 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class WebSocketEventListener {
 
     private final ChatMemberService chatMemberService;
@@ -34,12 +36,11 @@ public class WebSocketEventListener {
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectEvent event) {
         StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-        System.out.println("[WebSocket] 클라이언트 연결 시도: sessionId=" + sha.getSessionId());
-    }
+        log.info("[WebSocket] 클라이언트 연결 시도: sessionId={}", sha.getSessionId());    }
 
     @EventListener
     public void handleWebSocketConnectedListener(SessionConnectedEvent event) {
         StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-        System.out.println("[WebSocket] 클라이언트 연결 완료: sessionId=" + sha.getSessionId());
+        log.info("[WebSocket] 클라이언트 연결 완료: sessionId={}", sha.getSessionId());
     }
 }

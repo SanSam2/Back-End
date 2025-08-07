@@ -6,6 +6,7 @@ import org.example.sansam.chat.domain.ChatRoom;
 import org.example.sansam.chat.dto.ChatMessageRequestDTO;
 import org.example.sansam.chat.dto.ChatMessageResponseDTO;
 
+import org.example.sansam.chat.repository.ChatMemberRepository;
 import org.example.sansam.chat.repository.ChatMessageRepository;
 import org.example.sansam.chat.repository.ChatRoomRepository;
 import org.example.sansam.user.domain.User;
@@ -27,13 +28,21 @@ public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
+    private final ChatMemberRepository chatMemberRepository;
 
     // 채팅방 메세지 페이징 처리
     @Transactional(readOnly = true)
-    public List<ChatMessageResponseDTO> getMessages(Long roomId, Long lastMessageId, int size) {
+    public List<ChatMessageResponseDTO> getMessages(Long roomId, Long lastMessageId, Long userId , int size) {
 
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채팅방입니다."));
+
+        boolean isMember = chatMemberRepository.existsByUserIdAndChatRoomId(userId, roomId);
+
+        if (!isMember) {
+            throw new SecurityException("채팅방에 접근할 권한이 없습니다.");
+        }
+
 
         Pageable pageable = PageRequest.of(0, size);
 

@@ -1,5 +1,6 @@
 package org.example.sansam.chat.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -15,12 +16,18 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Map;
 
 @Configuration
 @EnableWebSocketMessageBroker
+@Slf4j
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Value("${websocket.allowed-origins}")
+    private String[] allowedOrigins;
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/sub");
@@ -30,22 +37,21 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-stomp")
-                .setAllowedOriginPatterns("*")
+                .setAllowedOriginPatterns(allowedOrigins)
                 .addInterceptors(new HttpSessionHandshakeInterceptor() {
                     @Override
                     public boolean beforeHandshake(ServerHttpRequest request,
                                                    ServerHttpResponse response,
                                                    WebSocketHandler wsHandler,
                                                    Map<String, Object> attributes) throws Exception {
-                        System.out.println("[WebSocket] 핸드쉐이크 시작: " + request.getURI());
-                        return super.beforeHandshake(request, response, wsHandler, attributes);
+                        log.info("[WebSocket] 핸드쉐이크 시작: {}", request.getURI());                        return super.beforeHandshake(request, response, wsHandler, attributes);
                     }
                     @Override
                     public void afterHandshake(ServerHttpRequest request,
                                                ServerHttpResponse response,
                                                WebSocketHandler wsHandler,
                                                Exception ex) {
-                        System.out.println("[WebSocket] 핸드쉐이크 완료: " + request.getURI());
+                        log.info("[WebSocket] 핸드쉐이크 완료: {}", request.getURI());
                         super.afterHandshake(request, response, wsHandler, ex);
                     }
                 })
@@ -60,16 +66,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
                 if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
-                    String destination = accessor.getDestination();
-                    if (destination != null && destination.startsWith("/sub/chat/room/")) {
-
-                        String roomIdStr = destination.substring("/sub/chat/room/".length());
+                    String dest = accessor.getDestination(); // "/sub/chat/room/{roomId}"
+                    if (dest != null && dest.startsWith("/sub/chat/room/")) {
                         try {
-                            Long roomId = Long.valueOf(roomIdStr);
-                            accessor.getSessionAttributes()
-                                    .put("roomId", roomId);
-                        } catch (NumberFormatException ignored) {
-                        }
+                            Long roomId = Long.valueOf(dest.substring("/sub/chat/room/".length()));
+                            accessor.getSessionAttributes().put("roomId", roomId);
+                        } catch (NumberFormatException ignored) {}
                     }
                 }
                 return message;
