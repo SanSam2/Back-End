@@ -43,7 +43,6 @@ public class FileService {
         Long id = fileDetailJpaRepository.save(fileDetail).getId();
         FileManagement saveFile = fileJpaRepository.findById(fileId)
                 .orElseThrow(() -> new EntityNotFoundException("파일 정보를 찾을 수 없습니다."));
-
         return saveFile;
     }
 
@@ -60,6 +59,19 @@ public class FileService {
                 .findFirst()
                 .orElse(fileDetails.get(0))
                 .getUrl();
+    }
+
+    public Long getFileDetail(FileManagement fileManagement) {
+        List<FileDetail> fileDetails = fileDetailJpaRepository.findByFileManagement(fileManagement);
+        if (fileDetails.isEmpty()) {
+            throw new EntityNotFoundException("파일 상세 정보를 찾을 수 없습니다.");
+        }
+
+        return fileDetails.stream()
+                .filter(FileDetail::getIsMain)
+                .findFirst()
+                .orElse(fileDetails.get(0))
+                .getId();
     }
 
 }
