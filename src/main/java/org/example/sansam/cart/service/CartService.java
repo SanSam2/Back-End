@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import org.example.sansam.cart.domain.Cart;
 import org.example.sansam.cart.dto.*;
 import org.example.sansam.cart.repository.CartJpaRepository;
-import org.example.sansam.cart.repository.CartRepository;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.product.domain.ProductDetail;
 import org.example.sansam.product.dto.Option;
@@ -44,8 +43,8 @@ public class CartService {
 
     public void deleteCartItem(DeleteCartRequest request) {
         User user = userRepository.findById(request.getUserId()).orElseThrow();
-        List<deleteCartItem> deleteCartItems = request.getDeleteCartItems();
-        for(deleteCartItem item : deleteCartItems){
+        List<DeleteCartItem> deleteCartItems = request.getDeleteCartItems();
+        for(DeleteCartItem item : deleteCartItems){
             Long detailId = productService.getDetailId(item.getColor(), item.getSize(), item.getProductId());
             ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
             Cart cart = cartJpaRepository.findByUserIdAndProductDetail(user, productDetail);
@@ -83,9 +82,7 @@ public class CartService {
         Long detailId = productService.getDetailId(request.getColor(), request.getSize(), request.getProductId());
         ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
 
-        System.out.println(productDetail.getId() + "   [p");
         Cart cart = cartJpaRepository.findByUserIdAndProductDetail(user, productDetail);
-        System.out.println(cart + "kklj");
         cart.setQuantity(request.getQuantity());
         cartJpaRepository.save(cart);
 

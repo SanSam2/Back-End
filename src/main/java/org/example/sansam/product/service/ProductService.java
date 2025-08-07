@@ -257,22 +257,7 @@ public class ProductService {
     public Long getDetailId(String color, String size, Long productId) {
         List<ProductDetail> details = productDetailJpaRepository.findByProduct(productJpaRepository.findById(productId).orElseThrow());
         for (ProductDetail detail : details) {
-            boolean tColor = false;
-            boolean tSize = false;
-            List<ProductConnect> productConnects = detail.getProductConnects();
-            for (ProductConnect connect : productConnects) {
-                ProductOption option = connect.getOption();
-                if (option.getType().equals("color")) {
-                    tColor = option.getName().equals(color) ? true : false;
-                } else if (option.getType().equals("size")) {
-                    tSize = option.getName().equals(size) ? true : false;
-                }
-                if (tColor && tSize) {
-                   break;
-                }
-            }
-            if (tColor && tSize) {
-                System.out.println(detail.getId().toString());
+            if (matchProductDetail(detail, color, size)) {
                 return detail.getId();
             }
         }
