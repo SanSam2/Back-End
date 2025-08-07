@@ -1,5 +1,6 @@
 package org.example.sansam.chat.controller;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.chat.dto.ChatMessageRequestDTO;
 import org.example.sansam.chat.dto.ChatMessageResponseDTO;
@@ -27,10 +28,18 @@ public class ChatMessageController {
     // 채팅방 메세지 조회
     @GetMapping("/{roomId}/message")
     public ResponseEntity<?> getRoomMessages(@PathVariable Long roomId,
+                                             HttpSession session,
                                                    @RequestParam(required = false) Long lastMessageId,
                                                    @RequestParam(defaultValue = "20") int size) {
         try{
-            List<ChatMessageResponseDTO> chatMessageResponseDTOS = chatMessageService.getMessages(roomId, lastMessageId, size);
+            LoginResponse loginUser = (LoginResponse) session.getAttribute("loginUser");
+            if (loginUser == null) {
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+
+            Long userId = loginUser.getId();
+
+            List<ChatMessageResponseDTO> chatMessageResponseDTOS = chatMessageService.getMessages(roomId, lastMessageId, userId, size);
             return new ResponseEntity<>(chatMessageResponseDTOS, HttpStatus.OK);
         }catch (Exception e){
             return ResponseEntity.status(400).body(e.getMessage());

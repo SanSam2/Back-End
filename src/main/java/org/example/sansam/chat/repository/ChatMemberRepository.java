@@ -31,4 +31,6 @@ public interface ChatMemberRepository extends JpaRepository<ChatMember, ChatMemb
     void updateLastReadAt(@Param("userId") Long userId,
                           @Param("roomId") Long roomId,
                           @Param("ts")     LocalDateTime ts);
+
+    boolean existsByUserIdAndChatRoomId(Long userId, Long roomId);
 }
