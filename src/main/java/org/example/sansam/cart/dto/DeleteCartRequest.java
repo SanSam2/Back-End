@@ -9,5 +9,5 @@ import java.util.List;
 @Setter
 public class DeleteCartRequest {
     private Long userId;
-    private List<deleteCartItem> deleteCartItems;
+    private List<DeleteCartItem> deleteCartItems;
 }

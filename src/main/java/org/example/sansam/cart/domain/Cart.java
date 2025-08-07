@@ -9,6 +9,7 @@ import org.example.sansam.product.domain.Product;
 import org.example.sansam.product.domain.ProductDetail;
 import org.example.sansam.user.domain.User;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -33,6 +34,7 @@ public class Cart {
     @JoinColumn(name = "product_detail_id", nullable=false)
     private ProductDetail productDetail;
 
+    @Column(nullable = false)
     private Long quantity;
 
     @CreationTimestamp
@@ -40,7 +42,7 @@ public class Cart {
     private LocalDateTime createdAt;
 
 
-    @CreationTimestamp
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 }

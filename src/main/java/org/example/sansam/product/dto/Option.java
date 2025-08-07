@@ -1,16 +1,15 @@
 package org.example.sansam.product.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Option {
     private String color;
     private String size;
-
-    public Option(String color, String size) {
-        this.color = color;
-        this.size = size;
-    }
 }

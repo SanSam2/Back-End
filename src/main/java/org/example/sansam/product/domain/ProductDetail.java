@@ -49,7 +49,6 @@ public class ProductDetail {
                 size = option.getName();
             }
         }
-        System.out.println(color + " " + size);
         return new Option(color, size);
     }
 
