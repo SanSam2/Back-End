@@ -6,6 +6,7 @@ import org.example.sansam.chat.dto.ChatMessageRequestDTO;
 import org.example.sansam.chat.dto.ChatMessageResponseDTO;
 import org.example.sansam.chat.service.ChatMessageService;
 import org.example.sansam.user.dto.LoginResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -14,7 +15,6 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -39,7 +39,7 @@ public class ChatMessageController {
 
             Long userId = loginUser.getId();
 
-            List<ChatMessageResponseDTO> chatMessageResponseDTOS = chatMessageService.getMessages(roomId, lastMessageId, userId, size);
+            Page<ChatMessageResponseDTO> chatMessageResponseDTOS = chatMessageService.getMessages(roomId, lastMessageId, userId, size);
             return new ResponseEntity<>(chatMessageResponseDTOS, HttpStatus.OK);
         }catch (Exception e){
             return ResponseEntity.status(400).body(e.getMessage());
