@@ -1,6 +1,7 @@
 package org.example.sansam.wish.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.product.repository.ProductJpaRepository;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -40,13 +42,17 @@ public class WishService {
         }
     }
 
+    @Transactional
     public void deleteWish(DeleteWishRequest request) {
         List<DeleteWishItem> deleteWishRequests = request.getDeleteWishItemList();
+
+        List<Wish> wishes = new ArrayList<>();
         for(DeleteWishItem item : deleteWishRequests) {
             Wish wish = wishJpaRepository.findByUserIdAndProductId(item.getUserId(), item.getProductId())
                     .orElseThrow(() -> new EntityNotFoundException("위시를 찾을 수 없습니다."));
-            wishJpaRepository.delete(wish);
+            wishes.add(wish);
         }
+        wishJpaRepository.deleteAll(wishes);
     }
 
     public Page<SearchWishResponse> searchWishList(Long userId, Integer page, Integer size) {
