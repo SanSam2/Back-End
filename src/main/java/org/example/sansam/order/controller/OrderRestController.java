@@ -48,7 +48,7 @@ public class OrderRestController {
     })
     @PostMapping("/save") //주문 요청
     public ResponseEntity<?> saveOrder(@RequestBody OrderRequest orderRequest){
-
+        log.error("여기까지는 들어왔당");
         try{
             OrderResponse response = orderService.saveOrder(orderRequest);
             return ResponseEntity.ok(response);
@@ -56,68 +56,5 @@ public class OrderRestController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
-
-
-
-
-    @Operation(summary = "전체 주문 조회", description = "등록된 전체 주문 목록을 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "전체 주문 조회 성공",
-                    content = @Content(mediaType = "application/json",
-                            examples = @ExampleObject(value = """
-                                [
-                                  {
-                                    "orderId": 1,
-                                    "userId": 2,
-                                    "totalAmount": 50000,
-                                    "orderStatus": "ORDERED",
-                                    "createdAt": "2025-07-31T13:30:00"
-                                  },
-                                  {
-                                    "orderId": 2,
-                                    "userId": 3,
-                                    "totalAmount": 80000,
-                                    "orderStatus": "DELIVERED",
-                                    "createdAt": "2025-07-31T14:00:00"
-                                  }
-                                ]
-                                """))),
-            @ApiResponse(responseCode = "500", description = "조회 실패",
-                    content = @Content(mediaType = "application/json",
-                            examples = @ExampleObject(value = "전체 주문 조회 실패")))
-    })
-    @GetMapping("/getAllOrders") //주문 전체 조회
-    public ResponseEntity<?> getAllOrders(){
-        try{
-            return ResponseEntity.ok("대충 전체 조회한 주문 리스트 반환");
-        }catch(Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("전체 주문 조회 실패");
-        }
-    }
-
-    @Operation(summary = "주문 삭제", description = "주문 내역을 삭제합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "삭제 성공",
-                    content = @Content(mediaType = "application/json",
-                            examples = @ExampleObject(value = "delete성공"))),
-            @ApiResponse(responseCode = "500", description = "삭제 실패",
-                    content = @Content(mediaType = "application/json",
-                            examples = @ExampleObject(value = "서버 오류로 삭제 실패")))
-    })
-    @DeleteMapping("/deleteOrder")
-    public ResponseEntity<?> deleteOrders(){
-        try{
-            return ResponseEntity.ok("delete성공");
-        }catch(Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
-    }
-
-
-
-
-
-
 
 }

@@ -4,14 +4,13 @@ package org.example.sansam.order.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.sansam.order.domain.Order;
+import org.example.sansam.status.domain.StatusEnum;
 
 import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
 public class OrderResponse {
-
-
 
     private Long orderId;
     private String orderNumber;
@@ -20,12 +19,12 @@ public class OrderResponse {
     private String status;
     private LocalDateTime createdAt;
 
-    public OrderResponse(Order order){
+    public OrderResponse (Order order){
         this.orderId = order.getId();
         this.orderName= order.getOrderName();
         this.orderNumber = order.getOrderNumber();
         this.totalAmount = order.getTotalAmount();
-        this.status = order.getStatus().toString();
+        this.status = order.getStatus().getStatusName().toString();
         this.createdAt = order.getCreatedAt();
     }
 
