@@ -9,7 +9,7 @@ import lombok.Getter;
 public class TossPaymentRequest {
 
     private String paymentKey;
-    private String orderId;
+    private String orderId; //orderNumber
     private Long amount;
 
 }

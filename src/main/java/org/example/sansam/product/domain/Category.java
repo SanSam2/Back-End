@@ -29,6 +29,6 @@ public class Category {
 
     @Override
     public String toString() {
-        return bigName + " > " + middleName + " > " + smallName;
+        return String.format("%s>%s>%s", bigName != null ? bigName : "", middleName != null ? middleName : "", smallName != null ? smallName : "");
     }
 }

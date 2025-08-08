@@ -1,96 +1,99 @@
 package org.example.sansam.payment.service;
 
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.sansam.exception.pay.CustomException;
+import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.order.domain.Order;
-import org.example.sansam.order.service.OrderService;
+import org.example.sansam.order.repository.OrderRepository;
+
 import org.example.sansam.payment.domain.PaymentMethodType;
 import org.example.sansam.payment.domain.Payments;
 import org.example.sansam.payment.domain.PaymentsType;
 import org.example.sansam.payment.dto.TossPaymentRequest;
 import org.example.sansam.payment.repository.PaymentsRepository;
 import org.example.sansam.payment.repository.PaymentsTypeRepository;
-import org.example.sansam.user.service.UserService;
-
+import org.example.sansam.status.domain.Status;
+import org.example.sansam.status.domain.StatusEnum;
+import org.example.sansam.status.repository.StatusRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PaymentService {
 
-    private final UserService userService;
-    private final OrderService orderService;
+    private final OrderRepository orderRepository;
 
     private final PaymentsTypeRepository paymentsTypeRepository;
     private final PaymentsRepository paymentsRepository;
+    private final StatusRepository statusRepository;
 
-    private String SECRET_KEY = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6";
+    private final PaymentApiClient paymentApiClient;
 
+    @Transactional
     public void confirmPayment(TossPaymentRequest request) throws Exception {
-        String paymentKey = request.getPaymentKey();
-        String orderId = request.getOrderId();
-        Long amount = request.getAmount();
-        log.error(orderId);
-        log.error(paymentKey);
-        log.error(amount.toString());
+        try {
+            // 주문 상태 업데이트(강결합이 과연 좋을까? 단점이 뭐가 있을까?) -> 결국 분리를 해야한다
+            Order order = orderRepository.findByOrderNumber(request.getOrderId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+            order.addPaymentKey(request.getPaymentKey()); //더티체킹 일어날텐데 왜 굳이 밑에 save가 있나요?
 
-        String basicAuth = "Basic " + java.util.Base64.getEncoder().encodeToString((SECRET_KEY + ":").getBytes());
-        log.error(basicAuth);
-
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.tosspayments.com/v1/payments/confirm"))
-                .header("Authorization", basicAuth)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(String.format(
-                        "{\"paymentKey\":\"%s\",\"orderId\":\"%s\",\"amount\":%d}",
-                        paymentKey, orderId, amount)))
-                .build();
-
-        log.error(httpRequest.uri().toString());
-        log.error(httpRequest.headers().toString());
+            log.error("order: {}", order);
+            Map<String, Object> response = paymentApiClient.confirmPayment(request);
+            log.error("response: {}", response);
+            String method = (String) response.get("method");
+            savePaymentInfo(method, request);
 
 
-        HttpResponse<String> response = HttpClient.newHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofString());
-        log.error(response.body());
-        log.error(response.headers().toString());
-        if (response.statusCode() == 200) {
+            Status orderPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PAID);
+            Status orderProductPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID);
+            order.completePayment(orderPaid, orderProductPaid, request.getPaymentKey());
+            orderRepository.save(order);
 
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode jsonNode = mapper.readTree(response.body());
-            Order order =orderService.findById(Long.valueOf(request.getOrderId())).orElse(null);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.PAYMENT_CONFIRM_FAILED);
+        }
+    }
+
+    private void savePaymentInfo(String methodKorean, TossPaymentRequest request) {
+        // 주문 정보 조회(이거뭐죠??)
+        Order order = orderRepository.findByOrderNumber(request.getOrderId())
+                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+
+        PaymentMethodType paymentMethodType = PaymentMethodType.fromKorean(methodKorean);
+        PaymentsType paymentsType = findPaymentsType(paymentMethodType);
+        Long totalPrice = request.getAmount();
+
+        // Payments 엔티티 생성과 저장
+        Payments payment = Payments.create(order,paymentsType,totalPrice, LocalDateTime.now());
+        paymentsRepository.save(payment);
+    }
+
+    private PaymentsType findPaymentsType(PaymentMethodType paymentMethodType){
+        return paymentsTypeRepository.findByTypeName(paymentMethodType)
+                .orElseThrow(()-> new CustomException(ErrorCode.UNSUPPORTED_PAYMENT_METHOD)); // restControllerAdvice
+    }
 
 
-            log.error(order.toString());
+    // 추후, 주문에 맞는 요청 왔는지 확인이 필요하기에 필요한 메소드
+    private Order findOrderByOrderNumber(String orderNumber){
+        return orderRepository.findByOrderNumber(orderNumber).orElseThrow(()-> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+    }
+    private void orderCheck(String orderId, Long amount) {
+        Order order = orderRepository.findById(Long.valueOf(orderId)).orElse(null);
+        Status status = statusRepository.findByStatusName(StatusEnum.ORDER_PAID);
 
-            String methodKor = jsonNode.get("method").asText();
-            PaymentMethodType type = PaymentMethodType.fromKorean(methodKor);
-            PaymentsType paymentsType = paymentsTypeRepository.findByTypeName(type)
-                    .orElseThrow(() -> new IllegalArgumentException("결제 수단이 존재하지 않습니다"));
-            log.error(paymentsType.toString());
-
-            Payments payment = Payments.builder()
-                    .order(order)
-                    .paymnetsType(paymentsType)
-                    .totalPrice(jsonNode.get("totalAmount").asLong())
-                    .finalPrice(jsonNode.get("approvedAmount").asLong())
-                    .createdAt(LocalDateTime.now())
-                    .build();
-
-            paymentsRepository.save(payment);
-        } else {
-            log.error("결제 승인 실패: {}", response.body());
-            throw new RuntimeException("결제 승인 실패: " + response.body());
+        if(order.getStatus().equals(status)){
+            throw new CustomException(ErrorCode.ORDER_ALREADY_FINISHED);
+        }
+        if(!order.getTotalAmount().equals(amount)){
+            throw new CustomException(ErrorCode.NOT_EQUAL_COST);
         }
     }
 

@@ -5,8 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SearchWishRequest {
+public class DeleteWishItem {
     private Long userId;
-    private int page;
-    private int size;
+    private Long productId;
 }

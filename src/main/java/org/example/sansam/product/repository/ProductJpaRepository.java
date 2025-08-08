@@ -17,22 +17,32 @@ public interface ProductJpaRepository extends JpaRepository<Product, Long> {
     @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId")
     Long countReviewsByProductId(@Param("productId") Long productId);
 
-    @Query("SELECT p FROM Product p " +
-            "WHERE (:category IS NULL OR p.category.smallName = :category) " +
-            "AND (:keyword IS NULL OR " +
-            "LOWER(p.productName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(p.category.smallName) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<Product> findByCategoryOrKeyword(
+    @Query("""
+    SELECT p FROM Product p
+    WHERE
+        (:keyword IS NULL OR
+            LOWER(p.productName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+            LOWER(p.category.smallName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+
+    AND (:bigCategory IS NULL OR p.category.bigName = :bigCategory)
+    AND (:middleCategory IS NULL OR p.category.middleName = :middleCategory)
+    AND (:smallCategory IS NULL OR p.category.smallName = :smallCategory)
+""")
+    Page<Product> findByCategoryNamesOrKeyword(
             @Param("keyword") String keyword,
-            @Param("category") String category,
+            @Param("bigCategory") String bigCategory,
+            @Param("middleCategory") String middleCategory,
+            @Param("smallCategory") String smallCategory,
             Pageable pageable
     );
 
-    @Query("SELECT p FROM Product p left JOIN p.wishList w GROUP BY p.id ORDER BY COUNT(w) DESC")
+
+    @Query("SELECT p FROM Product p left JOIN p.wishList w GROUP BY p.id ORDER BY COUNT(w) DESC LIMIT 10")
     List<Product> findTopWishListProduct();
 
     @Query(value = "SELECT * FROM products p ORDER BY p.view_count DESC LIMIT 10", nativeQuery = true)
     List<Product> findProductsOrderByViewCountDesc();
 
-    List<Product> findByCategoryOrderByViewCountDesc(Category category);
+    @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId ORDER BY p.viewCount DESC LIMIT 10")
+    List<Product> findByCategoryIdOrderByViewCountDesc(@Param("categoryId") Long categoryId);
 }

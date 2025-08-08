@@ -33,7 +33,7 @@ public class NotificationScheduler {
 //        LocalDateTime oneDayAgo = LocalDateTime.now().minusDays(1);
 //
 //        // 배송 완료 상태 && delivered_at 기준 하루 이상 지난 주문 조회
-//        List<Order> deliveredOrders = orderRepository.findByDeliveredAtBeforeAndStatus_statusName(oneDayAgo, "배송 완료");
+//        List<Order> deliveredOrders = orderRepository.findByDeliveredAtBeforeAndStatus_statusName(oneDayAgo, "ORDER_PAID");
 //
 //        for (Order order : deliveredOrders) {
 //            Long userId = order.getUser().getId();
@@ -44,7 +44,7 @@ public class NotificationScheduler {
 //                    .anyMatch(productId -> !reviewRepository.existsByUserIdAndProductId(userId, productId));
 //
 //            if (!hasUnreviewedProduct) {
-//                continue; // 리뷰가 다 작성되었으면 알림 X
+//                continue; // 리뷰가 작성되어 있으면 알림 X
 //            }
 //
 //            // 이벤트 발행

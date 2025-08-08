@@ -18,13 +18,9 @@ public class Notification {
     @Column(name = "notification_id")
     private Long id;
 
-    @Column(length=50, nullable=false)
+    @Column(length=100, nullable=false)
     private String title;
 
     @Column(length=100, nullable=false)
     private String message;
-
-    @Column(name = "created_at",nullable=false)
-    private Timestamp createdAt;
-
 }
