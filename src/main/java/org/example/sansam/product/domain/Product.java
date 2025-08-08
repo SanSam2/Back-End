@@ -50,7 +50,7 @@ public class Product {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_management_id")
     private FileManagement fileManagement;
 
