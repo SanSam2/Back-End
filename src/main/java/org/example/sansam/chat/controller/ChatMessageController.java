@@ -69,15 +69,27 @@ public class ChatMessageController {
     }
 
     // 본인 메세지 삭제
-    @DeleteMapping("/{messageId}/message")
-    public ResponseEntity<?> deleteRoomMessage(@PathVariable Long messageId, SimpMessageHeaderAccessor headerAccessor) {
-        LoginResponse loginUser = (LoginResponse) headerAccessor.getSessionAttributes().get("loginUser");
-        if (loginUser == null) {
-            throw new IllegalStateException("User not authenticated");
-        }
-        Long userId = loginUser.getId();
+    @MessageMapping("/chat/{roomId}/message/{messageId}/delete")
+    public void deleteRoomMessage(@DestinationVariable Long roomId,
+                                  @DestinationVariable Long messageId,
+                                  SimpMessageHeaderAccessor headerAccessor) {
+        try {
+            LoginResponse loginUser = (LoginResponse) headerAccessor.getSessionAttributes().get("loginUser");
+            if (loginUser == null) {
+                throw new IllegalStateException("User not authenticated");
+            }
+            Long userId = loginUser.getId();
 
-        chatMessageService.deleteMessage(messageId, userId);
-        return new ResponseEntity<>(HttpStatus.OK);
+            chatMessageService.deleteMessage(messageId, userId, roomId);
+
+            messagingTemplate.convertAndSend(
+                    "/sub/chat/room/" + roomId + "/message.delete",
+                    messageId
+            );
+
+        } catch (Exception e) {
+            System.out.print("채팅 메시지 처리 중 예외 발생");
+
+        }
     }
 }

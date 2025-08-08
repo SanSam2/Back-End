@@ -10,10 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
@@ -38,7 +35,7 @@ public class ChatMemberController {
     }
 
     // 새로고침시 읽은날짜 로드
-    @PostMapping("/last_read")
+    @PutMapping("/last_read")
     public ResponseEntity<Void> lastRead(
             @RequestBody LastReadDTO dto,
             HttpSession session) {
