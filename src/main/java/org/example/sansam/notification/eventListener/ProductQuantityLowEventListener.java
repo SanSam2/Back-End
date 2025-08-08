@@ -22,6 +22,13 @@ public class ProductQuantityLowEventListener {
     private final CartJpaRepository cartJpaRepository;
     private final WishJpaRepository wishJpaRepository;
 
+    /**
+     * Handles low product quantity events by notifying users with the affected product in their cart or wishlist.
+     *
+     * When a product's quantity becomes low, this method identifies users who have the product detail in their cart or the product in their wishlist and sends them appropriate low stock notifications.
+     *
+     * @param event the event containing information about the product detail with low quantity
+     */
     @EventListener
     public void handleProductQuantityLowEvent(ProductQuantityLowEvent event) {
         ProductDetail productDetail = event.getProductDetail(); // 상품 디테일
