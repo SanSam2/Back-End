@@ -9,9 +9,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductTmpService {
 
-    private final ProductRepository productRepository;
+    private final TmpProductRepository productRepository;
 
-    public Optional<Products> findById(Long id) {
+    public Optional<TmpProducts> findById(Long id) {
         return productRepository.findById(id);
     }
 

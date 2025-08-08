@@ -44,6 +44,14 @@ public class SwaggerConfig {
     }
 
     @Bean
+    public GroupedOpenApi orderFindApi() {
+        return GroupedOpenApi.builder()
+                .group("상품조회 API")
+                .pathsToMatch("/orders/**")
+                .build();
+    }
+
+    @Bean
     public GroupedOpenApi productApi() {
         return GroupedOpenApi.builder()
                 .group("상품 API")
