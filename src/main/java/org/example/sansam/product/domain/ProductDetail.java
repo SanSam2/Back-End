@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.sansam.product.dto.Option;
+import org.example.sansam.s3.domain.FileManagement;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,9 +32,26 @@ public class ProductDetail {
     @Column(name = "map_name")
     private String mapName;
 
-    @Column(name = "file_management_id", nullable = false)
-    private Long fileManagementId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_management_id")
+    private FileManagement fileManagement;
 
     @OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL)
     private List<ProductConnect> productConnects = new ArrayList<>();
+
+    public Option getOptionName() {
+        String color = null;
+        String size = null;
+        for (ProductConnect connect : productConnects) {
+            ProductOption option = connect.getOption();
+            if (option.getType().equals("color") ) {
+                color = option.getName();
+            } else if (option.getType().equals("size")) {
+                size = option.getName();
+            }
+        }
+        return new Option(color, size);
+    }
+
+
 }

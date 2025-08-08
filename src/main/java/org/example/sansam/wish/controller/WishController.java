@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.sansam.wish.dto.AddWishRequest;
 import org.example.sansam.wish.dto.DeleteWishRequest;
 import org.example.sansam.wish.dto.SearchWishResponse;
+import org.example.sansam.wish.service.WishService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,10 +16,12 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/wishes")
 public class WishController {
+    private final WishService wishService;
     //위시 추가, 삭제, 리스트 조회,
     @PostMapping("/add")
     public ResponseEntity<?> addWish(@RequestBody AddWishRequest addWishRequest) {
         try{
+            wishService.addWish(addWishRequest);
             return ResponseEntity.ok("위시 추가 완료");
         }catch(IllegalArgumentException e){
             return ResponseEntity.status(400).body(e.getMessage());
@@ -27,16 +31,20 @@ public class WishController {
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteWish(@RequestBody DeleteWishRequest deleteWishRequest) {
         try{
+            wishService.deleteWish(deleteWishRequest);
             return ResponseEntity.ok("위시 삭제 완료");
         }catch(IllegalArgumentException e){
             return ResponseEntity.status(400).body(e.getMessage());
         }
     }
 
-    @PostMapping("/list")
-    public ResponseEntity<?> searchWishList(@RequestParam(defaultValue = "1") Integer page, @RequestParam(defaultValue = "10") Integer size) {
+    @GetMapping("/list")
+    public ResponseEntity<?> searchWishList(
+            @RequestParam Long userId,
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer size) {
         try {
-            List<SearchWishResponse> wishList = new ArrayList<>();
+            Page<SearchWishResponse> wishList = wishService.searchWishList(userId, page, size);
             return ResponseEntity.ok(wishList);
         } catch (Exception e) {
             return ResponseEntity.status(400).body(e.getMessage());

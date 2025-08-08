@@ -8,6 +8,7 @@ import lombok.Setter;
 public class UpdateCartRequest {
     private Long userId;
     private Long productId;
-    private Long productDetailsId;
+    private String color;
+    private String size;
     private Long quantity;
 }

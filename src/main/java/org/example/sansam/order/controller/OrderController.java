@@ -9,16 +9,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.order.dto.OrderItemDto;
+import org.example.sansam.order.dto.OrderProductResponse;
 import org.example.sansam.order.dto.OrderResponse;
+import org.example.sansam.order.dto.OrderWithProductsResponse;
 import org.example.sansam.order.service.OrderProductService;
 import org.example.sansam.order.service.OrderService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -56,11 +61,11 @@ public class OrderController {
             List<OrderItemDto> items = orderProductService.findByOrderId(orderId);
 
             if(items.isEmpty()){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("주문하신 상품이 없습니다.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorCode.PRODUCT_NOT_FOUND.getMessage());
             }
             return ResponseEntity.status(HttpStatus.OK).body(items);
         }catch(Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류로 조회 실패");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
         }
     }
 
@@ -75,6 +80,20 @@ public class OrderController {
                               {
                                 "orderId": 1,
                                 "userId": 2,
+                                {
+                                    orderItemName : 상품명
+                                    Itemprice : 상품 가격
+                                    ItemSize : 상품 사이즈
+                                    ItemColor : 상품 색상 
+                                    ItemQuantity : 상품 구매 개수
+                                }
+                                {
+                                    orderItemName : 상품명
+                                    Itemprice : 가격
+                                    ItemSize : 사이즈
+                                    ItemColor : 색상
+                                    ItemQuantity : 개수
+                                }
                                 "totalAmount": 50000,
                                 "orderStatus": "ORDERED",
                                 "createdAt": "2025-07-31T13:30:00"
@@ -93,15 +112,16 @@ public class OrderController {
                             examples = @ExampleObject(value = "회원의 주문 내역이 없습니다.")))
     })
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getOrdersByUserId(@PathVariable Long userId) {
+    public ResponseEntity<?> getOrdersByUserId(@PathVariable Long userId, @RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "5") int size) {
         try {
-            List<OrderResponse> orders = orderService.getAllOrdersByUserId(userId);
+            Page<OrderWithProductsResponse> orders = orderService.getAllOrdersByUserId(userId,page, size);
             if (orders.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("회원의 주문 내역이 없습니다.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorCode.ORDER_NOT_FOUND.getMessage());
             }
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류로 조회 실패");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
         }
     }
 
