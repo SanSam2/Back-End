@@ -32,7 +32,7 @@ public class ProductDetail {
     @Column(name = "map_name")
     private String mapName;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_management_id")
     private FileManagement fileManagement;
 
