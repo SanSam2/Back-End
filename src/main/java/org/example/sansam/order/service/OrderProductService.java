@@ -24,7 +24,7 @@ public class OrderProductService {
             OrderItemDto dto = new OrderItemDto();
             dto.setProductId(orderProduct.getProduct().getProductsId());
             dto.setProductPrice(orderProduct.getProduct().getPrice());
-            dto.setQuantity(orderProduct.getQuantity().intValue());
+            dto.setQuantity(orderProduct.getQuantity());
             return dto;
         }).toList();
     }
