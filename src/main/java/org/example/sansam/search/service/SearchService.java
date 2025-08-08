@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +31,7 @@ public class SearchService {
     private final WishJpaRepository wishJpaRepository;
     private final FileService fileService;
 
+    @Transactional(readOnly = true)
     public Page<SearchItemResponse> searchProductList(
             String keyword, String bigCategory, String middleCategory, String smallCategory,
             Long userId, int page, int size, String sort
@@ -103,12 +105,15 @@ public class SearchService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<SearchListResponse> getProductsByLike(Long userId) {
         List<Product> products = productJpaRepository.findTopWishListProduct();
         return productToDto(products, userId);
     }
 
+
     //상품 추천 - 위시에 상품이 있는 경우 -> 위시에 있는 상품과 같은 카테고리에 있는 상품 랜덤 추천 / 상품 위시에 없거나 유저 로그인X 시 -> 상품 조회순으로 표시
+    @Transactional(readOnly = true)
     public List<SearchListResponse> getProductsByRecommend(Long userId) {
         Wish wish = wishJpaRepository.findTopByUserIdOrderByCreated_atDesc(userId);
         List<Product> products;

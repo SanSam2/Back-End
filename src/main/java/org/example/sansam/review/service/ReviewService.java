@@ -94,6 +94,7 @@ public class ReviewService {
         reviewJpaRepository.delete(review);
     }
 
+    @Transactional(readOnly = true)
     public List<SearchReviewListResponse> searchReviews(Long productId) {
         List<Review> reviews = reviewJpaRepository.findAllByProductId(productId);
         return reviews.stream()
@@ -101,6 +102,7 @@ public class ReviewService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<SearchReviewListResponse> searchMyReviews(Long userId) {
         List<Review> reviews = reviewJpaRepository.findAllByUserId(userId);
         return reviews.stream()
