@@ -26,10 +26,7 @@ public class CartController {
                     @ApiResponse(responseCode = "500", description = "서버 에러")
             })
     @PostMapping("/add")
-    public ResponseEntity<?> addCar
-
-
-    t(@RequestBody AddCartRequest addCartRequest){
+    public ResponseEntity<?> addCart(@RequestBody AddCartRequest addCartRequest){
         try{
             cartService.AddCartItem(addCartRequest);
             return ResponseEntity.ok(new TextResponse("장바구니 추가 완료"));
