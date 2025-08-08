@@ -3,7 +3,7 @@ package org.example.sansam.product.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.sansam.notification.event.CartLowEvent;
+import org.example.sansam.notification.event.ProductQuantityLowEvent;
 import org.example.sansam.product.domain.*;
 import org.example.sansam.product.dto.*;
 import org.example.sansam.product.repository.ProductConnectJpaRepository;
