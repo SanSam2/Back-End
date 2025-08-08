@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.chat.dto.ChatMessageRequestDTO;
 import org.example.sansam.chat.dto.ChatMessageResponseDTO;
+import org.example.sansam.chat.dto.ChatMessageSendResponseDTO;
 import org.example.sansam.chat.service.ChatMessageService;
 import org.example.sansam.user.dto.LoginResponse;
 import org.springframework.data.domain.Page;
@@ -58,10 +59,10 @@ public class ChatMessageController {
             }
             Long userId = loginUser.getId();
 
-            ChatMessageResponseDTO chatMessageResponseDTO = chatMessageService.addMessage(chatMessageRequestDTO, userId, roomId);
+            ChatMessageSendResponseDTO chatMessageSendResponseDTO = chatMessageService.addMessage(chatMessageRequestDTO, userId, roomId);
 
             messagingTemplate.convertAndSend(
-                    "/sub/chat/room/" + roomId, chatMessageResponseDTO
+                    "/sub/chat/room/" + roomId, chatMessageSendResponseDTO
             );
         } catch (Exception e) {
             System.out.print("채팅 메시지 처리 중 예외 발생");

@@ -6,6 +6,7 @@ import org.example.sansam.chat.domain.ChatRoom;
 import org.example.sansam.chat.dto.ChatMessageRequestDTO;
 import org.example.sansam.chat.dto.ChatMessageResponseDTO;
 
+import org.example.sansam.chat.dto.ChatMessageSendResponseDTO;
 import org.example.sansam.chat.repository.ChatMemberRepository;
 import org.example.sansam.chat.repository.ChatMessageRepository;
 import org.example.sansam.chat.repository.ChatRoomRepository;
@@ -54,7 +55,7 @@ public class ChatMessageService {
         }
 
         List<ChatMessageResponseDTO> chatMessageResponseDTOS = messages.stream()
-                .map(msg -> ChatMessageResponseDTO.fromEntity(msg, msg.getSender().getName(), roomId, userId))
+                .map(msg -> ChatMessageResponseDTO.fromEntity(msg, msg.getSender().getName(), roomId))
                 .collect(Collectors.toList());
         Collections.reverse(chatMessageResponseDTOS);
 
@@ -63,7 +64,7 @@ public class ChatMessageService {
 
     // 메세지 전송시, 데이터 베이스에 추가
     @Transactional
-    public ChatMessageResponseDTO addMessage(ChatMessageRequestDTO chatMessageRequestDTO, Long userId, Long roomId) {
+    public ChatMessageSendResponseDTO addMessage(ChatMessageRequestDTO chatMessageRequestDTO, Long userId, Long roomId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
@@ -82,7 +83,7 @@ public class ChatMessageService {
         chatMessageRepository.save(chatMessage);
         chatRoom.setLastMessageAt(chatMessage.getCreatedAt());
 
-        return ChatMessageResponseDTO.fromEntity(chatMessage,user.getName(), roomId, userId);
+        return ChatMessageSendResponseDTO.fromEntity(chatMessage,user.getName(), roomId, userId);
     }
 
     // 메세지 삭제

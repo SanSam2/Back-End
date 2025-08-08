@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatMessageResponseDTO {
+public class ChatMessageSendResponseDTO {
 
     private Long id;
     private String message;
@@ -21,13 +21,13 @@ public class ChatMessageResponseDTO {
     private Long sender;
     private Long roomId;
 
-    public static ChatMessageResponseDTO fromEntity(ChatMessage chatMessage, String userName, Long roomId) {
-        return ChatMessageResponseDTO.builder()
+    public static ChatMessageSendResponseDTO fromEntity(ChatMessage chatMessage, String userName, Long roomId, Long userId) {
+        return ChatMessageSendResponseDTO.builder()
                 .id(chatMessage.getId())
                 .message(chatMessage.getMessage())
                 .createdAt(chatMessage.getCreatedAt())
                 .userName(userName)
-                .sender(chatMessage.getSender().getId())
+                .sender(userId)
                 .roomId(roomId)
                 .build();
     }
