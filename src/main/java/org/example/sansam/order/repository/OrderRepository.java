@@ -4,6 +4,7 @@ package org.example.sansam.order.repository;
 import jakarta.transaction.Transactional;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.status.domain.Status;
+import org.example.sansam.status.domain.StatusEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -57,4 +58,5 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
     """)
     List<Order> findOrdersWithProductsFetchJoin(@Param("ids") List<Long> ids);
 
+    List<Order> findByDeliveredAtBeforeAndStatus_StatusId(LocalDateTime deliveredAtBefore, Long statusId);
 }
