@@ -186,9 +186,7 @@ public class NotificationService {
 
             // 파라미터 수에 맞춰 잘라내기
             Object[] args = new Object[placeholderCount];
-            for (int i = 0; i < placeholderCount; i++) {
-                args[i] = parts[i];
-            }
+            System.arraycopy(parts, 0, args, 0, placeholderCount);
 
             return String.format(template, args);
         } catch (IllegalFormatException e) {

@@ -3,7 +3,7 @@ package org.example.sansam.product.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.example.sansam.notification.event.ProductQuantityLowEvent;
 import org.example.sansam.product.domain.*;
 import org.example.sansam.product.dto.*;
 import org.example.sansam.product.repository.ProductConnectJpaRepository;
@@ -11,6 +11,7 @@ import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.s3.service.FileService;
 import org.example.sansam.wish.repository.WishJpaRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -27,6 +28,7 @@ public class ProductService {
     private final ProductDetailJpaRepository productDetailJpaRepository;
     private final WishJpaRepository wishJpaRepository;
     private final FileService fileService;
+    private final ApplicationEventPublisher publisher;
 
     private static final int NEW_PRODUCT_PERIOD_DAYS = 14;
 
@@ -78,7 +80,8 @@ public class ProductService {
 
         Set<String> colors = new LinkedHashSet<>();
         Set<String> sizes = new LinkedHashSet<>();
-        Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, colors, sizes);
+        Map<String, ProductDetailResponse> colorOptionMap =
+                getProductOption(product, colors, sizes);
 
         String defaultColor = colors.stream()
                 .findFirst()
@@ -247,9 +250,13 @@ public class ProductService {
         if (stock < request.getNum()) {
             throw new IllegalArgumentException("재고가 부족합니다. 현재 재고: " + stock);
         }
-        productDetail.setQuantity(stock - request.getNum());
-
+        Long afterStock = stock - request.getNum();
+        productDetail.setQuantity(afterStock);
         productDetailJpaRepository.save(productDetail);
+
+        if (stock > 50L && afterStock <= 50L) {
+            publisher.publishEvent(new ProductQuantityLowEvent(productDetail));
+        }
         return new SearchStockResponse(
                 product.getId(),
                 request.getSize(),
