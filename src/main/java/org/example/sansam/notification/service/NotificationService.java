@@ -176,6 +176,16 @@ public class NotificationService {
         }
     }
 
+    /**
+     * Formats a notification message by substituting parameters into the template.
+     *
+     * Splits the provided parameter string by commas and inserts the resulting values into the template's "%s" placeholders.
+     * Throws a {@code CustomException} if the number of parameters is insufficient or if formatting fails.
+     *
+     * @param template the message template containing "%s" placeholders
+     * @param param a comma-separated string of parameters to substitute into the template
+     * @return the formatted message string
+     */
     private String formatMessage(String template, String param) {
         try {
             int placeholderCount = countPlaceholders(template);
