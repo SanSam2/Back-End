@@ -1,7 +1,7 @@
 package org.example.sansam.order.repository;
 
 import org.example.sansam.order.domain.OrderProduct;
-import org.example.sansam.status.Status;
+import org.example.sansam.status.domain.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

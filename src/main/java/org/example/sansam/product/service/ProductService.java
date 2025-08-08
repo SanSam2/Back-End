@@ -3,6 +3,7 @@ package org.example.sansam.product.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.product.domain.*;
 import org.example.sansam.product.dto.*;
 import org.example.sansam.product.repository.ProductConnectJpaRepository;
@@ -20,6 +21,7 @@ import static org.example.sansam.product.domain.ProductStatus.SOLDOUT;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductService {
     private final ProductJpaRepository productJpaRepository;
     private final ProductDetailJpaRepository productDetailJpaRepository;
@@ -38,7 +40,6 @@ public class ProductService {
             List<ProductConnect> productConnects = detail.getProductConnects();
             String color = null;
             String size = null;
-
             for (ProductConnect connect : productConnects) {
                 ProductOption option = connect.getOption();
                 if ("color".equals(option.getType())) {
@@ -55,6 +56,7 @@ public class ProductService {
             colorImageMap.computeIfAbsent(color, c ->
                     fileService.getImageUrl(detail.getFileManagement().getId())
             );
+            log.error("이거너ㅏ이ㅓ린마럼;ㅣㅏㅓ라ㅣ;너라ㅣ;ㅁㄴ얼;ㅏㅣㄴ어라ㅣ;널;ㅣ ㅏㅁㄴ어라ㅣㄴ어;리ㅏ");
 
             ProductDetailResponse productDetailResponse = colorOptionMap.computeIfAbsent(
                     color,
@@ -205,6 +207,7 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
         ProductDetailResponse detailResponse = colorOptionMap.get(request.getColor());
+        log.error(detailResponse.toString());
         List<ProductDetail> productDetails = product.getProductDetails();
         ProductDetail findDetail = productDetails.stream()
                 .filter(detail -> matchProductDetail(detail, request.getColor(), request.getSize()))
@@ -235,10 +238,11 @@ public class ProductService {
     //재고 감소
     @Transactional
     public SearchStockResponse decreaseStock(ChangStockRequest request) throws IllegalArgumentException {
+        log.error("되나되난ㄷ아ㅣㄹ너ㅏㅣㄹ넘ㅇ;ㅏㅣ러;아ㅣ럼나이러ㅏㄴㅇ루ㅢ;ㅁㄴㅇㄹ");
         ProductDetail productDetail = searchProductDetail(request);
+        log.error(productDetail.toString());
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
-
         Long stock = productDetail.getQuantity();
         if (stock < request.getNum()) {
             throw new IllegalArgumentException("재고가 부족합니다. 현재 재고: " + stock);

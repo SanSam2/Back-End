@@ -15,7 +15,8 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR("내부 서버 오류입니다."),
     API_INTERNAL_ERROR("API 내부 오류 발생입니다."),
     CANCEL_NOT_FOUND("취소 내역이 존재하지 않습니다."),
-    RESPONSE_FORM_NOT_RIGHT("응답 형식이 옳지 않습니다.");
+    RESPONSE_FORM_NOT_RIGHT("응답 형식이 옳지 않습니다."),
+    NO_ITEM("구매하려는 상품의 재고가 없습니다.");
 
     private final String message;
 

@@ -13,7 +13,8 @@ import org.example.sansam.payment.domain.PaymentsType;
 import org.example.sansam.payment.dto.TossPaymentRequest;
 import org.example.sansam.payment.repository.PaymentsRepository;
 import org.example.sansam.payment.repository.PaymentsTypeRepository;
-import org.example.sansam.status.Status;
+import org.example.sansam.status.domain.Status;
+import org.example.sansam.status.domain.StatusEnum;
 import org.example.sansam.status.repository.StatusRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,8 +51,8 @@ public class PaymentService {
             savePaymentInfo(method, request);
 
 
-            Status orderPaid = statusRepository.findByStatusName("ORDER_PAID");
-            Status orderProductPaid = statusRepository.findByStatusName("ORDER_PRODUCT_PAID");
+            Status orderPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PAID);
+            Status orderProductPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID);
             order.completePayment(orderPaid, orderProductPaid, request.getPaymentKey());
             orderRepository.save(order);
 
@@ -86,7 +87,7 @@ public class PaymentService {
     }
     private void orderCheck(String orderId, Long amount) {
         Order order = orderRepository.findById(Long.valueOf(orderId)).orElse(null);
-        Status status = statusRepository.findByStatusName("ORDER_PAID");
+        Status status = statusRepository.findByStatusName(StatusEnum.ORDER_PAID);
 
         if(order.getStatus().equals(status)){
             throw new CustomException(ErrorCode.ORDER_ALREADY_FINISHED);
