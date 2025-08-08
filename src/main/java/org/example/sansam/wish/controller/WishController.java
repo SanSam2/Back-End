@@ -4,13 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.example.sansam.wish.dto.AddWishRequest;
 import org.example.sansam.wish.dto.DeleteWishRequest;
 import org.example.sansam.wish.dto.SearchWishResponse;
+import org.example.sansam.product.dto.TextResponse;
 import org.example.sansam.wish.service.WishService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,7 +20,7 @@ public class WishController {
     public ResponseEntity<?> addWish(@RequestBody AddWishRequest addWishRequest) {
         try{
             wishService.addWish(addWishRequest);
-            return ResponseEntity.ok("위시 추가 완료");
+            return ResponseEntity.ok(new TextResponse("성공"));
         }catch(IllegalArgumentException e){
             return ResponseEntity.status(400).body(e.getMessage());
         }
@@ -32,7 +30,7 @@ public class WishController {
     public ResponseEntity<?> deleteWish(@RequestBody DeleteWishRequest deleteWishRequest) {
         try{
             wishService.deleteWish(deleteWishRequest);
-            return ResponseEntity.ok("위시 삭제 완료");
+            return ResponseEntity.ok(new TextResponse("성공"));
         }catch(IllegalArgumentException e){
             return ResponseEntity.status(400).body(e.getMessage());
         }

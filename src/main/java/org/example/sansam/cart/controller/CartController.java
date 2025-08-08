@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.cart.dto.*;
 import org.example.sansam.cart.service.CartService;
+import org.example.sansam.product.dto.TextResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,7 @@ public class CartController {
     public ResponseEntity<?> addCart(@RequestBody AddCartRequest addCartRequest){
         try{
             cartService.AddCartItem(addCartRequest);
-            return ResponseEntity.ok("장바구니 추가 완료");
+            return ResponseEntity.ok(new TextResponse("장바구니 추가 완료"));
         }catch(IllegalArgumentException e){
             return ResponseEntity.status(400).body(e.getMessage());
         }
@@ -38,7 +39,7 @@ public class CartController {
     public ResponseEntity<?> deleteCart(@RequestBody DeleteCartRequest deleteCartRequest){
         try{
             cartService.deleteCartItem(deleteCartRequest);
-            return ResponseEntity.ok("장바구니 삭제 완료");
+            return ResponseEntity.ok(new TextResponse("장바구니 삭제 완료"));
         }catch(IllegalArgumentException e){
             return ResponseEntity.status(400).body(e.getMessage());
         }

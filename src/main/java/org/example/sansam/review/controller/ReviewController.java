@@ -1,6 +1,7 @@
 package org.example.sansam.review.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.sansam.product.dto.TextResponse;
 import org.example.sansam.review.dto.*;
 import org.example.sansam.review.service.ReviewService;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class ReviewController {
     public ResponseEntity<?> createReview(@RequestBody AddReviewRequest addReviewRequest) {
         try{
             reviewService.createReview(addReviewRequest);
-            return ResponseEntity.ok("리뷰 추가 완료");
+            return ResponseEntity.ok(new TextResponse("리뷰 추가 완료"));
         }catch(IllegalArgumentException e){
             return ResponseEntity.status(400).body(e.getMessage());
         }
@@ -43,7 +44,7 @@ public class ReviewController {
     public ResponseEntity<?> deleteReview(@RequestBody DeleteReviewRequest deleteReviewRequest) {
         try{
             reviewService.deleteReview(deleteReviewRequest);
-            return ResponseEntity.ok("리뷰 삭제 완료");
+            return ResponseEntity.ok(new TextResponse("리뷰 삭제 완료"));
         }catch(IllegalArgumentException e){
             return ResponseEntity.status(400).body(e.getMessage());
         }
