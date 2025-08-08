@@ -12,7 +12,8 @@ import org.example.sansam.payment.domain.PaymentCancellation;
 import org.example.sansam.payment.domain.PaymentCancellationHistory;
 import org.example.sansam.payment.dto.PaymentCancelRequest;
 import org.example.sansam.payment.repository.PaymentsCancelRepository;
-import org.example.sansam.status.Status;
+import org.example.sansam.status.domain.Status;
+import org.example.sansam.status.domain.StatusEnum;
 import org.example.sansam.status.repository.StatusRepository;
 import org.springframework.stereotype.Service;
 
@@ -40,10 +41,10 @@ public class PaymentCancelService {
         try{
             //orderId 즉, orderNumber를 받아서, order찾기 (주문과 주문 상품 한방에 fetch join으로 가져옴)
             Order order = orderRepository.findOrderWithProducts(request.getOrderId());
-            Status cancelRequested = statusRepository.findByStatusName("ORDER_CANCEL_REQUESTED");
-            Status orderPartialCanceled = statusRepository.findByStatusName("ORDER_PARTIAL_CANCELED");
-            Status orderAllCanceled = statusRepository.findByStatusName("ORDER_ALL_CANCELED");
-            Status cancelCompleted = statusRepository.findByStatusName("CANCEL_COMPLETED");
+            Status cancelRequested = statusRepository.findByStatusName(StatusEnum.ORDER_CANCEL_REQUESTED);
+            Status orderPartialCanceled = statusRepository.findByStatusName(StatusEnum.ORDER_PARTIAL_CANCELED);
+            Status orderAllCanceled = statusRepository.findByStatusName(StatusEnum.ORDER_ALL_CANCELED);
+            Status cancelCompleted = statusRepository.findByStatusName(StatusEnum.CANCEL_COMPLETED);
 
             order.changeStatus(cancelRequested);
             Long cancelTotalAmount =order.getTotalAmount();

@@ -22,7 +22,7 @@ public class OrderProductService {
 
         return orderProducts.stream().map(orderProduct -> {
             OrderItemDto dto = new OrderItemDto();
-            dto.setProductId(orderProduct.getProduct().getProductsId());
+            dto.setProductId(orderProduct.getProduct().getId());
             dto.setProductPrice(orderProduct.getProduct().getPrice());
             dto.setQuantity(orderProduct.getQuantity());
             return dto;
