@@ -13,8 +13,8 @@ public class OrderProductSpec {
     private int quantity;
 
     public OrderProductSpec(OrderProduct orderProduct) {
-        this.productId = orderProduct.getProduct().getProductsId();
-        this.productName =orderProduct.getProduct().getName();
+        this.productId = orderProduct.getProduct().getId();
+        this.productName =orderProduct.getProduct().getProductName();
         this.productPrice = orderProduct.getProduct().getPrice();
         this.quantity = orderProduct.getQuantity();
     }

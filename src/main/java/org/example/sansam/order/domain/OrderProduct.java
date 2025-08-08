@@ -3,8 +3,8 @@ package org.example.sansam.order.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.example.sansam.order.tmp.TmpProducts;
-import org.example.sansam.status.Status;
+import org.example.sansam.product.domain.Product;
+import org.example.sansam.status.domain.Status;
 
 import java.util.Objects;
 
@@ -24,8 +24,8 @@ public class OrderProduct {
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "products_id",nullable = false)
-    private TmpProducts product;
+    @JoinColumn(name = "product_id",nullable = false)
+    private Product product;
 
     private int quantity;
 
@@ -39,7 +39,7 @@ public class OrderProduct {
 
     }
 
-    private OrderProduct(Order order, TmpProducts product, int quantity, Status status){
+    private OrderProduct(Order order, Product product, int quantity, Status status){
         this.order = order;
         this.product = product;
         this.quantity = quantity;
@@ -47,7 +47,7 @@ public class OrderProduct {
         this.status = status;
     }
 
-    public static OrderProduct create(Order order, TmpProducts product, int quantity,Status status){
+    public static OrderProduct create(Order order, Product product, int quantity, Status status){
         return new OrderProduct(order,product,quantity,status);
     }
 
