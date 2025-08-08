@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class CartService {
     private final ProductService productService;
     private final ProductDetailJpaRepository productDetailJpaRepository;
 
+    @Transactional
     public void AddCartItem(AddCartRequest request) {
         User user = userRepository.findById(request.getUserId()).orElseThrow();
         List<AddCartItem> addCartItemList = request.getAddCartItems();
@@ -41,6 +43,7 @@ public class CartService {
         }
     }
 
+    @Transactional
     public void deleteCartItem(DeleteCartRequest request) {
         User user = userRepository.findById(request.getUserId()).orElseThrow();
         List<DeleteCartItem> deleteCartItems = request.getDeleteCartItems();
@@ -52,6 +55,7 @@ public class CartService {
         }
     }
 
+    @Transactional(readOnly = true)
     public Page<SearchCartResponse> searchCarts(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         User user = userRepository.findById(userId).orElseThrow();
@@ -77,6 +81,7 @@ public class CartService {
                 });
     }
 
+    @Transactional
     public SearchCartResponse updateCart(UpdateCartRequest request) {
         User user = userRepository.findById(request.getUserId()).orElseThrow();
         Long detailId = productService.getDetailId(request.getColor(), request.getSize(), request.getProductId());
