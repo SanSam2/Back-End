@@ -4,6 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface ProductRepository extends JpaRepository<Products, Long> {
-    Optional<Products> findById(Long id);
+public interface TmpProductRepository extends JpaRepository<TmpProducts, Long> {
+    Optional<TmpProducts> findById(Long id);
 }

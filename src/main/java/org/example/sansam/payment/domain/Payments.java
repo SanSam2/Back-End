@@ -38,5 +38,20 @@ public class Payments {
     @Column(name="created_at")
     private LocalDateTime createdAt;
 
+    private Payments(Order order, PaymentsType paymentsType,Long totalPrice, LocalDateTime createdAt){
+        this.order= order;
+        this.paymnetsType= paymentsType;
+        this.totalPrice= totalPrice;
+        this.createdAt= createdAt;
+    }
+
+    public static Payments create(Order order, PaymentsType paymentsType,Long totalPrice, LocalDateTime createdAt){
+        if(order==null || paymentsType ==null || totalPrice==null || createdAt==null){
+            throw new IllegalArgumentException("Payment 필수값 누락");
+        }else{
+            return new Payments(order, paymentsType, totalPrice, createdAt);
+        }
+    }
+
 
 }
