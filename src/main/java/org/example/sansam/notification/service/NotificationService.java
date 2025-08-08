@@ -41,7 +41,7 @@ public class NotificationService {
     private final NotificationsRepository notificationRepository;
     private final NotificationHistoriesRepository notificationHistoriesRepository;
     private final Map<Long, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
-    private static final long DEFAULT_TIMEOUT = 60L * 1000 * 5; // 5분 설정, 리소스 점유 시간 절감
+    private static final long DEFAULT_TIMEOUT = 60L * 1000 * 30; // 30분 설정, 리소스 점유 시간 절감
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -144,8 +144,8 @@ public class NotificationService {
         sendNotification(user, NotificationType.REVIEW_REQUEST, "", messageParam);
     }
 
-    public void sendChatNotification(User user, String senderName, String message) {
-        sendNotification(user, NotificationType.CHAT, senderName, message);
+    public void sendChatNotification(User user, String chatRoomName, String message) {
+        sendNotification(user, NotificationType.CHAT, chatRoomName, message);
     }
 
     // private 메서드
@@ -157,6 +157,7 @@ public class NotificationService {
 
         NotificationHistories saved = saveNotificationHistory(user, template, title, message);
         String payload = serializeToJson(NotificationDTO.from(saved));
+        log.info(payload);
         sendViaSSEAsync(user.getId(), payload, type.getEventName());
 
         log.info("알림 전송 완료 - 사용자: {}, 이벤트: {}", user.getName(), type.getEventName());
@@ -240,15 +241,29 @@ public class NotificationService {
     protected void sendViaSSEAsync(Long userId, String payload, String eventName) {
         try {
             SseEmitter emitter = sseEmitters.get(userId);
+            log.info("Emitter 상태 확인 - userId: {}, emitter: {}", userId, emitter == null ? "null" : "존재");
+
             if (emitter == null) {
-                throw new CustomException(ErrorCode.EMITTER_NOT_FOUND);
+                log.warn("Emitter가 없음 - userId: {}, 알림은 저장됨", userId);
+                // SSE 전송 실패해도 알림은 이미 저장되었으므로 예외를 던지지 않음
+                return;
             }
+
             log.info("payload: {}, eventName: {}", payload, eventName);
             emitter.send(SseEmitter.event()
                     .name(eventName)
                     .data(payload, MediaType.APPLICATION_JSON));
+            log.info("SSE 전송 완료: userId: {}, eventName: {}", userId, eventName);
+
         }catch (IOException e) {
             log.error("SSE 전송 실패 - userId: {}, event: {}, error: {}", userId, eventName, e.getMessage() );
+
+            SseEmitter emitter = sseEmitters.get(userId);
+            if (emitter != null) {
+                emitter.completeWithError(e);
+                sseEmitters.remove(userId);
+                log.info("SSE emitter 제거 - userId: {}", userId);
+            }
         }
 
     }

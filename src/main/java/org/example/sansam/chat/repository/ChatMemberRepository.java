@@ -33,4 +33,6 @@ public interface ChatMemberRepository extends JpaRepository<ChatMember, ChatMemb
                           @Param("ts")     LocalDateTime ts);
 
     boolean existsByUserIdAndChatRoomId(Long userId, Long roomId);
+
+    Optional<List<ChatMember>> findAllByChatRoomId(Long roomId);
 }
