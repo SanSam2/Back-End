@@ -21,6 +21,12 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
 
+    /**
+     * Sends a welcome email to the specified user using a Thymeleaf template.
+     *
+     * @param user the user to receive the welcome email
+     * @throws RuntimeException if the email fails to send
+     */
     public void sendWelcomeEmail(User user) {
         try {
             MimeMessage message = createWelcomeMessage(user);
@@ -48,6 +54,14 @@ public class EmailService {
         return message;
     }
 
+    /**
+     * Sends a payment completion email to the specified user with order details and final price.
+     *
+     * @param user the recipient user
+     * @param orderName the name of the completed order
+     * @param finalPrice the final price paid for the order
+     * @throws RuntimeException if sending the email fails
+     */
     public void sendPaymentCompletedEmail(User user, String orderName, Long finalPrice) {
         try {
             MimeMessage message = createPaymentCompletedMessage(user, orderName, finalPrice);
@@ -77,6 +91,14 @@ public class EmailService {
         return message;
     }
 
+    /**
+     * Sends a payment cancellation email to the specified user with order and refund details.
+     *
+     * @param user the recipient of the email
+     * @param orderName the name of the canceled order
+     * @param refundPrice the amount refunded to the user
+     * @throws RuntimeException if sending the email fails
+     */
     public void sendPaymentCanceledMessage(User user, String orderName, Long refundPrice) {
         try {
             MimeMessage message = createPaymentCanceledMessage(user, orderName, refundPrice);
@@ -88,6 +110,16 @@ public class EmailService {
         }
     }
 
+    /**
+     * Creates a MIME email message notifying the user of a payment cancellation, including order details and refund amount.
+     *
+     * @param user the recipient user
+     * @param orderName the name of the canceled order
+     * @param refundPrice the amount refunded to the user
+     * @return a MimeMessage containing the payment cancellation notification
+     * @throws MessagingException if an error occurs while constructing the message
+     * @throws jakarta.mail.MessagingException if a Jakarta Mail-specific error occurs
+     */
     private MimeMessage createPaymentCanceledMessage(User user, String orderName, Long refundPrice) throws MessagingException, jakarta.mail.MessagingException {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
