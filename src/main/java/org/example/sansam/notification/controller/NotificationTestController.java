@@ -32,6 +32,15 @@ public class NotificationTestController {
     private final ChatMemberRepository chatMemberRepository;
     private final ChatRoomRepository chatRoomRepository;
 
+    /**
+     * Handles a test notification by simulating a product order and conditionally publishing a low quantity event.
+     *
+     * Retrieves a user and a product detail, simulates an order by reducing the product quantity, and publishes a
+     * {@code ProductQuantityLowEvent} if the product's quantity crosses from above 50 to 50 or below. Returns an HTTP 200 OK
+     * response on success, or an HTTP 500 response with the error message if an exception occurs.
+     *
+     * @return HTTP 200 OK if the operation succeeds; HTTP 500 with an error message if an exception is thrown.
+     */
     @PostMapping("/send")
     public ResponseEntity<?> sendTestNotification() {
         try {
