@@ -1,7 +1,6 @@
 package org.example.sansam.product.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.notification.event.ProductQuantityLowEvent;
@@ -14,6 +13,7 @@ import org.example.sansam.s3.service.FileService;
 import org.example.sansam.wish.repository.WishJpaRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.time.LocalDateTime;
@@ -73,7 +73,7 @@ public class ProductService {
     }
 
     //default option 조회
-    @Transactional
+    @Transactional(readOnly = true)
     public ProductResponse getProduct(Long productId, Long userId) {
         Product product = productJpaRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
@@ -114,6 +114,7 @@ public class ProductService {
     }
 
     //option 선택
+    @Transactional(readOnly = true)
     public ProductDetailResponse getOptionByColor(Long productId, String color) {
         Product product = productJpaRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
@@ -125,6 +126,7 @@ public class ProductService {
     }
 
     //재고 조회 - 옵션 별
+    @Transactional(readOnly = true)
     public SearchStockResponse checkStock(SearchStockRequest request) {
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
@@ -150,6 +152,7 @@ public class ProductService {
     }
 
     //상품 상태 체크 - 상품 조회 전 실행, 품절처리 및 상태 변경
+    @Transactional
     public ProductStatusResponse checkProductStatus(Long productId) {
         Product product = productJpaRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
