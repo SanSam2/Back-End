@@ -54,7 +54,7 @@ public class ChatMessageService {
         }
 
         List<ChatMessageResponseDTO> chatMessageResponseDTOS = messages.stream()
-                .map(msg -> ChatMessageResponseDTO.fromEntity(msg, msg.getSender().getName(), roomId))
+                .map(msg -> ChatMessageResponseDTO.fromEntity(msg, msg.getSender().getName(), roomId, userId))
                 .collect(Collectors.toList());
         Collections.reverse(chatMessageResponseDTOS);
 
@@ -82,16 +82,22 @@ public class ChatMessageService {
         chatMessageRepository.save(chatMessage);
         chatRoom.setLastMessageAt(chatMessage.getCreatedAt());
 
-        return ChatMessageResponseDTO.fromEntity(chatMessage,user.getName(), roomId);
+        return ChatMessageResponseDTO.fromEntity(chatMessage,user.getName(), roomId, userId);
     }
 
     // 메세지 삭제
     @Transactional
-    public void deleteMessage(Long messageId, Long userId) {
+    public void deleteMessage(Long messageId, Long userId, Long roomId) {
 
         ChatMessage chatMessage = chatMessageRepository.findById(messageId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("존재하지 않는 메세지입니다."));
+
+        Long actualRoomId = chatMessage.getChatRoom().getId();
+        if (!actualRoomId.equals(roomId)) {
+            throw new IllegalArgumentException(
+                    String.format("잘못된 접근입니다. 메시지[%d]는 방[%d]의 메시지가 아닙니다.", messageId, roomId));
+        }
 
         if (!chatMessage.getSender().getId().equals(userId)) {
             throw new IllegalArgumentException("본인의 메시지만 삭제할 수 있습니다.");
