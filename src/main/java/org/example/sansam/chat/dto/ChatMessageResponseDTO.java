@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.sansam.chat.domain.ChatMessage;
-import org.example.sansam.chat.domain.ChatRoom;
 
 import java.time.LocalDateTime;
 
@@ -19,14 +18,16 @@ public class ChatMessageResponseDTO {
     private String message;
     private LocalDateTime createdAt;
     private String userName;
+    private Long sender;
     private Long roomId;
 
-    public static ChatMessageResponseDTO fromEntity(ChatMessage chatMessage, String userName, Long roomId) {
+    public static ChatMessageResponseDTO fromEntity(ChatMessage chatMessage, String userName, Long roomId, Long userId) {
         return ChatMessageResponseDTO.builder()
                 .id(chatMessage.getId())
                 .message(chatMessage.getMessage())
                 .createdAt(chatMessage.getCreatedAt())
                 .userName(userName)
+                .sender(userId)
                 .roomId(roomId)
                 .build();
     }
