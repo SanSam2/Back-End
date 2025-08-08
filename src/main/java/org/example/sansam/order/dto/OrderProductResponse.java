@@ -1,7 +1,6 @@
 package org.example.sansam.order.dto;
 
 import lombok.Getter;
-import org.example.sansam.status.Status;
 
 import java.time.LocalDateTime;
 

@@ -10,10 +10,12 @@ import org.example.sansam.order.domain.OrderProduct;
 import org.example.sansam.order.dto.*;
 import org.example.sansam.order.repository.OrderProductRepository;
 import org.example.sansam.order.repository.OrderRepository;
-import org.example.sansam.order.tmp.ProductTmpService;
-import org.example.sansam.order.tmp.TmpProductRepository;
-import org.example.sansam.order.tmp.TmpProducts;
-import org.example.sansam.status.Status;
+import org.example.sansam.product.domain.Product;
+import org.example.sansam.product.dto.ChangStockRequest;
+import org.example.sansam.product.repository.ProductJpaRepository;
+import org.example.sansam.product.service.ProductService;
+import org.example.sansam.status.domain.Status;
+import org.example.sansam.status.domain.StatusEnum;
 import org.example.sansam.status.repository.StatusRepository;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
@@ -25,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,12 +36,13 @@ public class OrderService {
     //Order클래스 내부에 있는거니까 orderRepository에서 직접 꺼내고 수정
     private final OrderRepository orderRepository;
     private final OrderProductRepository orderProductRepository;
-    private final TmpProductRepository productRepository;
+    private final ProductService productService;
+
 
 
     private final UserRepository userRepository;
-    private final ProductTmpService productService;
     private final StatusRepository statusRepository;
+    private final ProductJpaRepository productJpaRepository;
 
     @Transactional
     public OrderResponse saveOrder(OrderRequest request){
@@ -51,32 +53,43 @@ public class OrderService {
 
         String orderName = buildOrderName(request.getItems());
         String orderNumber = generateCustomOrderNumber();
-        Status orderWaiting =statusRepository.findByStatusName("ORDER_WAITING");
+        Status orderWaiting = statusRepository.findByStatusName(StatusEnum.ORDER_WAITING);
         Long totalAmount = calculateTotalAmount(request.getItems());
         Order order = Order.create(user,orderName,orderNumber,orderWaiting ,totalAmount,LocalDateTime.now());
         Order savedOrder = orderRepository.save(order);
 
-        //재고 확인 후 재고 차감 로직
+        log.error("여기까진 이상없당ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ");
+        //재고 확인 후 재고 차감 로직 (2차때 꼭 다 갈아엎어버리기)
         for(OrderItemDto item : request.getItems()){
-            TmpProducts product = productRepository.findById(item.getProductId())
+
+            //Product가 있는지 없는지확인을 하고
+            Product product = productJpaRepository.findById(item.getProductId())
                     .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
-            //캡슐화(x, dont get, just´z try)
-            if(product.getStockQuantity()<item.getQuantity()){
-                throw new CustomException(ErrorCode.NOT_ENOUGH_STOCK);
-            }
-//                product.decreaseStock(item.getQuantity()); 재고 감소 위한 코드 (아마 나중에 쓰게될 코드?)
-        }
+            ChangStockRequest stockDecreaseRequest=new ChangStockRequest();
+            log.error(item.getProductColor());
+            log.error(item.getProductSize());
+            log.error(String.valueOf(item.getQuantity()));
+            stockDecreaseRequest.setProductId(product.getId());
+            stockDecreaseRequest.setSize(item.getProductSize());
+            stockDecreaseRequest.setColor(item.getProductColor());
+            stockDecreaseRequest.setNum(item.getQuantity());
 
+            try{
+                productService.decreaseStock(stockDecreaseRequest); //재고차감 안에서 현재 재고에 대한 확인 진행
+            }catch(Exception e) {
+                throw new CustomException(ErrorCode.NO_ITEM);
+            }
+        }
         saveOrderProducts(request.getItems(), savedOrder); //트랜잭션 전파에 대해서 서칭
         return new OrderResponse(savedOrder);
     }
 
     //orderProduct 1차 주문 저장 -> Spring 스케줄러로 만약, 주문 완료 안되면 해당 주문 삭제
     private void saveOrderProducts(List<OrderItemDto> items, Order order) {
-        Status orderProductWaiting = statusRepository.findByStatusName("ORDER_PRODUCT_WAITING");
+        Status orderProductWaiting = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_WAITING);
         for (OrderItemDto itemDto : items) {
-            TmpProducts product = productService.findById(itemDto.getProductId())
+            Product product = productJpaRepository.findById(itemDto.getProductId())
                     .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
             OrderProduct orderProduct = OrderProduct.create(order,product, itemDto.getQuantity(),orderProductWaiting);
@@ -97,7 +110,7 @@ public class OrderService {
         if (itemCount == 0) throw new CustomException(ErrorCode.NO_ITEM_IN_ORDER);
 
         Long firstProductId = items.get(0).getProductId();
-        TmpProducts firstProduct = productService.findById(firstProductId)
+        Product firstProduct = productJpaRepository.findById(firstProductId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
 //        if (itemCount == 1) {
@@ -106,14 +119,14 @@ public class OrderService {
 //            return firstProduct.getName() + " 외 " + (itemCount - 1) + "건"; //메모리 관점에서 어떻게 돌아갈까요?
 //        }
 
-        return itemCount == 1 ? firstProduct.getName(): firstProduct.getName() + " 외 " + (itemCount - 1) + "건";
+        return itemCount == 1 ? firstProduct.getProductName(): firstProduct.getProductName() + " 외 " + (itemCount - 1) + "건";
     }
 
     //총금액 계산 메솓즈
     private Long calculateTotalAmount(List<OrderItemDto> items) {
         Long totalAmount = 0L; //2^16  2^21? BigInteger
         for (OrderItemDto itemDto : items) {
-            TmpProducts product = productService.findById(itemDto.getProductId())
+            Product product = productJpaRepository.findById(itemDto.getProductId())
                     .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
             Long itemPrice = product.getPrice();
@@ -143,8 +156,8 @@ public class OrderService {
             var items = o.getOrderProducts().stream()
                     .map(op -> new OrderWithProductsResponse.ProductSummary(
                             op.getId(),
-                            op.getProduct().getProductsId(),
-                            op.getProduct().getName(),
+                            op.getProduct().getId(),
+                            op.getProduct().getProductName(),
                             op.getProduct().getPrice(),
                             op.getQuantity(),
                             op.getStatus().getStatusName()

@@ -3,7 +3,7 @@ package org.example.sansam.order.repository;
 
 import jakarta.transaction.Transactional;
 import org.example.sansam.order.domain.Order;
-import org.example.sansam.status.Status;
+import org.example.sansam.status.domain.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

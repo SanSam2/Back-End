@@ -3,7 +3,7 @@ package org.example.sansam.order.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.example.sansam.status.Status;
+import org.example.sansam.status.domain.Status;
 import org.example.sansam.user.domain.User;
 
 import java.time.LocalDateTime;

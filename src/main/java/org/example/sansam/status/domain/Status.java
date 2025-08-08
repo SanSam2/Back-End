@@ -1,4 +1,4 @@
-package org.example.sansam.status;
+package org.example.sansam.status.domain;
 
 
 import jakarta.persistence.*;
@@ -18,12 +18,13 @@ public class Status {
 
 
     @Column(name = "status_name")
-    private String statusName;
+    @Enumerated(EnumType.STRING)
+    private StatusEnum statusName;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public Status(String statusName) {
+    public Status(StatusEnum statusName) {
         this.statusName = statusName;
         this.createdAt = LocalDateTime.now();
     }
