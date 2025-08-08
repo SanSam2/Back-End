@@ -10,6 +10,7 @@ public class UserMapper {
                 .email(user.getEmail())
                 .name(user.getName())
                 .password(user.getPassword())
+                .mobileNumber(user.getMobileNumber())
                 .role(user.getRole().name())
                 .build();
     }

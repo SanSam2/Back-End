@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class OrderResponse {
 
-
-
     private Long orderId;
     private String orderNumber;
     private String orderName;
@@ -20,7 +18,7 @@ public class OrderResponse {
     private String status;
     private LocalDateTime createdAt;
 
-    public OrderResponse(Order order){
+    public OrderResponse (Order order){
         this.orderId = order.getId();
         this.orderName= order.getOrderName();
         this.orderNumber = order.getOrderNumber();
