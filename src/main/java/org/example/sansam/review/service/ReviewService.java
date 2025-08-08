@@ -100,4 +100,11 @@ public class ReviewService {
                 .map(SearchReviewListResponse::from)
                 .toList();
     }
+
+    public List<SearchReviewListResponse> searchMyReviews(Long userId) {
+        List<Review> reviews = reviewJpaRepository.findAllByUserId(userId);
+        return reviews.stream()
+                .map(SearchReviewListResponse::from)
+                .toList();
+    }
 }
