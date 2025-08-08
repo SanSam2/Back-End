@@ -30,7 +30,7 @@ public class EmailService {
     public void sendWelcomeEmail(User user) {
         try {
             MimeMessage message = createWelcomeMessage(user);
-            javaMailSender.send(message);
+            if (user.getEmailAgree())javaMailSender.send(message);
             log.info("회원 가입 이메일 전송 완료 - {}", user.getEmail());
         } catch (MessagingException | jakarta.mail.MessagingException e) {
             log.error("회원 가입 이메일 전송 실패 - {}", user.getEmail());
@@ -65,7 +65,7 @@ public class EmailService {
     public void sendPaymentCompletedEmail(User user, String orderName, Long finalPrice) {
         try {
             MimeMessage message = createPaymentCompletedMessage(user, orderName, finalPrice);
-            javaMailSender.send(message);
+            if (user.getEmailAgree()) javaMailSender.send(message);
             log.info("결제 완료 이메일 전송 완료 - {}", user.getEmail());
         } catch (Exception e) {
             log.error("결제 완료 이메일 전송 실패 - {}", user.getEmail());
@@ -102,7 +102,7 @@ public class EmailService {
     public void sendPaymentCanceledMessage(User user, String orderName, Long refundPrice) {
         try {
             MimeMessage message = createPaymentCanceledMessage(user, orderName, refundPrice);
-            javaMailSender.send(message);
+            if (user.getEmailAgree())javaMailSender.send(message);
             log.info("결제 취소 완료 이메일 전송 완료 - {}", user.getEmail());
         } catch (Exception e) {
             log.error("결제 취소 완료 이메일 전송 실패 - {}", user.getEmail());
