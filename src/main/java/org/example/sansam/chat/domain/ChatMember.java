@@ -28,5 +28,6 @@ public class ChatMember {
     @JoinColumn(name = "chatroom_id")
     private ChatRoom chatRoom;
 
+    @Column(name = "last_read_at")
     private LocalDateTime lastReadAt;
 }
