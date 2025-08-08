@@ -37,7 +37,7 @@ public class ProductService {
         Map<String, ProductDetailResponse> colorOptionMap = new LinkedHashMap<>();
         Map<String, String> colorImageMap = new HashMap<>();
 
-        List<ProductDetail> details = productDetailJpaRepository.findByProduct(product);
+        List<ProductDetail> details = productDetailJpaRepository.findByProductWithConnects(product);
 
         for (ProductDetail detail : details) {
             List<ProductConnect> productConnects = detail.getProductConnects();
