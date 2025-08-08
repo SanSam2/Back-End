@@ -21,6 +21,11 @@ public class AwsSesConfig {
     @Value("${cloud.aws.region.static}")
     private String region;
 
+    /**
+     * Creates and configures an AmazonSimpleEmailService client bean using provided AWS credentials and region.
+     *
+     * @return a configured AmazonSimpleEmailService client for sending emails via AWS SES
+     */
     @Bean
     public AmazonSimpleEmailService amazonSimpleEmailService() {
         AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
