@@ -59,4 +59,14 @@ public class ReviewController {
             return ResponseEntity.status(400).body(e.getMessage());
         }
     }
+
+    @GetMapping("/mypage")
+    public ResponseEntity<?> getMyReviews(@RequestParam Long userId) {
+        try {
+            List<SearchReviewListResponse> reviews = reviewService.searchMyReviews(userId);
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
 }
