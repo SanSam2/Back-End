@@ -5,6 +5,9 @@ import lombok.*;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.s3.domain.FileManagement;
 import org.example.sansam.user.domain.User;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reviews")
@@ -36,4 +39,8 @@ public class Review {
 
     @Column(name = "star_rating", nullable = false)
     private Integer starRating;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 }
