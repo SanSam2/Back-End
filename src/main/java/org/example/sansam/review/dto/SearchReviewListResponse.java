@@ -15,7 +15,6 @@ public class SearchReviewListResponse {
     private String url;
 
     public static SearchReviewListResponse from(Review review) {
-        Long fileId = review.getFile().getId();
         return SearchReviewListResponse.builder()
                 .userName(review.getUser().getName())
                 .message(review.getMessage())

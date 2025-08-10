@@ -9,5 +9,4 @@ public class DeleteCartItem {
     private Long productId;
     private String color;
     private String size;
-    private Long quantity;
 }
