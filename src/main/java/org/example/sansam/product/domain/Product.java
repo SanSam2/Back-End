@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.sansam.review.domain.Review;
 import org.example.sansam.s3.domain.FileManagement;
+import org.example.sansam.status.domain.Status;
 import org.example.sansam.wish.domain.Wish;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -35,8 +36,9 @@ public class Product {
     @Column(name = "product_name", nullable = false)
     private String productName;
 
-    @Enumerated(EnumType.STRING)
-    private ProductStatus status;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "status_id", nullable = false)
+    private Status status;
 
     private Long price;
 

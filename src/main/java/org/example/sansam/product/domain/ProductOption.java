@@ -3,6 +3,7 @@ package org.example.sansam.product.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,8 +28,9 @@ public class ProductOption {
     @Column(name = "use_yn", nullable = false)
     private Boolean useYn;
 
-    @Column(name = "option_date", nullable = false)
-    private LocalDateTime optionDate;
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "option", cascade = CascadeType.ALL)
     private List<ProductConnect> productConnects = new ArrayList<>();
