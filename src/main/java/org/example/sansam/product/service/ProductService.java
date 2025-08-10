@@ -112,7 +112,7 @@ public class ProductService {
                 product.getPrice(),
                 product.getDescription(),
                 product.getFileManagement() != null ? product.getFileManagement().getFileUrl() : null,
-                product.getStatus().getStatusName().name(),
+                product.getStatus() != null ? product.getStatus().getStatusName().name():StatusEnum.NEW.name(),
                 defaultDetail,
                 isWish,
                 reviewCount,
@@ -139,13 +139,14 @@ public class ProductService {
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
-        List<OptionResponse> optionResponses = colorOptionMap.get(canon(request.getColor())).getOptions();
-        if (optionResponses == null) {
+        ProductDetailResponse byColor = colorOptionMap.get(canon(request.getColor()));
+        if (byColor == null) {
             throw new EntityNotFoundException("해당 색상의 상품을 찾을 수 없습니다.");
         }
+        List<OptionResponse> optionResponses = byColor.getOptions();
         Long quantity = 0L;
         for (OptionResponse option : optionResponses) {
-            if (option.getSize().equals(canon(request.getSize()))) {
+            if(canon(option.getSize()).equals(canon(request.getSize()))) {
                 quantity = option.getQuantity();
                 break;
             }
@@ -167,43 +168,36 @@ public class ProductService {
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
         boolean statusChanged = false;
 
-        Status status = product.getStatus();
-        StatusEnum current = (status != null) ? status.getStatusName() : null;
+        StatusEnum current = product.getStatus() != null ? product.getStatus().getStatusName() : null;
+        StatusEnum next = (current != null) ? current : StatusEnum.NEW;
 
-        if (current == null) {
-            setStatus(product, StatusEnum.NEW);
-            statusChanged = true;
+        LocalDateTime deadlineDate = product.getCreatedAt().plusDays(NEW_PRODUCT_PERIOD_DAYS);
+        if (next == StatusEnum.NEW && LocalDateTime.now().isAfter(deadlineDate)) {
+            next = StatusEnum.AVAILABLE;
         }
 
-        if (current == StatusEnum.NEW) {
-            LocalDateTime deadlineDate = product.getCreatedAt().plusDays(NEW_PRODUCT_PERIOD_DAYS);
-            if (LocalDateTime.now().isAfter(deadlineDate)) {
-                setStatus(product, StatusEnum.AVAILABLE);
-                statusChanged = true;
-            }
+        boolean allSoldOut = checkAllOptionsSoldOut(colorOptionMap);
+        if (allSoldOut) {
+            next = StatusEnum.SOLDOUT;
+        } else if (next == StatusEnum.SOLDOUT) {
+            next = StatusEnum.AVAILABLE;
         }
 
-        boolean isAllSoldOut = checkAllOptionsSoldOut(colorOptionMap);
-        if (isAllSoldOut && current != StatusEnum.SOLDOUT) {
-            setStatus(product, StatusEnum.SOLDOUT);
-            statusChanged = true;
-        } else if (!isAllSoldOut && current == StatusEnum.SOLDOUT) {
-            setStatus(product, StatusEnum.AVAILABLE);
-            statusChanged = true;
-        }
-
-        if (statusChanged) {
+        if (next != current) {
+            setStatus(product, next);
             productJpaRepository.save(product);
         }
-
         return new ProductStatusResponse(
                 product.getProductName(),
-                product.getStatus().getStatusName().name()  // enum 이름 문자열로 반환
+                product.getStatus().getStatusName().name()
         );
     }
 
     private void setStatus(Product product, StatusEnum next) {
         Status status = statusRepository.findByStatusName(next);
+        if (status == null) {
+            throw new EntityNotFoundException("상태 엔티티가 없습니다: " + next);
+        }
         product.setStatus(status);
     }
 
@@ -219,9 +213,9 @@ public class ProductService {
         for (ProductConnect connect : detail.getProductConnects()) {
             ProductOption option = connect.getOption();
             if (option.getType().equals("color")) {
-                color = option.getName().equals(canon(targetColor));
+                color = canon(option.getName()).equals(canon(targetColor));
             } else if (option.getType().equals("size")) {
-                size = option.getName().equals(canon(targetSize));
+                size = canon(option.getName()).equals(canon(targetSize));
             }
         }
         return color && size;
@@ -273,10 +267,17 @@ public class ProductService {
             }
 
             if (attempt < MAX_TRY) {
-                try { Thread.sleep(BACKOFF_MS * attempt); } catch (InterruptedException ignored) {}
+                try {
+                    Thread.sleep(BACKOFF_MS * attempt);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("재시도 대기 중 인터럽트됨", ie);
+                }
                 continue;
             }
-            throw new OptimisticLockingFailureException(increment ? "재고 증가 충돌" : "재고 변경 충돌");
+            throw new OptimisticLockingFailureException(
+                    increment ? "재고 증가 충돌" : "재고 감소 충돌"
+            );
         }
         throw new IllegalStateException("재고 처리 오류");
     }
