@@ -18,7 +18,6 @@ import java.util.List;
 @NoArgsConstructor
 public class ProductDetail {
     @Id
-
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_detail_id")
     private Long id;
@@ -32,6 +31,10 @@ public class ProductDetail {
     @Column(name = "map_name")
     private String mapName;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_management_id")
     private FileManagement fileManagement;
@@ -44,7 +47,7 @@ public class ProductDetail {
         String size = null;
         for (ProductConnect connect : productConnects) {
             ProductOption option = connect.getOption();
-            if (option.getType().equals("color") ) {
+            if (option.getType().equals("color")) {
                 color = option.getName();
             } else if (option.getType().equals("size")) {
                 size = option.getName();
@@ -52,6 +55,5 @@ public class ProductDetail {
         }
         return new Option(color, size);
     }
-
 
 }
