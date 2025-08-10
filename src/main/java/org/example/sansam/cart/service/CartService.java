@@ -18,7 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Normalizer;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @AllArgsConstructor
@@ -28,17 +30,36 @@ public class CartService {
     private final ProductService productService;
     private final ProductDetailJpaRepository productDetailJpaRepository;
 
+    public boolean checkStock(Long detailId, Long quantity) {
+        ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
+        if(productDetail.getQuantity() < quantity) {
+            throw new IllegalArgumentException(detailId + " 재고가 부족합니다. 현재 재고: " + productDetail.getQuantity() + "요청 수량 : " + quantity);
+        }
+        return true;
+    }
     @Transactional
     public void AddCartItem(AddCartRequest request) {
         User user = userRepository.findById(request.getUserId()).orElseThrow();
         List<AddCartItem> addCartItemList = request.getAddCartItems();
+
         for(AddCartItem item : addCartItemList){
             Long detailId = productService.getDetailId(item.getColor(), item.getSize(), item.getProductId());
-            ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
+            Long cartId = isExistOption(user.getId(), detailId);
             Cart cart = new Cart();
+            if(cartId != 0) {
+                cart = cartJpaRepository.findById(cartId).orElseThrow();
+                Long changedQuantity = cart.getQuantity() + item.getQuantity();
+                cart.setQuantity(changedQuantity);
+                checkStock(detailId, changedQuantity);
+                cartJpaRepository.save(cart);
+                continue;
+            }
+
+            ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
             cart.setUser(user);
             cart.setQuantity(item.getQuantity());
             cart.setProductDetail(productDetail);
+            checkStock(detailId, item.getQuantity());
             cartJpaRepository.save(cart);
         }
     }
@@ -98,5 +119,12 @@ public class CartService {
                 .quantity(cart.getQuantity())
                 .stock(productDetail.getQuantity())
                 .build();
+    }
+
+    public Long isExistOption(Long userId, Long detail_id) {
+        User user = userRepository.findById(userId).orElseThrow();
+        ProductDetail productDetail = productDetailJpaRepository.findById(detail_id).orElseThrow();
+        Cart cart = cartJpaRepository.findByUserIdAndProductDetail(user, productDetail);
+        return cart != null ? cart.getId() : 0L;
     }
 }
