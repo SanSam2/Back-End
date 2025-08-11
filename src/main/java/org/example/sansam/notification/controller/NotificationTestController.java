@@ -51,25 +51,25 @@ public class NotificationTestController {
 //            String senderName = "김김김";
 //            String message = "집에 가고 싶구나..";
 
-//
-//            ProductDetail productDetail = productDetailJpaRepository.findById(1L).orElseThrow();
-//
-//            Long beforeQuantity = productDetail.getQuantity();
-//            log.info("beforeQuantity: {}", beforeQuantity);
-//            Long orderQuantity = 5L;
-//            Long afterQuantity = beforeQuantity - orderQuantity;
-//            log.info("afterQuantity: {}", afterQuantity);
-//
-//            if (beforeQuantity > 50L && afterQuantity <= 50L) {
-//                publisher.publishEvent(new ProductQuantityLowEvent(productDetail));
-//            }
+
+            ProductDetail productDetail = productDetailJpaRepository.findById(1L).orElseThrow();
+
+            Long beforeQuantity = productDetail.getQuantity();
+            log.info("beforeQuantity: {}", beforeQuantity);
+            Long orderQuantity = 5L;
+            Long afterQuantity = beforeQuantity - orderQuantity;
+            log.info("afterQuantity: {}", afterQuantity);
+
+            if (beforeQuantity > 50L && afterQuantity <= 50L) {
+                publisher.publishEvent(new ProductQuantityLowEvent(productDetail));
+            }
 
 
 
-            ChatRoom chatRoom = chatRoomRepository.findById(1L).orElseThrow();
-            User sender = userRepository.findById(1L).orElseThrow();
-            log.info("chatRoom - {}", chatRoom);
-            publisher.publishEvent(new ChatEvent(chatRoom, sender,"이게 바로 테스트 성공"));
+//            ChatRoom chatRoom = chatRoomRepository.findById(1L).orElseThrow();
+//            User sender = userRepository.findById(1L).orElseThrow();
+//            log.info("chatRoom - {}", chatRoom);
+//            publisher.publishEvent(new ChatEvent(chatRoom, sender,"이게 바로 테스트 성공"));
 
             return ResponseEntity.ok().build();
         }catch (Exception e) {
