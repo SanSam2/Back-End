@@ -2,6 +2,7 @@ package org.example.sansam.order.service;
 
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.order.domain.Order;
@@ -30,6 +31,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
 
     //Order클래스 내부에 있는거니까 orderRepository에서 직접 꺼내고 수정
@@ -80,8 +82,6 @@ public class OrderService {
 
         }
         List<OrderItemResponseDto> responseDtos = saveOrderProducts(request.getItems(), savedOrder);
-
-
         return new OrderResponse(savedOrder, responseDtos);
     }
 
