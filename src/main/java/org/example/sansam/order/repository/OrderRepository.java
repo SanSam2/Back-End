@@ -26,6 +26,8 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
     @Query("select o from Order o join fetch o.orderProducts where o.orderNumber = :orderNumber")
     Order findOrderWithProducts(@Param("orderNumber") String orderNumber);
 
+
+
     //계속 order_status가 waiting으로 되어있는 부분에 대한 삭제 처리
     @Transactional
     @Modifying
