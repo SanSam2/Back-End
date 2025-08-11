@@ -30,7 +30,6 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class OrderService {
 
     //Order클래스 내부에 있는거니까 orderRepository에서 직접 꺼내고 수정
@@ -58,7 +57,6 @@ public class OrderService {
         Order order = Order.create(user,orderName,orderNumber,orderWaiting ,totalAmount,LocalDateTime.now());
         Order savedOrder = orderRepository.save(order);
 
-        log.error("여기까진 이상없당ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ");
         //재고 확인 후 재고 차감 로직 (2차때 꼭 다 갈아엎어버리기)
         for(OrderItemDto item : request.getItems()){
 
@@ -67,9 +65,7 @@ public class OrderService {
                     .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
             ChangStockRequest stockDecreaseRequest=new ChangStockRequest();
-            log.error(item.getProductColor());
-            log.error(item.getProductSize());
-            log.error(String.valueOf(item.getQuantity()));
+
             stockDecreaseRequest.setProductId(product.getId());
             stockDecreaseRequest.setSize(item.getProductSize());
             stockDecreaseRequest.setColor(item.getProductColor());
@@ -81,8 +77,8 @@ public class OrderService {
                 throw new CustomException(ErrorCode.NO_ITEM);
             }
         }
-        saveOrderProducts(request.getItems(), savedOrder); //트랜잭션 전파에 대해서 서칭
-        return new OrderResponse(savedOrder);
+        saveOrderProducts(request.getItems(), savedOrder);
+        return new OrderResponse(savedOrder, request.getItems());
     }
 
     //orderProduct 1차 주문 저장 -> Spring 스케줄러로 만약, 주문 완료 안되면 해당 주문 삭제
@@ -92,12 +88,12 @@ public class OrderService {
             Product product = productJpaRepository.findById(itemDto.getProductId())
                     .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
-            OrderProduct orderProduct = OrderProduct.create(order,product, itemDto.getQuantity(),orderProductWaiting);
+            OrderProduct orderProduct = OrderProduct.create(order,product,itemDto.getProductPrice(),itemDto.getQuantity(),itemDto.getProductSize(),itemDto.getProductColor(),orderProductWaiting);
             orderProductRepository.save(orderProduct);
         }
     }
 
-    //주문번호 생성 메서드
+    //주문번호 생성 메서드 -> 이것도 도메인로직 안으로 집어넣어야한다.
     private String generateCustomOrderNumber() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
                 + "-" + UUID.randomUUID().toString().substring(0, 8);
@@ -122,7 +118,7 @@ public class OrderService {
         return itemCount == 1 ? firstProduct.getProductName(): firstProduct.getProductName() + " 외 " + (itemCount - 1) + "건";
     }
 
-    //총금액 계산 메솓즈
+    //총금액 계산 메소드
     private Long calculateTotalAmount(List<OrderItemDto> items) {
         Long totalAmount = 0L; //2^16  2^21? BigInteger
         for (OrderItemDto itemDto : items) {
