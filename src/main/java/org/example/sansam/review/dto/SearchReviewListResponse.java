@@ -19,7 +19,7 @@ public class SearchReviewListResponse {
                 .userName(review.getUser().getName())
                 .message(review.getMessage())
                 .rating(review.getStarRating())
-                .url(review.getFile().getFileDetail().getUrl())
+                .url(review.getFile() != null ? review.getFile().getFileDetail().getUrl(): null)
                 .build();
     }
 }

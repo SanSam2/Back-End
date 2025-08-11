@@ -40,8 +40,10 @@ public class ReviewService {
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다."));
-
-        FileManagement file = fileService.AddFile(request.getUrl(), request.getSize());
+        FileManagement file = null;
+        if (request.getUrl() != null) {
+            file = fileService.AddFile(request.getUrl(), request.getSize());
+        }
         review = Review.builder()
                 .user(user)
                 .product(product)
