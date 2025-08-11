@@ -12,7 +12,6 @@ import java.util.Objects;
 @Entity
 @Table(name = "order_product")
 @Getter
-@Setter
 public class OrderProduct {
 
     @Id
@@ -37,6 +36,8 @@ public class OrderProduct {
     private String orderedproductColor;
 
     private Long canceledQuantity=0L;
+
+    private Boolean isReviewed=false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id", nullable = false)
@@ -77,6 +78,8 @@ public class OrderProduct {
         this.status = status;
     }
 
-
+    public void changeReviewStatus(Boolean isReviewed){
+        this.isReviewed = isReviewed;
+    }
 
 }

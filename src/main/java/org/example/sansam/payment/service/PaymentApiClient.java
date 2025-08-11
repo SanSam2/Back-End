@@ -33,7 +33,6 @@ public class PaymentApiClient {
 
 
     public Map<String,Object> confirmPayment(TossPaymentRequest paymentRequest){
-        log.error("confirmPayment까지는 잘 들어옵니다.");
         // Base64 인코딩
         String encodedAuth = Base64.getEncoder().encodeToString((secretKey + ":").getBytes());
         String authHeader = "Basic " + encodedAuth;
@@ -42,7 +41,6 @@ public class PaymentApiClient {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", authHeader);
-        log.error("authHeader: {}", authHeader);
 
         // 요청 바디 설정
         Map<String, Object> payloadMap = Map.of(
@@ -50,17 +48,13 @@ public class PaymentApiClient {
                 "orderId", paymentRequest.getOrderId(),
                 "amount", paymentRequest.getAmount()
         );
-        log.error("payloadMap: {}", payloadMap);
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payloadMap, headers);
 
         try{
-            log.error("requestEntity: {}", requestEntity);
             ResponseEntity<Map> response = restTemplate.postForEntity(urlPath, requestEntity, Map.class);
-            log.error("response: {}", response);
             if(response.getStatusCode()== HttpStatus.OK){
                 return response.getBody();
             }else{
-                log.error("여기오륜가요");
                 throw new CustomException(ErrorCode.PAYMENT_FAILED);
             }
         }catch(Exception e){
@@ -92,7 +86,6 @@ public class PaymentApiClient {
             );
             return response.getBody();
         } catch (Exception e) {
-            log.error("Failed to cancel payment. PaymentKey: {}, Error: {}", paymentKey, e.getMessage());
             throw new IllegalStateException("결제 취소 요청 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
