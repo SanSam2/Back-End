@@ -1,7 +1,6 @@
 package org.example.sansam.payment.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
