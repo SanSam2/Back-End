@@ -28,6 +28,7 @@ public class OrderResponse {
         this.orderNumber = order.getOrderNumber();
         this.totalAmount = order.getTotalAmount();
         this.status = order.getStatus().getStatusName().toString();
+        this.items = items;
         this.createdAt = order.getCreatedAt();
     }
 
