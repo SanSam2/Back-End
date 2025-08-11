@@ -1,13 +1,11 @@
 package org.example.sansam.product.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.notification.event.ProductQuantityLowEvent;
 import org.example.sansam.product.domain.*;
 import org.example.sansam.product.dto.*;
-import org.example.sansam.product.repository.ProductConnectJpaRepository;
 import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.s3.service.FileService;
@@ -17,11 +15,7 @@ import org.example.sansam.status.repository.StatusRepository;
 import org.example.sansam.wish.repository.WishJpaRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
@@ -48,13 +42,21 @@ public class ProductService {
         Map<String, String> colorImageMap = new HashMap<>();
 
         List<ProductDetail> details = productDetailJpaRepository.findByProductWithConnects(product);
+        if (details == null || details.isEmpty()) {
+            throw new EntityNotFoundException("상품 옵션 정보가 없습니다.");
+        }
 
         for (ProductDetail detail : details) {
             List<ProductConnect> productConnects = detail.getProductConnects();
+            if (productConnects == null || productConnects.isEmpty()) continue;
+
             String color = null;
             String size = null;
+
             for (ProductConnect connect : productConnects) {
                 ProductOption option = connect.getOption();
+                if (option == null || option.getType() == null) continue;
+
                 if ("color".equals(option.getType())) {
                     color = option.getName();
                     if (colors != null) colors.add(color);
@@ -66,19 +68,25 @@ public class ProductService {
 
             if (color == null || size == null) continue;
 
+            if (detail.getFileManagement() == null || detail.getFileManagement().getId() == null) {
+                throw new EntityNotFoundException("상품 이미지 정보가 없습니다.");
+            }
             colorImageMap.computeIfAbsent(color, c ->
                     fileService.getImageUrl(detail.getFileManagement().getId())
             );
+
             ProductDetailResponse productDetailResponse = colorOptionMap.computeIfAbsent(
                     color,
                     currentColor -> new ProductDetailResponse(currentColor, colorImageMap.get(currentColor), new ArrayList<>())
             );
 
-            productDetailResponse.getOptions().add(new OptionResponse(size, detail.getQuantity()));
+            Long quantity = detail.getQuantity() != null ? detail.getQuantity() : 0L;
+            productDetailResponse.getOptions().add(new OptionResponse(size, quantity));
         }
 
         return colorOptionMap;
     }
+
 
     //default option 조회
     @Transactional(readOnly = true)
@@ -89,8 +97,7 @@ public class ProductService {
 
         Set<String> colors = new LinkedHashSet<>();
         Set<String> sizes = new LinkedHashSet<>();
-        Map<String, ProductDetailResponse> colorOptionMap =
-                getProductOption(product, colors, sizes);
+        Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, colors, sizes);
 
         String defaultColor = colors.stream()
                 .findFirst()
@@ -139,11 +146,11 @@ public class ProductService {
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
-        ProductDetailResponse byColor = colorOptionMap.get(canon(request.getColor()));
-        if (byColor == null) {
+        ProductDetailResponse detail = colorOptionMap.get(canon(request.getColor()));
+        if (detail == null) {
             throw new EntityNotFoundException("해당 색상의 상품을 찾을 수 없습니다.");
         }
-        List<OptionResponse> optionResponses = byColor.getOptions();
+        List<OptionResponse> optionResponses = detail.getOptions();
         Long quantity = 0L;
         for (OptionResponse option : optionResponses) {
             if(canon(option.getSize()).equals(canon(request.getSize()))) {
@@ -166,7 +173,6 @@ public class ProductService {
         Product product = productJpaRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
-        boolean statusChanged = false;
 
         StatusEnum current = product.getStatus() != null ? product.getStatus().getStatusName() : null;
         StatusEnum next = (current != null) ? current : StatusEnum.NEW;
@@ -227,14 +233,15 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         Map<String, ProductDetailResponse> colorOptionMap = getProductOption(product, null, null);
         ProductDetailResponse detailResponse = colorOptionMap.get(request.getColor());
-        log.error(detailResponse.toString());
+        if (detailResponse == null) {
+            throw new EntityNotFoundException("해당 색상의 상품을 찾을 수 없습니다.");
+        }
         List<ProductDetail> productDetails = product.getProductDetails();
-        ProductDetail findDetail = productDetails.stream()
+
+        return productDetails.stream()
                 .filter(detail -> matchProductDetail(detail, request.getColor(), request.getSize()))
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
-
-        return findDetail;
     }
 
     private SearchStockResponse changeStock(ChangStockRequest request, boolean increment) {
@@ -249,7 +256,6 @@ public class ProductService {
                     .orElseThrow(() -> new EntityNotFoundException("해당 옵션 조합이 없습니다."));
 
             long before = pd.getQuantity();
-
             if (!increment && before < num) {
                 throw new IllegalArgumentException("재고가 부족합니다. 현재 재고: " + before);
             }
@@ -295,7 +301,8 @@ public class ProductService {
     }
 
     public Long getDetailId(String color, String size, Long productId) {
-        List<ProductDetail> details = productDetailJpaRepository.findByProduct(productJpaRepository.findById(productId).orElseThrow());
+        List<ProductDetail> details = productDetailJpaRepository.findByProduct(productJpaRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다.")));
         for (ProductDetail detail : details) {
             if (matchProductDetail(detail, canon(color), canon(size))) {
                 return detail.getId();
