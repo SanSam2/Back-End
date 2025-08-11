@@ -1,6 +1,7 @@
 package org.example.sansam.user.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.user.domain.Role;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.dto.RegisterRequest;
@@ -8,10 +9,12 @@ import org.example.sansam.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
