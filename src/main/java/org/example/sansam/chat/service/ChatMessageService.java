@@ -10,8 +10,10 @@ import org.example.sansam.chat.dto.ChatMessageSendResponseDTO;
 import org.example.sansam.chat.repository.ChatMemberRepository;
 import org.example.sansam.chat.repository.ChatMessageRepository;
 import org.example.sansam.chat.repository.ChatRoomRepository;
+import org.example.sansam.notification.event.ChatEvent;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +34,7 @@ public class ChatMessageService {
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
     private final ChatMemberRepository chatMemberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 채팅방 메세지 페이징 처리
     @Transactional(readOnly = true)
@@ -81,6 +84,7 @@ public class ChatMessageService {
                 .build();
 
         chatMessageRepository.save(chatMessage);
+        eventPublisher.publishEvent(new ChatEvent(chatRoom, user, chatMessage.getMessage()));
         chatRoom.setLastMessageAt(chatMessage.getCreatedAt());
 
         return ChatMessageSendResponseDTO.fromEntity(chatMessage,user.getName(), roomId, userId);

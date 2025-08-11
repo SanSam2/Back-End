@@ -1,5 +1,11 @@
 package org.example.sansam.chat.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.chat.dto.ChatMessageRequestDTO;
@@ -27,6 +33,47 @@ public class ChatMessageController {
 
 
     // 채팅방 메세지 조회
+    @Operation(summary = "채팅방 메시지 조회", description = "특정 채팅방의 메시지 목록을 페이징 처리하여 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "메시지 조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ChatMessageResponseDTO.class),
+                            examples = @ExampleObject(value = """
+                {
+                  "content": [
+                    {
+                      "id": 123,
+                      "message": "안녕하세요",
+                      "createdAt": "2025-08-11T14:00:00",
+                      "userName": "홍길동",
+                      "sender": 45,
+                      "roomId": 1
+                    }
+                  ],
+                  "pageable": {
+                    "pageNumber": 0,
+                    "pageSize": 20
+                  },
+                  "totalPages": 5,
+                  "totalElements": 100,
+                  "last": false,
+                  "first": true,
+                  "numberOfElements": 20
+                }
+            """)
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "로그인 필요",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"로그인이 필요합니다.\"}")
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"error\": \"에러 메시지 내용\"}")
+                    )
+            )
+    })
     @GetMapping("/{roomId}/message")
     public ResponseEntity<?> getRoomMessages(@PathVariable Long roomId,
                                              HttpSession session,
