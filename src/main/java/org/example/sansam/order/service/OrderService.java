@@ -30,7 +30,6 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class OrderService {
 
     //Order클래스 내부에 있는거니까 orderRepository에서 직접 꺼내고 수정
