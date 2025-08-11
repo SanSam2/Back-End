@@ -36,11 +36,10 @@ public class WebSocketEventListener {
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectEvent event) {
         StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-        log.info("[WebSocket] 클라이언트 연결 시도: sessionId={}", sha.getSessionId());    }
+    }
 
     @EventListener
     public void handleWebSocketConnectedListener(SessionConnectedEvent event) {
         StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-        log.info("[WebSocket] 클라이언트 연결 완료: sessionId={}", sha.getSessionId());
     }
 }
