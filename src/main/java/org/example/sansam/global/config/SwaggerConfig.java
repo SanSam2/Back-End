@@ -99,5 +99,12 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi chatApi() {
+        return GroupedOpenApi.builder()
+                .group("채팅 API")
+                .pathsToMatch("/api/chatroom/**")
+                .build();
+    }
 
 }
