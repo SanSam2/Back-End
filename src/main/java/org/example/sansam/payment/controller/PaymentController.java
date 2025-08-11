@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.sansam.payment.dto.CancelResponse;
 import org.example.sansam.payment.dto.PaymentCancelRequest;
 import org.example.sansam.payment.dto.TossPaymentRequest;
 import org.example.sansam.payment.service.PaymentCancelService;
@@ -64,10 +65,9 @@ public class PaymentController {
     public ResponseEntity<?> handlePaymentCancel(
             @RequestBody PaymentCancelRequest cancelRequest) {
         try {
-
             String result = paymentCancelService.wantToCancel(cancelRequest);
-
-            return ResponseEntity.ok("결제가 성공적으로 취소되었습니다.");
+            CancelResponse response = new CancelResponse(result);
+            return ResponseEntity.ok(response);
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         } catch (Exception e) {
