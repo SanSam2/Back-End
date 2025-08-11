@@ -98,9 +98,6 @@ public class CartService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         Page<Cart> carts = cartJpaRepository.findAllByUser(user, pageable);
-        if( carts == null ) {
-            throw new EntityNotFoundException("상품 조회 실패");
-        }
         return carts.map(cart -> {
             Option option = cart.getProductDetail().getOptionName();
             Product product = cart.getProductDetail().getProduct();
@@ -133,7 +130,7 @@ public class CartService {
 
         Cart cart = cartJpaRepository.findByUserIdAndProductDetail(user, productDetail);
         if( cart == null ) {
-            throw new IllegalArgumentException("장바구니에 해당 상품이 없습니다.");
+            throw new EntityNotFoundException("장바구니에 해당 상품이 없습니다.");
         }
         checkStock(detailId, request.getQuantity());
         cart.setQuantity(request.getQuantity());
