@@ -47,7 +47,7 @@ public class WishService {
     public void deleteWish(DeleteWishRequest request) {
         List<DeleteWishItem> deleteWishRequests = request.getDeleteWishItemList();
         if(deleteWishRequests == null ) {
-            throw new EntityNotFoundException("삭제할 위시 정보가 존재하지 않습니다.");
+            throw new IllegalArgumentException("삭제할 위시 정보가 존재하지 않습니다.");
         }
         List<Wish> wishes = new ArrayList<>();
         for(DeleteWishItem item : deleteWishRequests) {

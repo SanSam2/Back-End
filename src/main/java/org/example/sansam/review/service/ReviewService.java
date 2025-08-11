@@ -98,7 +98,6 @@ public class ReviewService {
         if (review == null) {
             throw new EntityNotFoundException("리뷰가 존재하지 않습니다.");
         }
-        reviewJpaRepository.delete(review);
 
         if (review.getFile() != null) {
             String url = review.getFile().getFileUrl();
