@@ -44,14 +44,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                                                    ServerHttpResponse response,
                                                    WebSocketHandler wsHandler,
                                                    Map<String, Object> attributes) throws Exception {
-                        log.info("[WebSocket] 핸드쉐이크 시작: {}", request.getURI());                        return super.beforeHandshake(request, response, wsHandler, attributes);
+                        return super.beforeHandshake(request, response, wsHandler, attributes);
                     }
                     @Override
                     public void afterHandshake(ServerHttpRequest request,
                                                ServerHttpResponse response,
                                                WebSocketHandler wsHandler,
                                                Exception ex) {
-                        log.info("[WebSocket] 핸드쉐이크 완료: {}", request.getURI());
                         super.afterHandshake(request, response, wsHandler, ex);
                     }
                 })
