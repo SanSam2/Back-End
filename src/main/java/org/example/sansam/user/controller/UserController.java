@@ -10,10 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sansam.user.dto.LoginRequest;
-import org.example.sansam.user.dto.LoginResponse;
-import org.example.sansam.user.dto.RegisterRequest;
-import org.example.sansam.user.dto.UserMapper;
+import org.example.sansam.user.dto.*;
 import org.example.sansam.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -62,7 +59,8 @@ public class UserController {
                             }))
     })
     @PostMapping("/emailCheck")
-    public Boolean emailCheck(@RequestBody String email){
+    public Boolean emailCheck(@RequestBody EmailRequest emailRequest){
+        String email = emailRequest.getEmail();
         Boolean response = userService.ifSameEmail(email);
         return  response;
     }

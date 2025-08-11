@@ -12,12 +12,13 @@ import java.util.Objects;
 @Entity
 @Table(name = "order_product")
 @Getter
+@Setter
 public class OrderProduct {
 
     @Id
     @Column(name="order_product_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; //많이 적재되는 테이블에 Long이 맞을까???
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="order_id", nullable = false)
@@ -29,6 +30,12 @@ public class OrderProduct {
 
     private int quantity;
 
+    private Long orderedProductPrice;
+
+    private String orderedProductSize;
+
+    private String orderedproductColor;
+
     private Long canceledQuantity=0L;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -39,16 +46,19 @@ public class OrderProduct {
 
     }
 
-    private OrderProduct(Order order, Product product, int quantity, Status status){
+    private OrderProduct(Order order, Product product, Long orderedProductPrice, int quantity,String orderedProductSize,String orderedproductColor, Status status){
         this.order = order;
         this.product = product;
+        this.orderedProductPrice = orderedProductPrice;
+        this.orderedProductSize = orderedProductSize;
+        this.orderedproductColor = orderedproductColor;
         this.quantity = quantity;
         this.canceledQuantity=0L;
         this.status = status;
     }
 
-    public static OrderProduct create(Order order, Product product, int quantity, Status status){
-        return new OrderProduct(order,product,quantity,status);
+    public static OrderProduct create(Order order, Product product,Long orderedProductPrice, int quantity, String orderedProductSize, String orderedproductColor, Status status){
+        return new OrderProduct(order,product,orderedProductPrice,quantity,orderedProductSize,orderedproductColor,status);
     }
 
     public void cancelQuantity(int amount, Status canceledStatus, Status partialCanceledStatus){
