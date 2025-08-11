@@ -31,7 +31,6 @@ public class NotificationController {
     @GetMapping(value = "/subscribe/{userId}", produces = "text/event-stream; charset=UTF-8")
     public ResponseEntity<SseEmitter> subscribe(@PathVariable Long userId) {
         try {
-            log.info("SSE 구독 요청 - userId: {}", userId);
             SseEmitter emitter = notificationService.connect(userId);
             return ResponseEntity.ok(emitter);
 
