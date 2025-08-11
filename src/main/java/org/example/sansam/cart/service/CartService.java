@@ -1,5 +1,6 @@
 package org.example.sansam.cart.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.example.sansam.cart.domain.Cart;
 import org.example.sansam.cart.dto.*;
@@ -18,7 +19,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Normalizer;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @AllArgsConstructor
@@ -28,26 +31,52 @@ public class CartService {
     private final ProductService productService;
     private final ProductDetailJpaRepository productDetailJpaRepository;
 
+    public boolean checkStock(Long detailId, Long quantity) {
+        if (quantity <= 0 || quantity == null) {
+            throw new IllegalArgumentException("요청 수량은 1 이상이어야 합니다.");
+        }
+        ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
+        if (productDetail.getQuantity() < quantity) {
+            throw new IllegalArgumentException(
+                    String.format("재고가 부족합니다. 현재 재고: %d, 요청 수량: %d", productDetail.getQuantity(), quantity)
+            );
+        }
+        return true;
+    }
+
     @Transactional
     public void AddCartItem(AddCartRequest request) {
-        User user = userRepository.findById(request.getUserId()).orElseThrow();
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         List<AddCartItem> addCartItemList = request.getAddCartItems();
-        for(AddCartItem item : addCartItemList){
+
+        for (AddCartItem item : addCartItemList) {
             Long detailId = productService.getDetailId(item.getColor(), item.getSize(), item.getProductId());
-            ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
-            Cart cart = new Cart();
-            cart.setUser(user);
-            cart.setQuantity(item.getQuantity());
-            cart.setProductDetail(productDetail);
-            cartJpaRepository.save(cart);
+            ProductDetail productDetail = productDetailJpaRepository.findById(detailId)
+                    .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("상품 옵션을 찾을 수 없습니다. detailId=" + detailId));
+            Cart cart = cartJpaRepository.findByUserIdAndProductDetail(user, productDetail);
+            if (cart != null) {
+                Long changedQuantity = cart.getQuantity() + item.getQuantity();
+                checkStock(detailId, changedQuantity);
+                cart.setQuantity(changedQuantity);
+                cartJpaRepository.save(cart);
+                continue;
+            }
+            Cart newCart = new Cart();
+            newCart.setUser(user);
+            newCart.setQuantity(item.getQuantity());
+            newCart.setProductDetail(productDetail);
+            checkStock(detailId, item.getQuantity());
+            cartJpaRepository.save(newCart);
         }
     }
 
     @Transactional
     public void deleteCartItem(DeleteCartRequest request) {
-        User user = userRepository.findById(request.getUserId()).orElseThrow();
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         List<DeleteCartItem> deleteCartItems = request.getDeleteCartItems();
-        for(DeleteCartItem item : deleteCartItems){
+        for (DeleteCartItem item : deleteCartItems) {
             Long detailId = productService.getDetailId(item.getColor(), item.getSize(), item.getProductId());
             ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
             Cart cart = cartJpaRepository.findByUserIdAndProductDetail(user, productDetail);
@@ -58,11 +87,12 @@ public class CartService {
     @Transactional(readOnly = true)
     public Page<SearchCartResponse> searchCarts(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         Page<Cart> carts = cartJpaRepository.findAllByUser(user, pageable);
         return carts.map(cart -> {
-                    Option option = cart.getProductDetail().getOptionName();
-                    Product product = cart.getProductDetail().getProduct();
+            Option option = cart.getProductDetail().getOptionName();
+            Product product = cart.getProductDetail().getProduct();
             SearchListResponse searchListResponse = SearchListResponse.builder()
                     .productId(product.getId())
                     .productName(product.getProductName())
@@ -70,24 +100,26 @@ public class CartService {
                     .url(product.getFileManagement().getMainFileDetail().getUrl())
                     .wish(false)
                     .build();
-                    return SearchCartResponse.builder()
-                            .searchListResponse(searchListResponse)
-                            .size(option.getSize())
-                            .color(option.getColor())
-                            .quantity(cart.getQuantity())
-                            .stock(cart.getProductDetail().getQuantity())
-                            .build();
+            return SearchCartResponse.builder()
+                    .searchListResponse(searchListResponse)
+                    .size(option.getSize())
+                    .color(option.getColor())
+                    .quantity(cart.getQuantity())
+                    .stock(cart.getProductDetail().getQuantity())
+                    .build();
 
-                });
+        });
     }
 
     @Transactional
     public SearchCartResponse updateCart(UpdateCartRequest request) {
-        User user = userRepository.findById(request.getUserId()).orElseThrow();
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         Long detailId = productService.getDetailId(request.getColor(), request.getSize(), request.getProductId());
         ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
 
         Cart cart = cartJpaRepository.findByUserIdAndProductDetail(user, productDetail);
+        checkStock(detailId, request.getQuantity());
         cart.setQuantity(request.getQuantity());
         cartJpaRepository.save(cart);
 
@@ -100,3 +132,4 @@ public class CartService {
                 .build();
     }
 }
+

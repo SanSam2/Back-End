@@ -11,10 +11,13 @@ import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderProductRepository extends JpaRepository<OrderProduct, Long> {
     List<OrderProduct> findByOrder_Id(Long orderId);
+    
+    Optional<OrderProduct> findByOrder_OrderNumberAndProduct_Id(String orderNumber, Long productId);
 
     @Modifying
     @Transactional

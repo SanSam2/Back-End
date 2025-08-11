@@ -1,7 +1,6 @@
 package org.example.sansam.payment.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.order.domain.Order;
@@ -25,7 +24,6 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class PaymentService {
 
     private final OrderRepository orderRepository;
@@ -44,15 +42,13 @@ public class PaymentService {
                     .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
             order.addPaymentKey(request.getPaymentKey()); //더티체킹 일어날텐데 왜 굳이 밑에 save가 있나요?
 
-            log.error("order: {}", order);
             Map<String, Object> response = paymentApiClient.confirmPayment(request);
-            log.error("response: {}", response);
             String method = (String) response.get("method");
             savePaymentInfo(method, request);
 
 
             Status orderPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PAID);
-            Status orderProductPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID);
+            Status orderProductPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_REQUIRED);
             order.completePayment(orderPaid, orderProductPaid, request.getPaymentKey());
             orderRepository.save(order);
 
@@ -79,23 +75,4 @@ public class PaymentService {
         return paymentsTypeRepository.findByTypeName(paymentMethodType)
                 .orElseThrow(()-> new CustomException(ErrorCode.UNSUPPORTED_PAYMENT_METHOD)); // restControllerAdvice
     }
-
-
-    // 추후, 주문에 맞는 요청 왔는지 확인이 필요하기에 필요한 메소드
-    private Order findOrderByOrderNumber(String orderNumber){
-        return orderRepository.findByOrderNumber(orderNumber).orElseThrow(()-> new CustomException(ErrorCode.ORDER_NOT_FOUND));
-    }
-    private void orderCheck(String orderId, Long amount) {
-        Order order = orderRepository.findById(Long.valueOf(orderId)).orElse(null);
-        Status status = statusRepository.findByStatusName(StatusEnum.ORDER_PAID);
-
-        if(order.getStatus().equals(status)){
-            throw new CustomException(ErrorCode.ORDER_ALREADY_FINISHED);
-        }
-        if(!order.getTotalAmount().equals(amount)){
-            throw new CustomException(ErrorCode.NOT_EQUAL_COST);
-        }
-    }
-
-
 }

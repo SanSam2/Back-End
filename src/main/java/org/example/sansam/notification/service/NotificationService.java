@@ -57,30 +57,17 @@ public class NotificationService {
         synchronized (sseEmitters) {
             SseEmitter existingEmitter = sseEmitters.get(userId);
             if (existingEmitter != null) {
-                log.info("기존 SSE 연결 제거 - userId: {}", userId);
                 existingEmitter.complete(); // 이전 연결 정리
                 sseEmitters.remove(userId);
             }
 
             SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
             sseEmitters.put(userId, emitter);
-            log.info("새 SSE 연결 생성 - userId: {}, 연결 수: {}", userId, sseEmitters.size());
 
             // 연결 종료 시 emitter 제거
-            emitter.onCompletion(() -> {
-                log.info("SSE 연결 종료 - userId: {}", userId);
-                sseEmitters.remove(userId);
-            });
-
-            emitter.onTimeout(() -> {
-                log.warn("SSE 연결 타임아웃 - userId: {}", userId);
-                sseEmitters.remove(userId);
-            });
-
-            emitter.onError(ex -> {
-                log.error("SSE 연결 에러 - userId: {}, error: {}", userId, ex.getMessage());
-                sseEmitters.remove(userId);
-            });
+            emitter.onCompletion(() -> sseEmitters.remove(userId));
+            emitter.onTimeout(() -> sseEmitters.remove(userId));
+            emitter.onError(ex -> sseEmitters.remove(userId));
 
             return emitter;
         }
@@ -122,12 +109,12 @@ public class NotificationService {
     }
 
     public void sendPaymentCompleteNotification(User user, String orderName, Long orderPrice) {
-        String messageParam = user.getName() + ","  + orderName + "," + orderPrice;
+        String messageParam = user.getName() + "," + orderName + "," + orderPrice;
         sendNotification(user, NotificationType.PAYMENT_COMPLETE, "", messageParam);
     }
 
     public void sendPaymentCancelNotification(User user, String orderName, Long refundPrice) {
-        String messageParam = user.getName()+ "," + orderName + "," + refundPrice;
+        String messageParam = user.getName() + "," + orderName + "," + refundPrice;
         sendNotification(user, NotificationType.PAYMENT_CANCEL, "", messageParam);
     }
 
@@ -159,8 +146,6 @@ public class NotificationService {
         String payload = serializeToJson(NotificationDTO.from(saved));
         log.info(payload);
         sendViaSSEAsync(user.getId(), payload, type.getEventName());
-
-        log.info("알림 전송 완료 - 사용자: {}, 이벤트: {}", user.getName(), type.getEventName());
     }
 
     private Notification getTemplateOrThrow(Long templateId) {
@@ -176,16 +161,6 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Formats a notification message by substituting parameters into the template.
-     *
-     * Splits the provided parameter string by commas and inserts the resulting values into the template's "%s" placeholders.
-     * Throws a {@code CustomException} if the number of parameters is insufficient or if formatting fails.
-     *
-     * @param template the message template containing "%s" placeholders
-     * @param param a comma-separated string of parameters to substitute into the template
-     * @return the formatted message string
-     */
     private String formatMessage(String template, String param) {
         try {
             int placeholderCount = countPlaceholders(template);
@@ -251,7 +226,6 @@ public class NotificationService {
     protected void sendViaSSEAsync(Long userId, String payload, String eventName) {
         try {
             SseEmitter emitter = sseEmitters.get(userId);
-            log.info("Emitter 상태 확인 - userId: {}, emitter: {}", userId, emitter == null ? "null" : "존재");
 
             if (emitter == null) {
                 log.warn("Emitter가 없음 - userId: {}, 알림은 저장됨", userId);
@@ -259,20 +233,17 @@ public class NotificationService {
                 return;
             }
 
-            log.info("payload: {}, eventName: {}", payload, eventName);
             emitter.send(SseEmitter.event()
                     .name(eventName)
                     .data(payload, MediaType.APPLICATION_JSON));
-            log.info("SSE 전송 완료: userId: {}, eventName: {}", userId, eventName);
 
-        }catch (IOException e) {
-            log.error("SSE 전송 실패 - userId: {}, event: {}, error: {}", userId, eventName, e.getMessage() );
+        } catch (IOException e) {
+            log.error("SSE 전송 실패 - userId: {}, event: {}, error: {}", userId, eventName, e.getMessage());
 
             SseEmitter emitter = sseEmitters.get(userId);
             if (emitter != null) {
                 emitter.completeWithError(e);
                 sseEmitters.remove(userId);
-                log.info("SSE emitter 제거 - userId: {}", userId);
             }
         }
 
