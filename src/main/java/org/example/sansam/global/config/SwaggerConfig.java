@@ -106,4 +106,5 @@ public class SwaggerConfig {
                 .pathsToMatch("/api/chatroom/**")
                 .build();
     }
+
 }
