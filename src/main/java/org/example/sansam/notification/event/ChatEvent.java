@@ -2,11 +2,12 @@ package org.example.sansam.notification.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.example.sansam.chat.domain.ChatRoom;
 import org.example.sansam.user.domain.User;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ChatEvent {
     private final ChatRoom chatRoom;
     private final User user;

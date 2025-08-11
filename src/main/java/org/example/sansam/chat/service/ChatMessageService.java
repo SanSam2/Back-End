@@ -1,6 +1,7 @@
 package org.example.sansam.chat.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.chat.domain.ChatMessage;
 import org.example.sansam.chat.domain.ChatRoom;
 import org.example.sansam.chat.dto.ChatMessageRequestDTO;
@@ -26,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatMessageService {
@@ -84,8 +86,8 @@ public class ChatMessageService {
                 .build();
 
         chatMessageRepository.save(chatMessage);
-        eventPublisher.publishEvent(new ChatEvent(chatRoom, user, chatMessage.getMessage()));
         chatRoom.setLastMessageAt(chatMessage.getCreatedAt());
+        eventPublisher.publishEvent(new ChatEvent(chatRoom, user, chatMessage.getMessage()));
 
         return ChatMessageSendResponseDTO.fromEntity(chatMessage,user.getName(), roomId, userId);
     }
