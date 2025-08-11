@@ -228,8 +228,6 @@ public class NotificationService {
             SseEmitter emitter = sseEmitters.get(userId);
 
             if (emitter == null) {
-                log.warn("Emitter가 없음 - userId: {}, 알림은 저장됨", userId);
-                // SSE 전송 실패해도 알림은 이미 저장되었으므로 예외를 던지지 않음
                 return;
             }
 
