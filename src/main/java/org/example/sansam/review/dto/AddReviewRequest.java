@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class AddReviewRequest {
     private Long userId;
+    private String orderNumber;
     private Long productId;
     private String message;
     private int rating;

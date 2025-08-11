@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.order.dto.OrderItemDto;
-import org.example.sansam.order.dto.OrderProductResponse;
 import org.example.sansam.order.dto.OrderResponse;
 import org.example.sansam.order.dto.OrderWithProductsResponse;
 import org.example.sansam.order.service.OrderProductService;

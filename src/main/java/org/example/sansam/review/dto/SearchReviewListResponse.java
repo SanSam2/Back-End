@@ -13,6 +13,7 @@ public class SearchReviewListResponse {
     private String message;
     private int rating;
     private String url;
+    private Long productId;
 
     public static SearchReviewListResponse from(Review review) {
         return SearchReviewListResponse.builder()
@@ -20,6 +21,7 @@ public class SearchReviewListResponse {
                 .message(review.getMessage())
                 .rating(review.getStarRating())
                 .url(review.getFile() != null ? review.getFile().getFileDetail().getUrl(): null)
+                .productId(review.getProduct().getId())
                 .build();
     }
 }

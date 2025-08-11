@@ -3,6 +3,7 @@ package org.example.sansam.order.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.status.domain.Status;
 
@@ -37,6 +38,8 @@ public class OrderProduct {
 
     private Long canceledQuantity=0L;
 
+    private String representativeURL;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id", nullable = false)
     private Status status;
@@ -45,7 +48,7 @@ public class OrderProduct {
 
     }
 
-    private OrderProduct(Order order, Product product, Long orderedProductPrice, int quantity,String orderedProductSize,String orderedproductColor, Status status){
+    private OrderProduct(Order order, Product product, Long orderedProductPrice, int quantity,String orderedProductSize,String orderedproductColor,String representativeURL, Status status){
         this.order = order;
         this.product = product;
         this.orderedProductPrice = orderedProductPrice;
@@ -53,11 +56,12 @@ public class OrderProduct {
         this.orderedproductColor = orderedproductColor;
         this.quantity = quantity;
         this.canceledQuantity=0L;
+        this.representativeURL = representativeURL;
         this.status = status;
     }
 
-    public static OrderProduct create(Order order, Product product,Long orderedProductPrice, int quantity, String orderedProductSize, String orderedproductColor, Status status){
-        return new OrderProduct(order,product,orderedProductPrice,quantity,orderedProductSize,orderedproductColor,status);
+    public static OrderProduct create(Order order, Product product,Long orderedProductPrice, int quantity, String orderedProductSize, String orderedproductColor,String representativeURL, Status status){
+        return new OrderProduct(order,product,orderedProductPrice,quantity,orderedProductSize,orderedproductColor,representativeURL,status);
     }
 
     public void cancelQuantity(int amount, Status canceledStatus, Status partialCanceledStatus){
