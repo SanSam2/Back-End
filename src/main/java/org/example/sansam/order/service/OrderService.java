@@ -78,7 +78,6 @@ public class OrderService {
                 throw new CustomException(ErrorCode.NO_ITEM);
             }
 
-
         }
         List<OrderItemResponseDto> responseDtos = saveOrderProducts(request.getItems(), savedOrder);
 
