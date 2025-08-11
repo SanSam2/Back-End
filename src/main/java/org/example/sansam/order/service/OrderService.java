@@ -2,7 +2,6 @@ package org.example.sansam.order.service;
 
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.order.domain.Order;
@@ -14,6 +13,7 @@ import org.example.sansam.product.domain.Product;
 import org.example.sansam.product.dto.ChangStockRequest;
 import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.product.service.ProductService;
+import org.example.sansam.s3.service.FileService;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
 import org.example.sansam.status.repository.StatusRepository;
@@ -39,6 +39,7 @@ public class OrderService {
 
 
 
+    private final FileService fileService;
     private final UserRepository userRepository;
     private final StatusRepository statusRepository;
     private final ProductJpaRepository productJpaRepository;
@@ -76,21 +77,31 @@ public class OrderService {
             }catch(Exception e) {
                 throw new CustomException(ErrorCode.NO_ITEM);
             }
+
+
         }
-        saveOrderProducts(request.getItems(), savedOrder);
-        return new OrderResponse(savedOrder, request.getItems());
+        List<OrderItemResponseDto> responseDtos = saveOrderProducts(request.getItems(), savedOrder);
+
+
+        return new OrderResponse(savedOrder, responseDtos);
     }
 
     //orderProduct 1차 주문 저장 -> Spring 스케줄러로 만약, 주문 완료 안되면 해당 주문 삭제
-    private void saveOrderProducts(List<OrderItemDto> items, Order order) {
+    private List<OrderItemResponseDto> saveOrderProducts(List<OrderItemDto> items, Order order) {
         Status orderProductWaiting = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_WAITING);
+        List<OrderItemResponseDto> responseDtos=new ArrayList<>();
+
         for (OrderItemDto itemDto : items) {
             Product product = productJpaRepository.findById(itemDto.getProductId())
                     .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+            Long fileManageUrl=product.getFileManagement().getId();
+            String representativeUrl = fileService.getImageUrl(fileManageUrl);
 
-            OrderProduct orderProduct = OrderProduct.create(order,product,itemDto.getProductPrice(),itemDto.getQuantity(),itemDto.getProductSize(),itemDto.getProductColor(),orderProductWaiting);
+            OrderProduct orderProduct = OrderProduct.create(order,product,itemDto.getProductPrice(),itemDto.getQuantity(),itemDto.getProductSize(),itemDto.getProductColor(),representativeUrl,orderProductWaiting);
+            responseDtos.add(new OrderItemResponseDto(product.getId(),product.getProductName(),itemDto.getProductPrice(),itemDto.getProductSize(),itemDto.getProductColor(),itemDto.getQuantity(),representativeUrl));
             orderProductRepository.save(orderProduct);
         }
+        return responseDtos;
     }
 
     //주문번호 생성 메서드 -> 이것도 도메인로직 안으로 집어넣어야한다.
@@ -156,6 +167,7 @@ public class OrderService {
                             op.getProduct().getProductName(),
                             op.getProduct().getPrice(),
                             op.getQuantity(),
+                            op.getRepresentativeURL(),
                             op.getStatus().getStatusName()
                     ))
                     .toList();

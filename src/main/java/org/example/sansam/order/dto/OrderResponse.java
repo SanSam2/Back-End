@@ -19,10 +19,10 @@ public class OrderResponse {
     private String orderName;
     private Long totalAmount;
     private String status;
-    private List<OrderItemDto> items;
+    private List<OrderItemResponseDto> items;
     private LocalDateTime createdAt;
 
-    public OrderResponse (Order order, List<OrderItemDto> items){
+    public OrderResponse (Order order, List<OrderItemResponseDto> items){
         this.orderId = order.getId();
         this.orderName= order.getOrderName();
         this.orderNumber = order.getOrderNumber();
