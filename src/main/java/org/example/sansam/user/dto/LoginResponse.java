@@ -9,7 +9,10 @@ import lombok.*;
 @Builder
 public class LoginResponse {
 
+    private Long id;
     private String email;
+    private String name;
     private String password;
+    private String mobileNumber;
     private String role;
 }

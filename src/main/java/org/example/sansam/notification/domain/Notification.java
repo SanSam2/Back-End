@@ -1,4 +1,26 @@
 package org.example.sansam.notification.domain;
 
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.sql.Timestamp;
+
+@Entity
+@Table(name = "notifications")
+@Builder
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Notification {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "notification_id")
+    private Long id;
+
+    @Column(length=100, nullable=false)
+    private String title;
+
+    @Column(length=100, nullable=false)
+    private String message;
 }

@@ -1,52 +1,78 @@
 package org.example.sansam.payment.controller;
 
 
-import org.example.sansam.order.dto.PaymentCancelRequest;
-import org.example.sansam.payment.dto.TossCallBackRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.sansam.payment.dto.PaymentCancelRequest;
+import org.example.sansam.payment.dto.TossPaymentRequest;
+import org.example.sansam.payment.service.PaymentCancelService;
+import org.example.sansam.payment.service.PaymentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/pay")
+@Slf4j
 public class PaymentController {
 
+    private final PaymentService paymentService;
+    private final PaymentCancelService paymentCancelService;
 
-    @PostMapping("/callback") //토스 API로 부터 받은 응답 처리
-    public ResponseEntity<?> handlePaymentCallback(@RequestBody TossCallBackRequest callBackRequest){
-        try{
-            if(callBackRequest!=null){ //결제가 성공한 경우
-
-
-                return ResponseEntity.ok("결제 성공");
-            }else{
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("결제 실패");
-            }
-
-        }catch(Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류");
-        }
-    }
-
-    @PostMapping("/cancel") //결제 취소 로직
-    public ResponseEntity<?> handlePaymentCancel(@RequestBody PaymentCancelRequest cancelRequest){
-
-        try{
-
-            //결제 취소 진행
-            return ResponseEntity.ok("결제 취소되었습니다.");
-
-        }catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+    @PostMapping("/confirm")
+    public ResponseEntity<?> confirmPayment(@RequestBody TossPaymentRequest request) {
+        try {
+            paymentService.confirmPayment(request);
+            return ResponseEntity.ok("결제 승인 완료");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
+            return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
 
+    @Operation(summary = "결제 취소", description = "사용자의 결제를 취소 처리합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "결제가 성공적으로 취소되었습니다.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PaymentCancelRequest.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                          "orderId": "ORD123456",
+                                          "cancelReason": "단순 변심",
+                                          "items": [
+                                            {
+                                              "productId": 1001,
+                                              "cancelQuantity": 2
+                                            },
+                                            {
+                                              "productId": 1002,
+                                              "cancelQuantity": 1
+                                            }
+                                          ]
+                                        }
+                                """))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @PostMapping("/cancel") //결제 취소 로직
+    public ResponseEntity<?> handlePaymentCancel(
+            @RequestBody PaymentCancelRequest cancelRequest) {
+        try {
 
+            String result = paymentCancelService.wantToCancel(cancelRequest);
 
+            return ResponseEntity.ok("결제가 성공적으로 취소되었습니다.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 
 }

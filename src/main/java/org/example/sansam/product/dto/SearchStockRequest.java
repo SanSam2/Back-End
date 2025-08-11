@@ -1,0 +1,14 @@
+package org.example.sansam.product.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+public class SearchStockRequest {
+    private Long productId;
+    private String size;
+    private String color;
+}
