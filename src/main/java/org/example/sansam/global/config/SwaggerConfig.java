@@ -107,4 +107,11 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi notificationApi() {
+        return GroupedOpenApi.builder()
+                .group("알림 API")
+                .pathsToMatch("/api/notifications/**")
+                .build();
+    }
 }

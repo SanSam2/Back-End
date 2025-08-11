@@ -31,8 +31,8 @@ public class CartService {
     private final ProductService productService;
     private final ProductDetailJpaRepository productDetailJpaRepository;
 
-    public boolean checkStock(Long detailId, Long quantity) {
-        if (quantity <= 0 || quantity == null) {
+    public void checkStock(Long detailId, Long quantity) {
+        if (quantity <= 0) {
             throw new IllegalArgumentException("요청 수량은 1 이상이어야 합니다.");
         }
         ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
@@ -41,7 +41,6 @@ public class CartService {
                     String.format("재고가 부족합니다. 현재 재고: %d, 요청 수량: %d", productDetail.getQuantity(), quantity)
             );
         }
-        return true;
     }
 
     @Transactional
@@ -49,11 +48,14 @@ public class CartService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         List<AddCartItem> addCartItemList = request.getAddCartItems();
+        if (addCartItemList.isEmpty()) {
+            throw new IllegalArgumentException("추가할 상품이 없습니다.");
+        }
 
         for (AddCartItem item : addCartItemList) {
             Long detailId = productService.getDetailId(item.getColor(), item.getSize(), item.getProductId());
             ProductDetail productDetail = productDetailJpaRepository.findById(detailId)
-                    .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("상품 옵션을 찾을 수 없습니다. detailId=" + detailId));
+                    .orElseThrow(() -> new EntityNotFoundException("상품 옵션을 찾을 수 없습니다. detailId=" + detailId));
             Cart cart = cartJpaRepository.findByUserIdAndProductDetail(user, productDetail);
             if (cart != null) {
                 Long changedQuantity = cart.getQuantity() + item.getQuantity();
@@ -76,10 +78,16 @@ public class CartService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         List<DeleteCartItem> deleteCartItems = request.getDeleteCartItems();
+        if (deleteCartItems.isEmpty()) {
+            throw new IllegalArgumentException("삭제할 상품이 없습니다.");
+        }
         for (DeleteCartItem item : deleteCartItems) {
             Long detailId = productService.getDetailId(item.getColor(), item.getSize(), item.getProductId());
             ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
             Cart cart = cartJpaRepository.findByUserIdAndProductDetail(user, productDetail);
+            if( cart == null ) {
+                throw new EntityNotFoundException("삭제할 상품 조회 실패" + item.getProductId());
+            }
             cartJpaRepository.delete(cart);
         }
     }
@@ -100,6 +108,7 @@ public class CartService {
                     .url(product.getFileManagement().getMainFileDetail().getUrl())
                     .wish(false)
                     .build();
+
             return SearchCartResponse.builder()
                     .searchListResponse(searchListResponse)
                     .size(option.getSize())
@@ -116,9 +125,13 @@ public class CartService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("유저를 찾을 수 없습니다."));
         Long detailId = productService.getDetailId(request.getColor(), request.getSize(), request.getProductId());
-        ProductDetail productDetail = productDetailJpaRepository.findById(detailId).orElseThrow();
+        ProductDetail productDetail = productDetailJpaRepository.findById(detailId)
+                .orElseThrow(() -> new EntityNotFoundException("삭제할 상품이 없습니다."));
 
         Cart cart = cartJpaRepository.findByUserIdAndProductDetail(user, productDetail);
+        if( cart == null ) {
+            throw new EntityNotFoundException("장바구니에 해당 상품이 없습니다.");
+        }
         checkStock(detailId, request.getQuantity());
         cart.setQuantity(request.getQuantity());
         cartJpaRepository.save(cart);
