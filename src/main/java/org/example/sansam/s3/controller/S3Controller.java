@@ -18,18 +18,26 @@ public class S3Controller {
 
 	@PostMapping("/presigned-url")
 	public ResponseEntity<?> generatePresignedUrl(@RequestBody PresignedRequest request) {
-		PresignedResponse response = s3Service.generatePresignedUploadUrl(
-				request.getFileName(),
-				request.getType(),
-				request.getSize()
-		);
-		return ResponseEntity.ok(response);
+		try {
+			PresignedResponse response = s3Service.generatePresignedUploadUrl(
+					request.getFileName(),
+					request.getType(),
+					request.getSize()
+			);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			return ResponseEntity.status(400).body(e.getMessage());
+		}
 	}
 
 	@PostMapping("/upload")
-	public ResponseEntity<String> uploadFile(@RequestPart("file") MultipartFile file) throws IOException {
-		String imageUrl = s3Service.uploadFile(file);
-		return ResponseEntity.ok(imageUrl);
+	public ResponseEntity<String> uploadFile(@RequestPart("file") MultipartFile file) {
+		try {
+			String imageUrl = s3Service.uploadFile(file);
+			return ResponseEntity.ok(imageUrl);
+		} catch (Exception e) {
+			return ResponseEntity.status(400).body(e.getMessage());
+		}
 	}
 
 }
