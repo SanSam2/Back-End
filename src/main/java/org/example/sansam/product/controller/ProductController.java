@@ -48,17 +48,25 @@ public class ProductController {
 
     //상품 상세 조회
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponse> getDefaultOption(@PathVariable Long productId, @RequestParam(required = false) Long userId) {
-        return ResponseEntity.ok(productService.getProduct(productId, userId));
+    public ResponseEntity<?> getDefaultOption(@PathVariable Long productId, @RequestParam(required = false) Long userId) {
+        try {
+            return ResponseEntity.ok(productService.getProduct(productId, userId));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
     }
 
     //상품 상세 조회 - 옵션 선택
     @GetMapping("/{productId}/option")
-    public ResponseEntity<ProductDetailResponse> getColorOption(
+    public ResponseEntity<?> getColorOption(
             @PathVariable Long productId,
             @RequestParam String color
     ) {
-        return ResponseEntity.ok(productService.getOptionByColor(productId, color));
+        try {
+            return ResponseEntity.ok(productService.getOptionByColor(productId, color));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
     }
 
 }

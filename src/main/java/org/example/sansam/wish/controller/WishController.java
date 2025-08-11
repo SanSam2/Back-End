@@ -21,7 +21,7 @@ public class WishController {
         try{
             wishService.addWish(addWishRequest);
             return ResponseEntity.ok(new TextResponse("성공"));
-        }catch(IllegalArgumentException e){
+        } catch(IllegalArgumentException e){
             return ResponseEntity.status(400).body(e.getMessage());
         }
     }
