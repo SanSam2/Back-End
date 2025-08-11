@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
+import org.example.sansam.notification.event.PaymentCanceledEmailEvent;
+import org.example.sansam.notification.event.PaymentCompleteEmailEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.domain.OrderProduct;
 import org.example.sansam.order.repository.OrderRepository;
@@ -14,6 +16,7 @@ import org.example.sansam.payment.repository.PaymentsCancelRepository;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
 import org.example.sansam.status.repository.StatusRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +36,8 @@ public class PaymentCancelService {
 
     private final OrderRepository orderRepository;
     private final StatusRepository statusRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
 
     @Transactional
     public String wantToCancel(PaymentCancelRequest request) {
@@ -111,9 +116,13 @@ public class PaymentCancelService {
             }
             cancellation.addHistories(histories);
             paymentsCancelRepository.save(cancellation);
+            PaymentCanceledEmailEvent event = new PaymentCanceledEmailEvent(order.getUser(), order.getOrderName(), order.getTotalAmount());
+            eventPublisher.publishEvent(event);
 
             // 주문 상태 CANCELED
             orderRepository.save(order);
+
+
             return "취소가 완료되었습니다.";
         }catch(Exception e){
             return "취소가 실패하였습니다. : "+e.getMessage();
