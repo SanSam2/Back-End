@@ -1,4 +1,4 @@
 package org.example.sansam.order.dto;
 
-public class OrderRequest {
+public class OrderDTO {
 }
