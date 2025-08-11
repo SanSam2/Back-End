@@ -4,9 +4,9 @@ package org.example.sansam.order.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.sansam.order.domain.Order;
-import org.example.sansam.status.domain.StatusEnum;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -17,9 +17,10 @@ public class OrderResponse {
     private String orderName;
     private Long totalAmount;
     private String status;
+    private List<OrderItemDto> items;
     private LocalDateTime createdAt;
 
-    public OrderResponse (Order order){
+    public OrderResponse (Order order, List<OrderItemDto> items){
         this.orderId = order.getId();
         this.orderName= order.getOrderName();
         this.orderNumber = order.getOrderNumber();
