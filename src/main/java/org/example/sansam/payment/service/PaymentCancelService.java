@@ -26,7 +26,6 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class PaymentCancelService {
 
     private final PaymentApiClient paymentApiClient;
@@ -68,7 +67,6 @@ public class PaymentCancelService {
             //토스에서 진행
             String paymentKey = order.getPaymentKey();
             Map<String, Object> cancelResult = paymentApiClient.tossPaymentCancel(paymentKey,cancelTotalAmount, request.getCancelReason());
-            log.error(cancelResult.toString());
 
             // 취소 결과 검증
             if (cancelResult == null || !cancelResult.containsKey("status")) {
