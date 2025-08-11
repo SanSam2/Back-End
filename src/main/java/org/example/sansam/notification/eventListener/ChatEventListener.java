@@ -1,6 +1,7 @@
 package org.example.sansam.notification.eventListener;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.chat.domain.ChatMember;
 import org.example.sansam.chat.repository.ChatMemberRepository;
 import org.example.sansam.notification.event.ChatEvent;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Component
 @AllArgsConstructor
 public class ChatEventListener {
@@ -22,10 +24,26 @@ public class ChatEventListener {
 
         Optional<List<ChatMember>> chatMemberList = chatMemberRepository.findAllByChatRoomId(event.getChatRoom().getId());
 
-        chatMemberList.ifPresent(list ->{
+        chatMemberList.ifPresent(list -> {
             list.forEach(chatMember -> {
-                if (!chatMember.getUser().getId().equals(event.getUser().getId())){
-                    notificationService.sendChatNotification(chatMember.getUser(), chatMember.getChatRoom().getRoomName(), event.getMessage());
+                try {
+                    if (chatMember.getUser() == null) {
+                        log.warn("ChatMember의 User가 null입니다. chatMember: {}", chatMember);
+                        return;
+                    }
+                    if (event.getUser() == null) {
+                        log.warn("이벤트의 User가 null입니다. event: {}", event);
+                        return;
+                    }
+
+                    Long chatMemberUserId = chatMember.getUser().getId();
+                    Long eventUserId = event.getUser().getId();
+
+                    if (chatMemberUserId != null && !chatMemberUserId.equals(eventUserId)) {
+                        notificationService.sendChatNotification(chatMember.getUser(), chatMember.getChatRoom().getRoomName(), event.getMessage());
+                    }
+                } catch (Exception e) {
+                    log.error("알림 전송 중 예외 발생, userId: {}", chatMember.getUser() != null ? chatMember.getUser().getId() : "null", e);
                 }
             });
         });
