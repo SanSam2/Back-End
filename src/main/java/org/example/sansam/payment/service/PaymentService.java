@@ -48,7 +48,7 @@ public class PaymentService {
 
 
             Status orderPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PAID);
-            Status orderProductPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID);
+            Status orderProductPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_REQUIRED);
             order.completePayment(orderPaid, orderProductPaid, request.getPaymentKey());
             orderRepository.save(order);
 
