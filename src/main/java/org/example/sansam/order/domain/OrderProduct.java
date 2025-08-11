@@ -37,8 +37,6 @@ public class OrderProduct {
 
     private Long canceledQuantity=0L;
 
-    private Boolean isReviewed=false;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id", nullable = false)
     private Status status;
@@ -76,10 +74,6 @@ public class OrderProduct {
 
     public void updateOrderProductStatus(Status status){
         this.status = status;
-    }
-
-    public void changeReviewStatus(Boolean isReviewed){
-        this.isReviewed = isReviewed;
     }
 
 }
