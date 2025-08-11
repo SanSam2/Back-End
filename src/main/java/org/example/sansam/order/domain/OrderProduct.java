@@ -12,6 +12,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "order_product")
 @Getter
+@Setter
 public class OrderProduct {
 
     @Id
