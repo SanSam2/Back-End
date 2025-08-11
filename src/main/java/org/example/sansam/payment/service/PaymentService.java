@@ -45,7 +45,7 @@ public class PaymentService {
             // 주문 상태 업데이트(강결합이 과연 좋을까? 단점이 뭐가 있을까?) -> 결국 분리를 해야한다
             Order order = orderRepository.findByOrderNumber(request.getOrderId())
                     .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
-            order.addPaymentKey(request.getPaymentKey()); //더티체킹 일어날텐데 왜 굳이 밑에 save가 있나요?
+            order.addPaymentKey(request.getPaymentKey()); //더티체킹 주의
 
             Map<String, Object> response = paymentApiClient.confirmPayment(request);
             String method = (String) response.get("method");
