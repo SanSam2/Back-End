@@ -3,6 +3,8 @@ package org.example.sansam.review.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.sansam.order.domain.OrderProduct;
+import org.example.sansam.order.repository.OrderProductRepository;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.review.domain.Review;
@@ -14,6 +16,9 @@ import org.example.sansam.s3.repository.FileDetailJpaRepository;
 import org.example.sansam.s3.repository.FileJpaRepository;
 import org.example.sansam.s3.service.FileService;
 import org.example.sansam.s3.service.S3Service;
+import org.example.sansam.status.domain.Status;
+import org.example.sansam.status.domain.StatusEnum;
+import org.example.sansam.status.repository.StatusRepository;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -33,6 +38,9 @@ public class ReviewService {
     private final FileJpaRepository fileJpaRepository;
     private final S3Service s3Service;
     private final FileDetailJpaRepository fileDetailJpaRepository;
+    private final OrderProductRepository orderProductRepository;
+
+    private final StatusRepository statusRepository;
 
     public void createReview(AddReviewRequest request) {
         Review review = new Review();
@@ -51,7 +59,10 @@ public class ReviewService {
                 .message(request.getMessage())
                 .starRating(request.getRating())
                 .build();
-
+//        OrderProduct orderProduct = orderProductRepository.findByOrder_OrderNumberAndProduct_Id(request.getOrderNumber(), request.getProductId())
+//                        .orElseThrow(() -> new EntityNotFoundException("주문된 상품을 찾을 수 없습니다. "));
+//        Status reviewCompleted = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_COMPLETED);
+//        orderProduct.updateOrderProductStatus(reviewCompleted);
         reviewJpaRepository.save(review);
     }
 
@@ -65,7 +76,7 @@ public class ReviewService {
         if(request.getUrl() != null) {
             Long detailId = fileService.getFileDetail(review.getFile());
             FileDetail detail = fileDetailJpaRepository.findById(detailId)
-                    .orElseThrow(() -> new EntityNotFoundException("리뷰가 존재하지 않습니다."));
+                    .orElseThrow(() -> new EntityNotFoundException("파일정보가 존재하지 않습니다."));
             detail.setUrl(request.getUrl());
             detail.setSize(request.getSize());
             fileDetailJpaRepository.save(detail);
@@ -84,12 +95,17 @@ public class ReviewService {
 
     public void deleteReview(DeleteReviewRequest deleteReviewRequest) {
         Review review = reviewJpaRepository.findByProductIdAndUserId(deleteReviewRequest.getProductId(), deleteReviewRequest.getUserId());
+        if( review == null ) {
+            throw new EntityNotFoundException("리뷰가 존재하지 않습니다.");
+        }
         reviewJpaRepository.delete(review);
 
         if (review.getFile() != null) {
             String url = review.getFile().getFileUrl();
             if(url != null) {
                 s3Service.deleteImage(url);
+                fileDetailJpaRepository.delete(review.getFile().getFileDetail());
+                fileJpaRepository.delete(review.getFile());
             }
         }
 

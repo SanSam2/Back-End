@@ -46,7 +46,9 @@ public class WishService {
     @Transactional
     public void deleteWish(DeleteWishRequest request) {
         List<DeleteWishItem> deleteWishRequests = request.getDeleteWishItemList();
-
+        if(deleteWishRequests == null ) {
+            throw new EntityNotFoundException("삭제할 위시 정보가 존재하지 않습니다.");
+        }
         List<Wish> wishes = new ArrayList<>();
         for(DeleteWishItem item : deleteWishRequests) {
             Wish wish = wishJpaRepository.findByUserIdAndProductId(item.getUserId(), item.getProductId())
@@ -61,7 +63,9 @@ public class WishService {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Page<Wish> wishes = wishJpaRepository.findWishesByUserId(userId, pageable);
-
+        if(wishes == null) {
+            throw new EntityNotFoundException("위시가 존재하지 않습니다.");
+        }
         return wishes.map(wish -> SearchWishResponse.builder()
                 .productId(wish.getProduct().getId())
                 .productName(wish.getProduct().getProductName())
