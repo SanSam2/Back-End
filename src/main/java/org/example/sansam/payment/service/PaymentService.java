@@ -3,6 +3,7 @@ package org.example.sansam.payment.service;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
+import org.example.sansam.notification.event.PaymentCompleteEmailEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.repository.OrderRepository;
 
@@ -15,6 +16,8 @@ import org.example.sansam.payment.repository.PaymentsTypeRepository;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
 import org.example.sansam.status.repository.StatusRepository;
+import org.example.sansam.user.domain.User;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,8 @@ public class PaymentService {
     private final StatusRepository statusRepository;
 
     private final PaymentApiClient paymentApiClient;
+    private final ApplicationEventPublisher eventPublisher;
+
 
     @Transactional
     public void confirmPayment(TossPaymentRequest request) throws Exception {
@@ -50,7 +55,10 @@ public class PaymentService {
             Status orderPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PAID);
             Status orderProductPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_REQUIRED);
             order.completePayment(orderPaid, orderProductPaid, request.getPaymentKey());
+
             orderRepository.save(order);
+            PaymentCompleteEmailEvent event = new PaymentCompleteEmailEvent(order.getUser(), order.getOrderName(), order.getTotalAmount());
+            eventPublisher.publishEvent(event);
 
         } catch (Exception e) {
             throw new CustomException(ErrorCode.PAYMENT_CONFIRM_FAILED);
