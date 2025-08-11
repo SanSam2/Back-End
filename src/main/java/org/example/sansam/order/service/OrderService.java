@@ -165,6 +165,8 @@ public class OrderService {
                             op.getProduct().getId(),
                             op.getProduct().getProductName(),
                             op.getProduct().getPrice(),
+                            op.getOrderedProductSize(),
+                            op.getOrderedproductColor(),
                             op.getQuantity(),
                             op.getRepresentativeURL(),
                             op.getStatus().getStatusName()

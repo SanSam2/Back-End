@@ -28,15 +28,20 @@ public class OrderWithProductsResponse {
         private Long orderProductId;
         private Long productId;
         private String productName;
+        private String productSize;
+        private String productColor;
         private Long productPrice;
         private int quantity;
         private String orderProductImageUrl;
         private StatusEnum orderProductStatus;
 
-        public ProductSummary(Long orderProductId, Long productId, String productName, Long productPrice, int quantity,String orderProductImageUrl, StatusEnum orderProductStatus) {
+        public ProductSummary(Long orderProductId, Long productId, String productName, Long productPrice,
+                              String productSize, String productColor, int quantity,String orderProductImageUrl, StatusEnum orderProductStatus) {
             this.orderProductId = orderProductId;
             this.productId = productId;
             this.productName = productName;
+            this.productSize = productSize;
+            this.productColor = productColor;
             this.productPrice = productPrice;
             this.quantity = quantity;
             this.orderProductImageUrl = orderProductImageUrl;
