@@ -59,10 +59,10 @@ public class ReviewService {
                 .message(request.getMessage())
                 .starRating(request.getRating())
                 .build();
-        OrderProduct orderProduct = orderProductRepository.findByOrder_OrderNumberAndProduct_Id(request.getOrderNumber(), request.getProductId())
-                        .orElseThrow(() -> new EntityNotFoundException("주문된 상품을 찾을 수 없습니다. "));
-        Status reviewCompleted = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_COMPLETED);
-        orderProduct.updateOrderProductStatus(reviewCompleted);
+//        OrderProduct orderProduct = orderProductRepository.findByOrder_OrderNumberAndProduct_Id(request.getOrderNumber(), request.getProductId())
+//                        .orElseThrow(() -> new EntityNotFoundException("주문된 상품을 찾을 수 없습니다. "));
+//        Status reviewCompleted = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_COMPLETED);
+//        orderProduct.updateOrderProductStatus(reviewCompleted);
         reviewJpaRepository.save(review);
     }
 
