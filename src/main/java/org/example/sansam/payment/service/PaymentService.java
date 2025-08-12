@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.notification.event.PaymentCompleteEmailEvent;
+import org.example.sansam.notification.event.PaymentCompleteEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.repository.OrderRepository;
 
@@ -59,7 +60,7 @@ public class PaymentService {
             orderRepository.save(order);
             PaymentCompleteEmailEvent event = new PaymentCompleteEmailEvent(order.getUser(), order.getOrderName(), order.getTotalAmount());
             eventPublisher.publishEvent(event);
-
+            eventPublisher.publishEvent(new PaymentCompleteEvent(order.getUser(), order.getOrderName(), order.getTotalAmount()));
         } catch (Exception e) {
             throw new CustomException(ErrorCode.PAYMENT_CONFIRM_FAILED);
         }

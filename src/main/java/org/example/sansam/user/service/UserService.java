@@ -2,10 +2,13 @@ package org.example.sansam.user.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.sansam.notification.event.UserWelcomeEmailEvent;
+import org.example.sansam.notification.event.WelcomeNotificationEvent;
 import org.example.sansam.user.domain.Role;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.dto.RegisterRequest;
 import org.example.sansam.user.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,6 +22,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final String adminEmail = "sansam@example.com";
+
+    private final ApplicationEventPublisher eventPublisher;
 
     public void register(RegisterRequest requestDto){
 
@@ -37,6 +42,8 @@ public class UserService {
                 .build();
 
         userRepository.save(newUser);
+        eventPublisher.publishEvent(new UserWelcomeEmailEvent(newUser));
+        eventPublisher.publishEvent(new WelcomeNotificationEvent(newUser));
     }
 
     public Optional<User> login(String email,String password) {
