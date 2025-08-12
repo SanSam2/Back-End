@@ -71,7 +71,6 @@ cloud:
       accessKey: ${AWS_ACCESS_KEY}
       secretKey: ${AWS_SECRET_KEY}
 cors:
-  allowed-origins: http://localhost:3000/
-
+  allowed-origins: http://localhost:3000
 websocket:
-  allowed-origins: "http://localhost:3000/"
+  allowed-origins: "http://localhost:3000"
