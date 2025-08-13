@@ -1,7 +1,8 @@
 name: CD-EC2
+
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 env:
@@ -17,6 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # GHCR 로그인 (uses 전용 스텝)
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -36,12 +38,33 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     steps:
+      # 시크릿 존재 여부 먼저 검증 (run 전용 스텝)
+      - name: Check secrets exist
+        env:
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+          KEY:  ${{ secrets.EC2_SSH_KEY }}
+          GHCR: ${{ secrets.GHCR_TOKEN }}
+        run: |
+          test -n "$HOST" || (echo "EC2_HOST is EMPTY"; exit 1)
+          test -n "$USER" || (echo "EC2_USER is EMPTY"; exit 1)
+          test -n "$KEY"  || (echo "EC2_SSH_KEY is EMPTY"; exit 1)
+          test -n "$GHCR" || (echo "GHCR_TOKEN is EMPTY"; exit 1)
+
+      # PEM을 파일로 저장해서 줄바꿈/공백 문제 회피
+      - name: Write SSH key to file
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      # 실제 SSH 배포 (uses 전용 스텝)
       - name: SSH deploy
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host:     ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key_path: key.pem      # key 대신 key_path 사용 권장
+          port: 22
           script_stop: true
           script: |
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
