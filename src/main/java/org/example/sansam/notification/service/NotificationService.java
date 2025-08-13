@@ -144,7 +144,7 @@ public class NotificationService {
 
         NotificationHistories saved = saveNotificationHistory(user, template, title, message);
         String payload = serializeToJson(NotificationDTO.from(saved));
-        log.info(payload);
+        log.info(type.getEventName());
         sendViaSSEAsync(user.getId(), payload, type.getEventName());
     }
 
