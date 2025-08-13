@@ -1,14 +1,24 @@
 # 1) Build stage
-FROM gradle:8.6-jdk17 AS builder
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
+
+# Gradle 캐시 최적화 (gradle wrapper 포함)
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x gradlew
+
+# 소스 코드 복사
 COPY . .
-RUN gradle clean bootJar --no-daemon
+
+# Spring Boot JAR 빌드
+RUN ./gradlew clean bootJar --no-daemon
 
 # 2) Runtime stage
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-ENV TZ=Asia/Seoul \
-    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+
+# 빌드 결과물 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+
+# 실행
+ENTRYPOINT ["java", "-jar", "app.jar"]
