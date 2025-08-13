@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE: ghcr.io/SanSam2/back-end
+  IMAGE: ghcr.io/sansam2/back-end
   TAG: ${{ github.sha }}
 
 jobs:
