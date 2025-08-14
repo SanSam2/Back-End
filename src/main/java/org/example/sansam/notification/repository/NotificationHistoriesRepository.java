@@ -14,16 +14,21 @@ import java.util.List;
 public interface NotificationHistoriesRepository extends JpaRepository<NotificationHistories, Long> {
 
     @Modifying
-    @Transactional
     @Query("DELETE FROM NotificationHistories n WHERE n.expiredAt < :now")
     int deleteByExpiredAtBefore(Timestamp now);
 
     List<NotificationHistories> findAllByUser_Id(Long userId);
 
     @Modifying
-    @Transactional
     void deleteByUser_IdAndId(Long userId, Long id);
 
     Long countByUser_IdAndIsReadFalse(Long userId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE NotificationHistories n
+        SET n.isRead = true
+        WHERE n.user.id = :userId AND n.isRead = false
+    """)
     List<NotificationHistories> findAllByUser_IdAndIsReadFalse(Long userId);
 }
