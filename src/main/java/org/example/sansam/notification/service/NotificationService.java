@@ -53,24 +53,22 @@ public class NotificationService {
             throw new IllegalArgumentException("Invalid userId: " + userId);
         }
 
-        // 동시성 제어
-        synchronized (sseEmitters) {
-            SseEmitter existingEmitter = sseEmitters.get(userId);
-            if (existingEmitter != null) {
-                existingEmitter.complete(); // 이전 연결 정리
-                sseEmitters.remove(userId);
-            }
-
-            SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
-            sseEmitters.put(userId, emitter);
-
-            // 연결 종료 시 emitter 제거
-            emitter.onCompletion(() -> sseEmitters.remove(userId));
-            emitter.onTimeout(() -> sseEmitters.remove(userId));
-            emitter.onError(ex -> sseEmitters.remove(userId));
-
-            return emitter;
+        SseEmitter existingEmitter = sseEmitters.get(userId);
+        if (existingEmitter != null) {
+            existingEmitter.complete(); // 이전 연결 정리
+            sseEmitters.remove(userId);
         }
+
+        SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
+        sseEmitters.put(userId, emitter);
+
+        // 연결 종료 시 emitter 제거
+        emitter.onCompletion(() -> sseEmitters.remove(userId));
+        emitter.onTimeout(() -> sseEmitters.remove(userId));
+        emitter.onError(ex -> sseEmitters.remove(userId));
+
+        return emitter;
+
     }
 
     public List<NotificationDTO> getNotificationHistories(Long userId) {
@@ -94,12 +92,10 @@ public class NotificationService {
 
     @Transactional
     public void markAllAsRead(Long userId) {
-        List<NotificationHistories> unreadNotifications =
-                notificationHistoriesRepository.findAllByUser_IdAndIsReadFalse(userId);
-
-        unreadNotifications.forEach(n -> n.setRead(true));
+        notificationHistoriesRepository.findAllByUser_IdAndIsReadFalse(userId);
     }
 
+    @Transactional
     public void deleteNotificationHistory(Long userId, Long notificationHistoriesId) {
         notificationHistoriesRepository.deleteByUser_IdAndId(userId, notificationHistoriesId);
     }
@@ -135,8 +131,8 @@ public class NotificationService {
         sendNotification(user, NotificationType.CHAT, chatRoomName, message);
     }
 
-    // private 메서드
-
+    // private 메서드 TODO: AOP 학습
+//    @Transactional
     private void sendNotification(User user, NotificationType type, String titleParam, String messageParam) {
         Notification template = getTemplateOrThrow(type.getTemplateId());
         String title = formatTitle(template.getTitle(), titleParam);
@@ -144,8 +140,7 @@ public class NotificationService {
 
         NotificationHistories saved = saveNotificationHistory(user, template, title, message);
         String payload = serializeToJson(NotificationDTO.from(saved));
-        log.info(type.getEventName());
-        sendViaSSEAsync(user.getId(), payload, type.getEventName());
+        sendViaSSEAsync(user.getId(), payload, type.getEventName()); //TODO: 트랜잭션이랑 별개의 작업인데 트랜잭션안에서 있다????
     }
 
     private Notification getTemplateOrThrow(Long templateId) {
@@ -203,12 +198,13 @@ public class NotificationService {
                 .build();
 
         NotificationHistories saved = notificationHistoriesRepository.save(notification);
-        if (saved.getId() == null) {
+        if (saved.getId() == null) { //fix:이부분 확인 필요
             throw new CustomException(ErrorCode.NOTIFICATION_SAVE_FAILED);
         }
         return saved;
     }
 
+    //TODO: 공통화 작업 필요
     private String serializeToJson(NotificationDTO dto) {
         try {
             return objectMapper.writeValueAsString(dto);

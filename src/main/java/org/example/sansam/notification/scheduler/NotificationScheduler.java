@@ -1,5 +1,6 @@
 package org.example.sansam.notification.scheduler;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.notification.event.ReviewRequestEvent;
 import org.example.sansam.notification.repository.NotificationHistoriesRepository;
@@ -24,12 +25,14 @@ public class NotificationScheduler {
     private static final long STATUS_ORDER_PAID = 7L;
 
     @Scheduled(cron = "0 0 3 * * *") // 매일 새벽 3시에 만료 알림 삭제
+    @Transactional
     public void deleteExpiredNotification() {
         int deleted = notificationHistoryRepository.deleteByExpiredAtBefore(Timestamp.valueOf(LocalDateTime.now()));
         System.out.println("삭제된 만료 알림 수: " + deleted);
     }
 
     @Scheduled(cron = "0 0 14 * * *") // 매 시간 정각
+    @Transactional
     public void checkReviewRequestCondition() {
         LocalDateTime oneDayAgo = LocalDateTime.now().minusDays(1);
 
