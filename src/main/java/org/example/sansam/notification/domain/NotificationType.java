@@ -1,4 +1,4 @@
-package org.example.sansam.notification.template;
+package org.example.sansam.notification.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

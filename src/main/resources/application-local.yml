@@ -1,14 +1,14 @@
 server:
-  port: ${SERVER_PORT:8080}
+  port: 8080
   address: 0.0.0.0
 
   servlet:
     session:
       timeout: 120m
       cookie:
-        name: JSESSIONID
-        http-only: true
-        secure: true
+        name: JSESSIONID        # 쿠키 이름
+        http-only: true         # JS에서 접근 불가
+        secure: false           # https에서만 필요 시 true
         same-site: none
 
 spring:
@@ -16,19 +16,15 @@ spring:
     encoding: UTF-8
   application:
     name: SanSam
-  profiles:
-    default: local  # 기본은 local로
-    group:
-      prod: prod
-      local: local
-      test: test
+  config:
+    activate:
+      on-profile: local
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:mysql://localhost:3305/sansam
+    username: root
+    password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -36,13 +32,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-    open-in-view: false
+    open-in-view: false # 이것도 찾아보세요!!!
 
   mail:
-    host: ${SPRING_MAIL_HOST}
-    port: ${SPRING_MAIL_PORT}
-    username: ${SPRING_MAIL_USERNAME}
-    password: ${SPRING_MAIL_PASSWORD}    # 앱 비밀번호 (환경변수)
+    host: smtp.gmail.com
+    port: 587
+    username: sansam250721@gmail.com
+    password: dgwj cvlz wpqt vfdo         # 앱 비밀번호
     properties:
       mail:
         smtp:
@@ -61,9 +57,10 @@ spring:
 #            include-parameter-values: true
 
 toss:
-  secret-key: ${TOSS_SECRET_KEY}
-  confirm-url: ${TOSS_CONFIRM_URL}
-  cancel-url: ${TOSS_CANCEL_URL}
+  secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+  confirm-url: https://api.tosspayments.com/v1/payments/confirm
+  cancel-url: https://api.tosspayments.com/v1/payments
+
 
 management:
   endpoints:
@@ -84,7 +81,7 @@ cloud:
       bucket: ${AWS_BUCKET_NAME}
       custom:
         dir: /images
-        defaultUrl: https://${AWS_BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/
+        defaultUrl: https://your-bucket-name.s3.ap-northeast-2.amazonaws.com/
       path:
         review: reviews
     region:
@@ -94,9 +91,7 @@ cloud:
     credentials:
       accessKey: ${AWS_ACCESS_KEY}
       secretKey: ${AWS_SECRET_KEY}
-
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS}
-
+  allowed-origins: http://localhost:3000
 websocket:
-  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS}
+  allowed-origins: "http://localhost:3000"

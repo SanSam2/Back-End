@@ -30,5 +30,14 @@ public interface NotificationHistoriesRepository extends JpaRepository<Notificat
         SET n.isRead = true
         WHERE n.user.id = :userId AND n.isRead = false
     """)
-    List<NotificationHistories> findAllByUser_IdAndIsReadFalse(Long userId);
+    void findAllByUser_IdAndIsReadFalse(Long userId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Transactional
+    @Query("""
+        UPDATE NotificationHistories n
+        SET n.isRead = true
+        WHERE n.id = :notificationHistoriesId
+    """)
+    void findByIsReadFalse(Long notificationHistoriesId);
 }
