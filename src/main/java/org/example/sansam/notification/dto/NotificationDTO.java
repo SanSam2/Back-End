@@ -5,6 +5,7 @@ import lombok.*;
 import org.example.sansam.notification.domain.NotificationHistories;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Builder
 @Getter
@@ -23,7 +24,7 @@ public class NotificationDTO {
     private String message;
 
     @Schema(description = "전송 시간",example = "2025-08-10T14:02:00")
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 
     @Schema(description = "읽음 여부",example = "false")
     private boolean isRead;

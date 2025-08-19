@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 @EnableAsync
 @EnableRetry
 public class AsyncConfig {
-    @Bean
+    @Bean(name = "pushExecutor")
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(5);    // 기본 스레드 수 (동시 실행 가능 작업 수)

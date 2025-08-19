@@ -1,6 +1,6 @@
 //package org.example.sansam.global.config;
 //
-//import org.example.sansam.notification.service.PushProvider;
+//import org.example.sansam.notification.infra.PushProvider;
 //import org.springframework.context.annotation.Bean;
 //import org.springframework.context.annotation.Configuration;
 //import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
