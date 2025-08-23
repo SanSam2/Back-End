@@ -2,7 +2,7 @@ package org.example.sansam.notification.scheduler;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.sansam.notification.event.ReviewRequestEvent;
+import org.example.sansam.notification.event.sse.ReviewRequestEvent;
 import org.example.sansam.notification.repository.NotificationHistoriesRepository;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.repository.OrderRepository;
