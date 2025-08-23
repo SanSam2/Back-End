@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
-import org.example.sansam.notification.event.PaymentCancelEvent;
-import org.example.sansam.notification.event.PaymentCanceledEmailEvent;
+import org.example.sansam.notification.event.sse.PaymentCancelEvent;
+import org.example.sansam.notification.event.email.PaymentCanceledEmailEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.domain.OrderProduct;
 import org.example.sansam.order.repository.OrderRepository;

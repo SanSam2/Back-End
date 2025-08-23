@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.4'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 }
 
 group = 'org.example'
@@ -70,6 +71,53 @@ tasks.jacocoTestReport {
             })
     )
 }
+
+//jacoco {
+//    toolVersion = '0.8.12'
+//}
+//
+//tasks.test {
+//    useJUnitPlatform()
+//    ignoreFailures = true
+//    finalizedBy tasks.jacocoTestReport
+//}
+//
+//tasks.jacocoTestCoverageVerification {
+//    dependsOn tasks.test
+//
+//    violationRules {
+//        rule {
+//
+//            element = 'BUNDLE'
+//            limit {
+//                counter = 'LINE'
+//                value = 'COVEREDRATIO'
+//                minimum = 0.00
+//            }
+//
+//            limit {
+//                counter = 'METHOD'
+//                value = 'COVEREDRATIO'
+//                minimum = 0.00
+//            }
+//        }
+//    }
+//}
+//
+//tasks.jacocoTestReport {
+//    dependsOn tasks.test  // 테스트 후 리포트 생성
+//    reports {
+//        html.required.set(true)  // 로컬에서 브라우저로 보기
+//        xml.required.set(true)   // CI나 Sonar 연동용
+//        csv.required.set(false)
+//    }
+//    classDirectories.setFrom(
+//            files(classDirectories.files.collect {
+//                fileTree(dir: it, include: ['org/example/sansam/notification/**'],
+//                        exclude: ['**/dto/**', '**/config/**', '**/Q*.*','**/notification/exception/**','**/notification/controller/*Test*'])
+//            })
+//    )
+//}
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

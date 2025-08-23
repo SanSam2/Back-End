@@ -9,7 +9,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @Component
 @RequiredArgsConstructor
 @Profile({"local","test"})
-public class SsePushProvider implements PushProvider{
+public class SseProvider implements PushProvider {
 
     private final SseConnector sseConnector;
 

@@ -2,22 +2,18 @@ package org.example.sansam.notification.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sansam.chat.domain.ChatRoom;
 import org.example.sansam.chat.repository.ChatMemberRepository;
 import org.example.sansam.chat.repository.ChatRoomRepository;
-import org.example.sansam.notification.event.*;
+import org.example.sansam.notification.event.sse.ProductQuantityLowEvent;
 import org.example.sansam.product.domain.ProductDetail;
 import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
-import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDateTime;
 
 @Slf4j
 @RestController

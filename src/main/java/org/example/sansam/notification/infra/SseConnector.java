@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class SseConnector implements PushConnector{
+public class SseConnector implements PushConnector {
 
     private final Map<Long, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
     private static final long DEFAULT_TIMEOUT = 60L * 1000 * 30; // 30분 설정, 리소스 점유 시간 절감

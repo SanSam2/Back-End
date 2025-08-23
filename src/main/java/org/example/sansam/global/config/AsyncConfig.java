@@ -10,12 +10,12 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
-@EnableAsync
-@EnableRetry
+//@EnableAsync
+//@EnableRetry
 public class AsyncConfig {
     @Bean(name = "pushExecutor")
     public Executor taskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor(); // TODO : 찾아보기 왜?
         executor.setCorePoolSize(5);    // 기본 스레드 수 (동시 실행 가능 작업 수)
         executor.setMaxPoolSize(20);    // 최대 스레드 수 (큐가 가득 찼을 때 확장)
         executor.setQueueCapacity(100); // 작업 대기 큐 크기 (corePoolSize만큼 실행 중일 때 대기 가능 작업 수)

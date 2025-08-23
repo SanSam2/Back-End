@@ -3,8 +3,8 @@ package org.example.sansam.payment.service;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
-import org.example.sansam.notification.event.PaymentCompleteEmailEvent;
-import org.example.sansam.notification.event.PaymentCompleteEvent;
+import org.example.sansam.notification.event.email.PaymentCompleteEmailEvent;
+import org.example.sansam.notification.event.sse.PaymentCompleteEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.repository.OrderRepository;
 
@@ -17,7 +17,6 @@ import org.example.sansam.payment.repository.PaymentsTypeRepository;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
 import org.example.sansam.status.repository.StatusRepository;
-import org.example.sansam.user.domain.User;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

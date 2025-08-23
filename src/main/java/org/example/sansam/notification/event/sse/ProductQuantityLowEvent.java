@@ -1,4 +1,4 @@
-package org.example.sansam.notification.event;
+package org.example.sansam.notification.event.sse;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

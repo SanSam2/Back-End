@@ -1,7 +1,7 @@
-package org.example.sansam.notification.eventListener;
+package org.example.sansam.notification.eventListener.sse;
 
 import lombok.RequiredArgsConstructor;
-import org.example.sansam.notification.event.NotificationSavedEvent;
+import org.example.sansam.notification.event.sse.NotificationSavedEvent;
 import org.example.sansam.notification.infra.PushProvider;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;

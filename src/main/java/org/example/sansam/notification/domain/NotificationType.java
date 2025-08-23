@@ -20,11 +20,4 @@ public enum NotificationType {
 
     private final Long templateId;
     private final String eventName;
-
-    public static NotificationType getNotificationType(Long templateId) {
-        return Arrays.stream(values())
-                .filter(notificationType -> notificationType.getTemplateId().equals(templateId))
-                .findFirst()
-                .orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_TEMPLATE_NOT_FOUND));
-    }
 }
