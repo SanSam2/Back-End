@@ -37,6 +37,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
     open-in-view: false
+    open-in-view: false # 이것도 찾아보세요!!!
+  batch:
+    jdbc:
+      initialize-schema: never   # 앱 실행 시 메타 테이블 자동 생성
+    job:
+      enabled: false              # 앱 시작할 때 배치 잡 자동 실행하지 않음 (테스트/스케줄러로만 실행)
 
   mail:
     host: ${SPRING_MAIL_HOST}
