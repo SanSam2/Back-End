@@ -3,13 +3,15 @@ package org.example.sansam.notification.infra;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class SseConnector implements PushConnector {
 
-    private final Map<Long, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
+    private final Map<Long, List<SseEmitter>> sseEmitters = new ConcurrentHashMap<>();
     private static final long DEFAULT_TIMEOUT = 60L * 1000 * 30; // 30분 설정, 리소스 점유 시간 절감
 
     @Override
@@ -18,14 +20,9 @@ public class SseConnector implements PushConnector {
             throw new IllegalArgumentException("Invalid userId: " + userId);
         }
 
-        SseEmitter existingEmitter = sseEmitters.get(userId);
-        if (existingEmitter != null) {
-            existingEmitter.complete(); // 이전 연결 정리
-            sseEmitters.remove(userId);
-        }
-
         SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
-        sseEmitters.put(userId, emitter);
+        sseEmitters.computeIfAbsent(userId, key -> new CopyOnWriteArrayList<>())
+                .add(emitter);
 
         // 연결 종료 시 emitter 제거
         emitter.onCompletion(() -> sseEmitters.remove(userId));
@@ -35,7 +32,11 @@ public class SseConnector implements PushConnector {
         return emitter;
     }
 
-    public SseEmitter getEmitter(Long userId) {
-        return sseEmitters.get(userId);
+    public List<SseEmitter> getEmitters(Long userId) {
+        return sseEmitters.getOrDefault(userId, List.of());
+    }
+
+    public Map<Long, List<SseEmitter>> getAllEmitters() {
+        return sseEmitters;
     }
 }
