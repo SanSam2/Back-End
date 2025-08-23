@@ -12,7 +12,6 @@ import org.example.sansam.notification.event.sse.ProductQuantityLowEvent;
 import org.example.sansam.product.domain.ProductDetail;
 import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
-import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +34,7 @@ public class NotificationTestController {
 
     /**
      * Handles a test notification by simulating a product order and conditionally publishing a low quantity event.
-     * <p>
+     *
      * Retrieves a user and a product detail, simulates an order by reducing the product quantity, and publishes a
      * {@code ProductQuantityLowEvent} if the product's quantity crosses from above 50 to 50 or below. Returns an HTTP 200 OK
      * response on success, or an HTTP 500 response with the error message if an exception occurs.
@@ -53,17 +52,7 @@ public class NotificationTestController {
 //            String message = "집에 가고 싶구나..";
 
 
-//            ProductDetail productDetail = productDetailJpaRepository.findById(1L).orElseThrow();
-//
-//            Long beforeQuantity = productDetail.getQuantity();
-//            log.info("beforeQuantity: {}", beforeQuantity);
-//            Long orderQuantity = 5L;
-//            Long afterQuantity = beforeQuantity - orderQuantity;
-//            log.info("afterQuantity: {}", afterQuantity);
-//
-//            if (beforeQuantity > 50L && afterQuantity <= 50L) {
-//                publisher.publishEvent(new ProductQuantityLowEvent(productDetail));
-//            }
+            ProductDetail productDetail = productDetailJpaRepository.findById(1L).orElseThrow();
 
             User user = userRepository.findById(33L).orElseThrow();
             String orderName = "무신사 반팔";
