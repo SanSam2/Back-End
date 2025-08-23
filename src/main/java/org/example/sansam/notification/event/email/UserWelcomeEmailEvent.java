@@ -1,12 +1,11 @@
-package org.example.sansam.notification.event;
+package org.example.sansam.notification.event.email;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.user.domain.User;
 
-@Getter
 @RequiredArgsConstructor
-public class WelcomeNotificationEvent {
+@Getter
+public class UserWelcomeEmailEvent {
     private final User user;
 }

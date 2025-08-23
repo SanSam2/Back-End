@@ -1,20 +1,24 @@
-package org.example.sansam.notification.eventListener;
+package org.example.sansam.notification.eventListener.sse;
 
 import lombok.AllArgsConstructor;
-import org.example.sansam.notification.event.WelcomeNotificationEvent;
+import lombok.extern.log4j.Log4j2;
+import org.example.sansam.notification.event.sse.WelcomeNotificationEvent;
 import org.example.sansam.notification.service.NotificationService;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-
 @Component
 @AllArgsConstructor
+@Log4j2
 public class WelcomeNotificationListener {
     private NotificationService notificationService;
 
     @EventListener
     public void handelWelcomeNotificationEvent(WelcomeNotificationEvent event) {
-        notificationService.sendWelcomeNotification(event.getUser());
+        try {
+            notificationService.sendWelcomeNotification(event.getUser());
+        } catch (Exception e) {
+            log.error("회원가입 환영 알림 실패 - userId={}", event.getUser() != null ? event.getUser().getId() : "null", e);
+        }
     }
 }

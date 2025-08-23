@@ -115,7 +115,7 @@ class NotificationHistoriesRepositoryTest {
 
     @DisplayName("사용자는 읽지 않은 하나의 알림을 읽음 처리한다.")
     @Test
-    void test(){
+    void markAsRead(){
         // given
         User user = createUser("qpqp@naver.com", "테스트용1", "1004", "01012345678", Role.USER, 10000000L, LocalDateTime.now());
         userRepository.save(user);
@@ -183,10 +183,10 @@ class NotificationHistoriesRepositoryTest {
                         .user(user)
                         .title(String.format(title, user.getName()))
                         .message(message)
-                        .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                        .createdAt(LocalDateTime.now())
                         .notification(notification)
                         .isRead(false)
-                        .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
+                        .expiredAt(LocalDateTime.now().plusDays(14))
                         .build());
     }
 }

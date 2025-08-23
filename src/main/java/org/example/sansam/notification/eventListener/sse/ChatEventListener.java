@@ -1,10 +1,10 @@
-package org.example.sansam.notification.eventListener;
+package org.example.sansam.notification.eventListener.sse;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.chat.domain.ChatMember;
 import org.example.sansam.chat.repository.ChatMemberRepository;
-import org.example.sansam.notification.event.ChatEvent;
+import org.example.sansam.notification.event.sse.ChatEvent;
 import org.example.sansam.notification.service.NotificationService;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -43,7 +43,7 @@ public class ChatEventListener {
                         notificationService.sendChatNotification(chatMember.getUser(), chatMember.getChatRoom().getRoomName(), event.getMessage());
                     }
                 } catch (Exception e) {
-                    log.error("알림 전송 중 예외 발생, userId: {}", chatMember.getUser() != null ? chatMember.getUser().getId() : "null", e);
+                    log.error("채팅 알림 전송 실패 - chatMemberUserId={}", chatMember.getUser() != null ? chatMember.getUser().getId() : "null", e);
                 }
             });
         });

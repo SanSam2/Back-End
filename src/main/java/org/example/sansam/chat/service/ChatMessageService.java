@@ -11,7 +11,7 @@ import org.example.sansam.chat.dto.ChatMessageSendResponseDTO;
 import org.example.sansam.chat.repository.ChatMemberRepository;
 import org.example.sansam.chat.repository.ChatMessageRepository;
 import org.example.sansam.chat.repository.ChatRoomRepository;
-import org.example.sansam.notification.event.ChatEvent;
+import org.example.sansam.notification.event.sse.ChatEvent;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;

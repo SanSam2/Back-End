@@ -1,14 +1,12 @@
-package org.example.sansam.notification.eventListener;
+package org.example.sansam.notification.eventListener.email;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sansam.notification.event.PaymentCanceledEmailEvent;
+import org.example.sansam.notification.event.email.PaymentCanceledEmailEvent;
 import org.example.sansam.notification.service.EmailService;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
-import java.util.EnumMap;
 
 @Slf4j
 @Component
@@ -19,6 +17,10 @@ public class PaymentCanceledEmailEventListener {
     @Async
     @EventListener
     public void handlePaymentCanceled(PaymentCanceledEmailEvent event) {
-        emailService.sendPaymentCanceledMessage(event.getUser(), event.getOrderName(), event.getRefundPrice());
+        try {
+            emailService.sendPaymentCanceledMessage(event.getUser(), event.getOrderName(), event.getRefundPrice());
+        } catch (Exception e) {
+            log.error("결제 취소 메일 전송 실패 - userId={}", event.getUser() != null ? event.getUser().getId() : "null", e);
+        }
     }
 }

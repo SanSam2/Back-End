@@ -6,7 +6,6 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.user.domain.User;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.messaging.MessagingException;
@@ -40,7 +39,7 @@ public class EmailService {
 
     private MimeMessage createWelcomeMessage(User user) throws MessagingException, jakarta.mail.MessagingException {
         MimeMessage message = javaMailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
 
         helper.setTo(user.getEmail());
         helper.setSubject("[Or de Firenz 회원가입을 축하드립니다.]");

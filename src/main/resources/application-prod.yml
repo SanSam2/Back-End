@@ -21,9 +21,9 @@ spring:
       on-profile: prod
 
   datasource:
-    url: jdbc:mysql://sansam.c3240ygmgpix.ap-northeast-2.rds.amazonaws.com:3306/sansam
-    username: admin
-    password: sansam333!
+    url: ${DB_URL}
+    username: ${USER_NAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
