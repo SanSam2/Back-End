@@ -1,6 +1,6 @@
 package org.example.sansam.notification.eventListener.sse;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.example.sansam.cart.repository.CartJpaRepository;
 import org.example.sansam.notification.event.sse.ProductQuantityLowEvent;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Log4j2
 public class ProductQuantityLowEventListener {
     private final NotificationService notificationService;

@@ -10,8 +10,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
-//@EnableAsync
-//@EnableRetry
+@EnableAsync
+@EnableRetry
 public class AsyncConfig {
     @Bean(name = "pushExecutor")
     public Executor taskExecutor() {

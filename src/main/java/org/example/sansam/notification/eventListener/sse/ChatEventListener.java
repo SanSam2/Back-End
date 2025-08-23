@@ -1,6 +1,6 @@
 package org.example.sansam.notification.eventListener.sse;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.chat.domain.ChatMember;
 import org.example.sansam.chat.repository.ChatMemberRepository;
@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Slf4j
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ChatEventListener {
     private final NotificationService notificationService;
     private final ChatMemberRepository chatMemberRepository;
