@@ -6,6 +6,8 @@ import org.example.sansam.notification.event.sse.PaymentCancelEvent;
 import org.example.sansam.notification.service.NotificationService;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
@@ -14,7 +16,7 @@ public class PaymentCancelEventListener {
 
     private final NotificationService notificationService;
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handelPaymentCancelEvent(PaymentCancelEvent event) {
         try{
             notificationService.sendPaymentCancelNotification(event.getUser(), event.getOrderName(), event.getRefundPrice());

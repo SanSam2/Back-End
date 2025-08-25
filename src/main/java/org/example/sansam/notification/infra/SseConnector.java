@@ -25,9 +25,9 @@ public class SseConnector implements PushConnector {
                 .add(emitter);
 
         // 연결 종료 시 emitter 제거
-        emitter.onCompletion(() -> sseEmitters.remove(userId));
-        emitter.onTimeout(() -> sseEmitters.remove(userId));
-        emitter.onError(ex -> sseEmitters.remove(userId));
+        emitter.onCompletion(() -> removeEmitter(userId, emitter));
+        emitter.onTimeout(() -> removeEmitter(userId, emitter));
+        emitter.onError(ex -> removeEmitter(userId, emitter));
 
         return emitter;
     }
@@ -38,5 +38,15 @@ public class SseConnector implements PushConnector {
 
     public Map<Long, List<SseEmitter>> getAllEmitters() {
         return sseEmitters;
+    }
+
+    public void removeEmitter(Long userId, SseEmitter emitter) {
+        List<SseEmitter> emitters = sseEmitters.get(userId);
+        if (emitters != null) {
+            emitters.remove(emitter);
+            if (emitters.isEmpty()) {
+                sseEmitters.remove(userId); // 메모리 정리
+            }
+        }
     }
 }

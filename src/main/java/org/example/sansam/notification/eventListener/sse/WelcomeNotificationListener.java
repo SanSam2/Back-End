@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Log4j2
 public class WelcomeNotificationListener {
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
 
     @EventListener
     public void handelWelcomeNotificationEvent(WelcomeNotificationEvent event) {

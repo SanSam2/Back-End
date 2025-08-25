@@ -31,7 +31,6 @@ public class NotificationDTO {
 
     public static NotificationDTO from(NotificationHistories entity){
         return NotificationDTO.builder()
-                .id(entity.getId())
                 .title(entity.getTitle())
                 .message(entity.getMessage())
                 .createdAt(entity.getCreatedAt())

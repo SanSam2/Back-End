@@ -86,6 +86,13 @@ public class GlobalExceptionHandler {
     // 8) 그 밖의 미처리 예외(최후의 보루)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnknown(Exception e, HttpServletRequest req) {
+        if (e.getCause() instanceof java.io.IOException
+                && e.getCause().getMessage() != null
+                && e.getCause().getMessage().contains("Broken pipe")) {
+            log.debug("SSE 연결 종료 (정상): {} {}", req.getMethod(), req.getRequestURI());
+            return ResponseEntity.noContent().build();
+        }
+
         log.error("Unexpected error on {} {}: {}", req.getMethod(), req.getRequestURI(), e.getMessage(), e);
         ErrorResponse res = new ErrorResponse(500, "INTERNAL_SERVER_ERROR",
                 "Unexpected server error", LocalDateTime.now());
