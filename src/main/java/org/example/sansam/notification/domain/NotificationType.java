@@ -16,7 +16,8 @@ public enum NotificationType {
     CART_LOW(4L, "cartProductStockLowMessage"),
     WISH_LOW(5L, "wishListProductStockLow"),
     REVIEW_REQUEST(6L, "reviewRequestMessage"),
-    CHAT(7L, "chatNotificationMessage");
+    CHAT(7L, "chatNotificationMessage"),
+    BROADCAST(8L, "broadcastMessage");
 
     private final Long templateId;
     private final String eventName;

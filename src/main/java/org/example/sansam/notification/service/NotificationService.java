@@ -2,6 +2,8 @@ package org.example.sansam.notification.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.sansam.notification.event.sse.BroadcastEvent;
+import org.example.sansam.user.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ import java.util.List;
 public class NotificationService {
     private final NotificationsRepository notificationRepository;
     private final NotificationHistoriesRepository notificationHistoriesRepository;
+    private final UserRepository userRepository;
     private final ApplicationEventPublisher publisher;
     private final ObjectMapper objectMapper;
 
@@ -111,6 +114,41 @@ public class NotificationService {
         }
     }
 
+    @Transactional
+    public void saveBroadcastNotification(String title, String content) {
+        Notification template = getTemplateOrThrow(NotificationType.BROADCAST.getTemplateId());
+        String formattedTitle = formatTitle(template.getTitle(), title);
+        String formattedContent = formatMessage(template.getMessage(), content);
+
+        List<User> allActivatedUsers = userRepository.findAllByActivated(true);
+
+        List<NotificationHistories> histories = getAllNotificationsToSave(allActivatedUsers, template, formattedTitle, formattedContent);
+
+        // bulk insert (Hibernate JDBC batch랑 합쳐져서 효율적으로 실행됨)
+        notificationHistoriesRepository.saveAll(histories);
+
+        // 마지막 하나만 payload 직렬화해서 이벤트 발행
+        NotificationHistories lastSaved = histories.getLast();
+        String payload = serializeToJson(NotificationDTO.from(lastSaved));
+
+        publisher.publishEvent(new BroadcastEvent(NotificationType.BROADCAST.getEventName(), payload));
+    }
+
+    private static List<NotificationHistories> getAllNotificationsToSave(List<User> allActivatedUsers, Notification template, String formattedTitle, String formattedContent) {
+        // NotificationHistories 리스트로 생성
+        return allActivatedUsers.stream()
+                .map(user -> NotificationHistories.builder()
+                        .user(user)
+                        .notification(template)
+                        .title(formattedTitle)
+                        .message(formattedContent)
+                        .createdAt(LocalDateTime.now())
+                        .expiredAt(LocalDateTime.now().plusDays(14))
+                        .isRead(false)
+                        .build())
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public List<NotificationDTO> getNotificationHistories(Long userId) {
         return notificationHistoriesRepository.findAllByUser_Id(userId)
@@ -142,29 +180,35 @@ public class NotificationService {
     public void sendWelcomeNotification(User user) {
         sendNotification(user, NotificationType.WELCOME, user.getName(), "");
     }
+
     @Transactional
     public void sendPaymentCompleteNotification(User user, String orderName, Long orderPrice) {
         String messageParam = user.getName() + "," + orderName + "," + orderPrice;
         sendNotification(user, NotificationType.PAYMENT_COMPLETE, "", messageParam);
     }
+
     @Transactional
     public void sendPaymentCancelNotification(User user, String orderName, Long refundPrice) {
         String messageParam = user.getName() + "," + orderName + "," + refundPrice;
         sendNotification(user, NotificationType.PAYMENT_CANCEL, "", messageParam);
     }
+
     @Transactional
     public void sendCartLowNotification(User user, String productName) {
         sendNotification(user, NotificationType.CART_LOW, "", productName);
     }
+
     @Transactional
     public void sendWishListLowNotification(User user, String productName) {
         sendNotification(user, NotificationType.WISH_LOW, "", productName);
     }
+
     @Transactional
     public void sendReviewRequestNotification(User user, String orderName) {
         String messageParam = user.getName() + "," + orderName;
         sendNotification(user, NotificationType.REVIEW_REQUEST, "", messageParam);
     }
+
     @Transactional
     public void sendChatNotification(User user, String chatRoomName, String message) {
         sendNotification(user, NotificationType.CHAT, chatRoomName, message);

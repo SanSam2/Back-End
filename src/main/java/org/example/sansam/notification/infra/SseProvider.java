@@ -7,6 +7,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,43 +24,50 @@ public class SseProvider implements PushProvider {
     public void push(Long userId, String eventName, String payloadJson) {
         List<SseEmitter> emitters = sseConnector.getEmitters(userId);
 
-        if (emitters == null || emitters.isEmpty()) {
-            return;
-        }
+        if (emitters.isEmpty()) return;
 
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event()
                         .name(eventName)
-                        .data(payloadJson), MediaType.APPLICATION_JSON);
+                        .data(payloadJson));
             } catch (Exception e) {
-                log.warn("SSE 전송 실패 userId={}, event={}", userId, eventName, e);
-                emitter.completeWithError(e);
-                sseConnector.getEmitters(userId).remove(emitter);
+                handleSendFailure(userId, eventName, emitter, e);
             }
         }
     }
-    // TODO : 지금 push 같은 경우에는 asyncconfig에 @Async 붙어있어서 비동기 보장돼 있지만 broadcast 같은 경우엔 미적용.
-    //  그리고 이걸 어떤 걸로 보낼지, event, eventListener 만들어서 이벤트 발행 시키고, 여기까지 타고 오게끔 구현해야함.
+
+    // TODO : 만약에 sse로 payload 던져주는데 emitter 유실. 그러면 db에 저장만되고 실시간으로 날라가진 않음. retriable?을 생각.
     @Override
     public void broadcast(String eventName, String payloadJson) {
         Map<Long, List<SseEmitter>> allEmitters = sseConnector.getAllEmitters();
 
         for (Map.Entry<Long, List<SseEmitter>> entry : allEmitters.entrySet()) {
-
+            Long userId = entry.getKey();
             List<SseEmitter> emitters = entry.getValue();
+            if (emitters == null || emitters.isEmpty()) {
+                continue;
+            }
+
             for (SseEmitter emitter : emitters) {
                 try {
                     emitter.send(SseEmitter.event()
                             .name(eventName)
-                            .data(payloadJson), MediaType.APPLICATION_JSON);
+                            .data(payloadJson));
                 } catch (Exception e) {
-                    log.warn("SSE 전송 실패 userId={}, event={}", entry.getKey(), eventName, e);
-                    emitter.completeWithError(e);
-                    sseConnector.getAllEmitters().get(entry.getKey()).remove(emitter);
+                    handleSendFailure(userId, eventName, emitter, e);
                 }
             }
         }
     }
 
+    private void handleSendFailure(Long userId, String eventName, SseEmitter emitter, Exception e) {
+        if (e instanceof IOException && e.getMessage() != null && e.getMessage().contains("Broken pipe")) {
+            log.debug("클라이언트 연결 종료됨 (정상) userId={}, event={}", userId, eventName);
+        } else {
+            log.error("SSE 전송 실패 userId={}, event={}", userId, eventName, e);
+        }
+        emitter.completeWithError(e);
+        sseConnector.removeEmitter(userId, emitter);
+    }
 }

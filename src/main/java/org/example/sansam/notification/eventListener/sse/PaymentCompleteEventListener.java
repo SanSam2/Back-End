@@ -4,8 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.example.sansam.notification.event.sse.PaymentCompleteEvent;
 import org.example.sansam.notification.service.NotificationService;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
@@ -14,7 +15,7 @@ public class PaymentCompleteEventListener {
 
     private final NotificationService notificationService;
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handelPaymentCompleteEvent(PaymentCompleteEvent event) {
         try {
             notificationService.sendPaymentCompleteNotification(event.getUser(), event.getOrderName(), event.getOrderPrice());

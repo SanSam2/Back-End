@@ -333,6 +333,42 @@ class NotificationServiceTest {
                 );
     }
 
+    @DisplayName("Broadcast 알림은 모든 활성화된 사용자에게 저장되고 이벤트가 발행된다.")
+    @Test
+    void saveBroadcastNotification_success() {
+        // given
+        User user1 = createUser();
+        User user2 = createUser();
+        user2.setEmail("other@test.com");
+        userRepository.saveAll(List.of(user1, user2));
+
+        String titleParam = "긴급공지";
+        String contentParam = "서버 점검 예정입니다.";
+
+        // when
+        notificationService.saveBroadcastNotification(titleParam, contentParam);
+
+        // then
+        List<NotificationHistories> notificationHistories = notificationHistoriesRepository.findAllByUser_Id(user1.getId());
+        assertThat(notificationHistories).hasSize(1);
+        List<NotificationHistories> notificationHistories1 = notificationHistoriesRepository.findAllByUser_Id(user1.getId());
+        assertThat(notificationHistories1).hasSize(1);
+
+        assertThat(notificationHistories)
+                .extracting("title", "message")
+                .containsExactlyInAnyOrder(
+                        Tuple.tuple("긴급공지", "서버 점검 예정입니다.")
+                );
+        assertThat(notificationHistories1)
+                .extracting("title", "message")
+                .containsExactlyInAnyOrder(
+                        Tuple.tuple("긴급공지", "서버 점검 예정입니다.")
+                );
+
+        NotificationHistories last = notificationHistories.getLast();
+        assertThat(last.getUser().getEmail()).isIn("dvbf@naver.com","other@test.com");
+    }
+
     private User createUser() {
         return User.builder()
                 .email("dvbf@naver.com")

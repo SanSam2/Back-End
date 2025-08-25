@@ -14,6 +14,8 @@ import org.example.sansam.status.repository.StatusRepository;
 import org.example.sansam.user.domain.Role;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.Job;
@@ -61,12 +63,9 @@ class NotificationBatchConfigTest {
     @Autowired
     private UserRepository userRepository;
 
-    @PersistenceContext
-    private EntityManager em;
-
     private User createUser() {
         return User.builder()
-                .email("zm@gmail.com")
+                .email("test" + System.currentTimeMillis() + "@naver.com")
                 .name("테스트1")
                 .password("1004")
                 .mobileNumber("01012345678")
@@ -104,9 +103,9 @@ class NotificationBatchConfigTest {
         notificationHistoriesRepository.save(expired);
 
         // when
-        JobExecution execution = jobLauncherTestUtils.getJobLauncher()
-                .run(deleteExpiredNotificationsJob,
-                        new JobParametersBuilder().addLong("time", System.currentTimeMillis()).toJobParameters());
+        jobLauncherTestUtils.setJob(deleteExpiredNotificationsJob);
+        JobExecution execution = jobLauncherTestUtils.launchJob(new JobParametersBuilder()
+                .addLong("time", System.currentTimeMillis()).toJobParameters());
 
         // then
         assertThat(execution.getExitStatus().getExitCode()).isEqualTo("COMPLETED");

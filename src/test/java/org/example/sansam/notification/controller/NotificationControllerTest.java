@@ -40,6 +40,7 @@ class NotificationControllerTest {
 
     // ----- /list/{userId}
 
+
     @DisplayName("사용자는 로그인 했을 시 본인의 알림 목록을 가져온다.")
     @Test
     void getNotificationList_returns200_whenExists() throws Exception {

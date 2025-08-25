@@ -5,28 +5,38 @@ import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.example.sansam.notification.domain.NotificationHistories;
+import org.example.sansam.notification.domain.NotificationType;
+import org.example.sansam.notification.dto.NotificationDTO;
+import org.example.sansam.notification.event.sse.NotificationSavedEvent;
 import org.example.sansam.notification.event.sse.ReviewRequestEvent;
 import org.example.sansam.notification.repository.NotificationHistoriesRepository;
+import org.example.sansam.notification.service.NotificationService;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.review.repository.ReviewJpaRepository;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.example.sansam.user.domain.User;
+import org.example.sansam.user.repository.UserRepository;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.scope.context.StepSynchronizationManager;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.data.RepositoryItemReader;
+import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -40,9 +50,12 @@ public class NotificationBatchConfig {
 
     private final EntityManagerFactory entityManagerFactory;
     private final NotificationHistoriesRepository notificationHistoryRepository;
+    private final UserRepository userRepository;
     private final OrderRepository orderRepository;
     private final ReviewJpaRepository reviewRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final NotificationService notificationService;
+
+    private static final String EVENT_NAME = NotificationType.BROADCAST.getEventName();
 
     /** ================== 만료 알림 삭제 Job ================== **/
     @Bean

@@ -37,8 +37,6 @@ class EmailServiceTest {
 
     @MockitoBean
     private SpringTemplateEngine templateEngine;
-    @Autowired
-    private JavaMailSender javaMailSender;
 
 
     @DisplayName("회원가입 환영 메일: 이메일 동의한 유저면 전송된다")
@@ -68,7 +66,8 @@ class EmailServiceTest {
         // MimeMessageHelper(true)로 만들었으니 multipart일 수 있음 → 내용 추출
         Object content = sent.getContent();
         String body = extractBodyAsString(content);
-        Assertions.assertThat(body).contains("WELCOME", user.getName());
+        Assertions.assertThat(body).contains("WELCOME");
+        Assertions.assertThat(body).contains(user.getName());
     }
 
     @DisplayName("회원가입 환영 메일: 이메일 동의하지 않은 유저는 전송이 되지 않는다")
@@ -96,7 +95,7 @@ class EmailServiceTest {
         // given
         User user = agreeUser();
         MimeMessage mimeMessage = mock(MimeMessage.class);
-        when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
         when(templateEngine.process(eq("email/payment-completed"), any()))
                 .thenReturn("<html>결제 완료</html>");
 
@@ -104,7 +103,7 @@ class EmailServiceTest {
         emailService.sendPaymentCompletedEmail(user, "테스트 상품",1000L);
 
         // then
-        verify(javaMailSender, times(1)).send(mimeMessage);
+        verify(mailSender, times(1)).send(mimeMessage);
     }
 
     @DisplayName("결제 완료 메일 : 이메일 동의하지 않은 유저라면 결제 완료 메일이 전송되지 않는다.")
@@ -113,7 +112,7 @@ class EmailServiceTest {
         // given
         User user = disagreeUser();
         MimeMessage mimeMessage = mock(MimeMessage.class);
-        when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
         when(templateEngine.process(eq("email/payment-completed"), any()))
                 .thenReturn("<html>결제 완료</html>");
 
@@ -121,7 +120,7 @@ class EmailServiceTest {
         emailService.sendPaymentCompletedEmail(user, "테스트 상품",1000L);
 
         // then
-        verify(javaMailSender, never()).send(mimeMessage);
+        verify(mailSender, never()).send(mimeMessage);
     }
 
     @DisplayName("결제 취소 메일 : 이메일 동의한 유저라면 결제 취소 메일이 전송된다.")
@@ -130,7 +129,7 @@ class EmailServiceTest {
         // given
         User user = agreeUser();
         MimeMessage mimeMessage = mock(MimeMessage.class);
-        when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
         when(templateEngine.process(eq("email/payment-canceled"), any()))
                 .thenReturn("<html>결제 취소</html>");
 
@@ -138,7 +137,7 @@ class EmailServiceTest {
         emailService.sendPaymentCanceledMessage(user, "테스트상품", 5000L);
 
         // then
-        verify(javaMailSender, times(1)).send(mimeMessage);
+        verify(mailSender, times(1)).send(mimeMessage);
     }
 
     @DisplayName("결제 취소 메일 : 이메일 동의하지 않은 유저라면 결제 취소 메일이 전송되지 않는다.")
@@ -147,13 +146,13 @@ class EmailServiceTest {
         // given
         User user = disagreeUser();
         MimeMessage mimeMessage = mock(MimeMessage.class);
-        when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
         when(templateEngine.process(eq("email/payment-canceled"), any()))
                 .thenReturn("<html>결제 취소</html>");
         // when
         emailService.sendPaymentCanceledMessage(user, "테스트상품", 5000L);
         // then
-        verify(javaMailSender, never()).send(mimeMessage);
+        verify(mailSender, never()).send(mimeMessage);
     }
 
     private User agreeUser() {
@@ -185,12 +184,29 @@ class EmailServiceTest {
     }
 
     private String extractBodyAsString(Object content) throws Exception {
-        if (content instanceof String s) return s;
+        if (content instanceof String s) {
+            return s;
+        }
         if (content instanceof jakarta.mail.Multipart mp) {
-            var part = mp.getBodyPart(0);
-            Object pContent = part.getContent();
-            if (pContent instanceof String s2) return s2;
-            if (pContent instanceof InputStream is) return new String(is.readAllBytes());
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < mp.getCount(); i++) {
+                var part = mp.getBodyPart(i);
+                Object pContent = part.getContent();
+                // text/html 우선
+                if (part.getContentType().toLowerCase().contains("text/html")) {
+                    if (pContent instanceof String html) {
+                        sb.append(html);
+                    }
+                } else if (pContent instanceof String plain) {
+                    sb.append(plain);
+                } else if (pContent instanceof InputStream is) {
+                    sb.append(new String(is.readAllBytes()));
+                } else if (pContent instanceof jakarta.mail.Multipart nested) {
+                    // nested multipart까지 재귀 탐색
+                    sb.append(extractBodyAsString(nested));
+                }
+            }
+            return sb.toString();
         }
         return content == null ? "" : content.toString();
     }
