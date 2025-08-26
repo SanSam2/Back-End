@@ -8,6 +8,7 @@ import org.example.sansam.product.domain.*;
 import org.example.sansam.product.dto.*;
 import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
+import org.example.sansam.s3.domain.FileManagement;
 import org.example.sansam.s3.service.FileService;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
@@ -22,9 +23,11 @@ import java.text.Normalizer;
 import java.util.*;
 import java.time.LocalDateTime;
 
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class ProductService {
     private final ProductJpaRepository productJpaRepository;
     private final ProductDetailJpaRepository productDetailJpaRepository;
@@ -36,6 +39,7 @@ public class ProductService {
     private final int MAX_TRY = 3;
     private final long BACKOFF_MS = 15;
     private static final int NEW_PRODUCT_PERIOD_DAYS = 14;
+
 
     private Map<String, ProductDetailResponse> getProductOption(Product product, Set<String> colors, Set<String> sizes) {
         Map<String, ProductDetailResponse> colorOptionMap = new LinkedHashMap<>();
@@ -317,4 +321,30 @@ public class ProductService {
         return Normalizer.normalize(s.trim(), Normalizer.Form.NFKC)
                 .toUpperCase(Locale.ROOT);
     }
+
+//    public Product createProduct(String name) {
+//        Product product = new Product();
+//        product.setProductName(name);
+//        product.setCreatedAt(LocalDateTime.now());
+//        product.setViewCount(0L);
+//        product.setStatus(statusRepository.findByStatusName(StatusEnum.NEW));
+//        product = productJpaRepository.save(product);
+//        return product;
+//    }
+//
+//    @Transactional
+//    public Product createProduct(String name, String brand, Long price, String fileUrl, String status) {
+//        FileManagement file = fil
+//        Product product = Product.builder()
+//                .productName(name)
+//                .brandName(brand)
+//                .category(categoryJpaRepository.findById(1L)
+//                        .orElseThrow(()-> new IllegalStateException("카테고리가 존재하지 않음")))
+//                .price(price)
+//                .status(statusRepository.findByStatusName(StatusEnum.NEW))
+//                .createdAt(LocalDateTime.now())
+//                .fileManagement(F)
+//                .build();
+//        return productJpaRepository.save(product);
+//    }
 }

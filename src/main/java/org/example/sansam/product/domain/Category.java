@@ -31,4 +31,8 @@ public class Category {
     public String toString() {
         return String.format("%s>%s>%s", bigName != null ? bigName : "", middleName != null ? middleName : "", smallName != null ? smallName : "");
     }
+
+    public static String toCategoryString(String bigName, String middleName, String smallName) {
+        return String.format("%s>%s>%s", bigName != null ? bigName : "", middleName != null ? middleName : "", smallName != null ? smallName : "");
+    }
 }
