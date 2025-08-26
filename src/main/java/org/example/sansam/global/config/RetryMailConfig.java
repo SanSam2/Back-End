@@ -1,11 +1,8 @@
 package org.example.sansam.global.config;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.AddressException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.mail.MailSendException;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.retry.interceptor.RetryInterceptorBuilder;
 import org.springframework.retry.interceptor.RetryOperationsInterceptor;

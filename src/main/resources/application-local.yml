@@ -20,10 +20,15 @@ spring:
     activate:
       on-profile: local
 
+#  datasource:
+#    url: ${DB_URL}
+#    username: ${USER_NAME}
+#    password: ${DB_PASSWORD}
+#    driver-class-name: com.mysql.cj.jdbc.Driver
   datasource:
-    url: ${DB_URL}
-    username: ${USER_NAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://localhost:3305/sansam
+    username: root
+    password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:

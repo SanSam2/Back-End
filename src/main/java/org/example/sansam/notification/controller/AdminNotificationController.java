@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/admin/notification")
+@RequestMapping("/api/admin/notifications")
 @RequiredArgsConstructor
 public class AdminNotificationController {
 

@@ -43,7 +43,7 @@ class SseConnectorTest {
 
     @DisplayName("userId가 null이거나 0이면 IllegalArgumentException을 던진다.")
     @Test
-    void connect_fail_with_null_or_zero_user_id() {
+    void connect_when_userId_is_invalid_then_throw_exception() {
         // given
         // when
         // then

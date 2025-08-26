@@ -35,8 +35,6 @@ public class NotificationService {
     private final ObjectMapper objectMapper;
 
     // public 메서드
-    // todo : 만약 broadcast가 추가 된다면 publisherEvent를 분기처리 해야함.
-    //  그래서 @Async(broadcastExecutor) 붙어셔 비동기 보장 필요
     private void sendNotification(User user, NotificationType type, String titleParam, String messageParam) {
         Notification template = getTemplateOrThrow(type.getTemplateId());
 

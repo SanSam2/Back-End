@@ -123,4 +123,25 @@ class SseProviderTest {
         verify(badEmitter, times(1)).completeWithError(any(RuntimeException.class));
         verify(sseConnector, times(1)).removeEmitter(1L, badEmitter);
     }
+
+    @DisplayName("broadcast 중 Broken pipe IOException 발생 시 debug 로그를 찍고 emitter를 제거한다.")
+    @Test
+    void broadcast_when_broken_pipe_exception_occurs_then_log_and_remove_emitter() throws IOException {
+        // given
+        SseConnector sseConnector = mock(SseConnector.class);
+        SseEmitter badEmitter = mock(SseEmitter.class);
+
+        doThrow(new IOException("Broken pipe"))
+                .when(badEmitter).send(any(SseEmitter.SseEventBuilder.class));
+
+        when(sseConnector.getAllEmitters()).thenReturn(Map.of(1L, List.of(badEmitter)));
+        SseProvider sseProvider = new SseProvider(sseConnector);
+
+        // when
+        sseProvider.broadcast("welcomeMessage", "{\"msg\":\"Broken pipe test\"}");
+
+        // then
+        verify(badEmitter, times(1)).completeWithError(any(IOException.class));
+        verify(sseConnector, times(1)).removeEmitter(1L, badEmitter);
+    }
 }
