@@ -10,7 +10,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                        "https://ordefirenz.shop",
+                        "https://ordefirenz.shop", // 도메인 주소
                         "https://front-end-fawn-pi.vercel.app",
                         "https://front-end-git-*-rlagusrud990619-9353s-projects.vercel.app"
                 )
