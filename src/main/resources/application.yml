@@ -82,4 +82,8 @@ cloud:
 cors:
   allowed-origins: http://localhost:3000
 websocket:
-  allowed-origins: "http://localhost:3000"
+  allowed-origins: >
+    https://ordefirenz.shop,
+    https://front-end-fawn-pi.vercel.app,
+    https://front-end-git-*.vercel.app,
+    http://localhost:3000
