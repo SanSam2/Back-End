@@ -20,7 +20,7 @@ spring:
   datasource:
     url: jdbc:mysql://sansam.c3240ygmgpix.ap-northeast-2.rds.amazonaws.com:3306/sansam
     username: admin
-    password: sansam333!
+    password: ordefirenz33!
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -80,7 +80,12 @@ cloud:
       accessKey: ${AWS_ACCESS_KEY}
       secretKey: ${AWS_SECRET_KEY}
 cors:
-  allowed-origins: http://localhost:3000
+  allowed-origins: >
+    https://ordefirenz.shop,
+    https://front-end-fawn-pi.vercel.app,
+    https://front-end-git-*.vercel.app,
+    http://localhost:3000
+
 websocket:
   allowed-origins: >
     https://ordefirenz.shop,
