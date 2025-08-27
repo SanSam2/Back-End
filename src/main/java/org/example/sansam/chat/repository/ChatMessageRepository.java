@@ -3,7 +3,6 @@ package org.example.sansam.chat.repository;
 import org.example.sansam.chat.domain.ChatMessage;
 import org.example.sansam.chat.domain.ChatRoom;
 import org.example.sansam.chat.dto.RoomCountDTO;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,9 +12,18 @@ import java.util.List;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
-    Page<ChatMessage> findByChatRoomOrderByCreatedAtDesc(ChatRoom chatRoom, Pageable pageable);
+    long countByChatRoom(ChatRoom chatRoom);
 
-    Page<ChatMessage> findByChatRoomAndIdLessThanOrderByCreatedAtDesc(ChatRoom chatRoom, Long lastMessageId, Pageable pageable);
+    @Query("SELECT m FROM ChatMessage m " +
+            "JOIN FETCH m.sender " +
+            "WHERE m.chatRoom = :chatRoom " +
+            "AND (:lastMessageId IS NULL OR m.id < :lastMessageId) " +
+            "ORDER BY m.createdAt DESC")
+    List<ChatMessage> findMessagesWithSender(
+            @Param("chatRoom") ChatRoom chatRoom,
+            @Param("lastMessageId") Long lastMessageId,
+            Pageable pageable);
+
 
     @Query("""
       select new org.example.sansam.chat.dto.RoomCountDTO(
