@@ -122,7 +122,7 @@ public class NotificationService {
 
         List<NotificationHistories> histories = getAllNotificationsToSave(allActivatedUsers, template, formattedTitle, formattedContent);
 
-        // bulk insert (Hibernate JDBC batch랑 합쳐져서 효율적으로 실행됨)
+        // bulk insert (Hibernate JDBC batch랑 합쳐져서 효율적으로 실행)
         notificationHistoriesRepository.saveAll(histories);
 
         // 마지막 하나만 payload 직렬화해서 이벤트 발행
@@ -132,7 +132,8 @@ public class NotificationService {
         publisher.publishEvent(new BroadcastEvent(NotificationType.BROADCAST.getEventName(), payload));
     }
 
-    private static List<NotificationHistories> getAllNotificationsToSave(List<User> allActivatedUsers, Notification template, String formattedTitle, String formattedContent) {
+    private static List<NotificationHistories> getAllNotificationsToSave(List<User> allActivatedUsers, Notification template,
+                                                                         String formattedTitle, String formattedContent) {
         // NotificationHistories 리스트로 생성
         return allActivatedUsers.stream()
                 .map(user -> NotificationHistories.builder()
@@ -211,8 +212,4 @@ public class NotificationService {
     public void sendChatNotification(User user, String chatRoomName, String message) {
         sendNotification(user, NotificationType.CHAT, chatRoomName, message);
     }
-//    @Transactional
-//    public void sendBroadcastNotification(String eventName, String payloadJson) {
-//        publisher.publishEvent(NotificationSavedEvent.of(null, eventName, payloadJson));
-//    }
 }
