@@ -8,7 +8,7 @@ server:
       cookie:
         name: JSESSIONID        # 쿠키 이름
         http-only: true         # JS에서 접근 불가
-        secure: false           # https에서만 필요 시 true
+        secure: true           # https에서만 필요 시 true
         same-site: none
 
 spring:
