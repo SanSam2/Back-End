@@ -79,6 +79,9 @@ public class Order {
                 .anyMatch(op -> "PARTIAL_CANCELED".equals(op.getStatus().getStatusName()));
     }
 
+
+
+
     public void completePayment(Status orderPaid, Status orderProductPaid, String paymentKey) {
         this.changeStatus(orderPaid);
         this.addPaymentKey(paymentKey);

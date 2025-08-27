@@ -118,7 +118,7 @@ public class SearchService {
         Wish wish = wishJpaRepository.findTopByUserIdOrderByCreated_atDesc(userId);
         List<Product> products;
         if(wish == null) {
-            products = productJpaRepository.findTopWishListProduct();
+            products = productJpaRepository.findProductsOrderByViewCountDesc();
         }else {
             Product product = productJpaRepository.findById(wish.getProduct().getId())
                     .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
