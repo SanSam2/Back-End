@@ -35,6 +35,7 @@ public class OrderWithProductsResponse {
         private String orderProductImageUrl;
         private StatusEnum orderProductStatus;
 
+
         public ProductSummary(Long orderProductId, Long productId, String productName, Long productPrice,
                               String productSize, String productColor, int quantity,String orderProductImageUrl, StatusEnum orderProductStatus) {
             this.orderProductId = orderProductId;
@@ -46,6 +47,7 @@ public class OrderWithProductsResponse {
             this.quantity = quantity;
             this.orderProductImageUrl = orderProductImageUrl;
             this.orderProductStatus = orderProductStatus;
+
         }
     }
 }

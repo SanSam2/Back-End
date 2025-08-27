@@ -28,7 +28,6 @@ public class UserService {
     public void register(RegisterRequest requestDto){
 
         Role role = requestDto.getEmail().equals(adminEmail) ? Role.ADMIN : Role.USER;
-
         User newUser = User.builder()
                 .email(requestDto.getEmail())
                 .password(requestDto.getPassword())

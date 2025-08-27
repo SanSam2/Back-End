@@ -25,7 +25,7 @@ public class SearchController {
             @RequestParam(required = false) String small,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false, defaultValue = "0") int page,
-            @RequestParam(required = false, defaultValue = "10") int size,
+            @RequestParam(required = false, defaultValue = "12") int size,
             @RequestParam(required = false, defaultValue = "createdAt") String sort
     ) {
         try {
