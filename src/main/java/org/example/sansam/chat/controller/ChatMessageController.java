@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.chat.dto.ChatMessageRequestDTO;
 import org.example.sansam.chat.dto.ChatMessageResponseDTO;
 import org.example.sansam.chat.dto.ChatMessageSendResponseDTO;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/chatroom")
+@Slf4j
 public class ChatMessageController {
 
     private final ChatMessageService chatMessageService;
@@ -136,8 +138,7 @@ public class ChatMessageController {
             );
 
         } catch (Exception e) {
-            System.out.print("채팅 메시지 처리 중 예외 발생");
-
+            log.info("메시지 처리중 오류");
         }
     }
 }

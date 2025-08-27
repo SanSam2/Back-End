@@ -2,8 +2,6 @@ package org.example.sansam.chat.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.server.ServerHttpRequest;
-import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -11,14 +9,11 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 import org.springframework.beans.factory.annotation.Value;
-
-import java.util.Map;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -38,22 +33,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-stomp")
                 .setAllowedOriginPatterns(allowedOrigins)
-                .addInterceptors(new HttpSessionHandshakeInterceptor() {
-                    @Override
-                    public boolean beforeHandshake(ServerHttpRequest request,
-                                                   ServerHttpResponse response,
-                                                   WebSocketHandler wsHandler,
-                                                   Map<String, Object> attributes) throws Exception {
-                        return super.beforeHandshake(request, response, wsHandler, attributes);
-                    }
-                    @Override
-                    public void afterHandshake(ServerHttpRequest request,
-                                               ServerHttpResponse response,
-                                               WebSocketHandler wsHandler,
-                                               Exception ex) {
-                        super.afterHandshake(request, response, wsHandler, ex);
-                    }
-                })
+                .addInterceptors(new HttpSessionHandshakeInterceptor())
                 .withSockJS();
     }
 
