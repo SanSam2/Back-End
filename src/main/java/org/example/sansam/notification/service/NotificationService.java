@@ -244,6 +244,5 @@ public class NotificationService {
                 sseEmitters.remove(userId);
             }
         }
-
     }
 }
