@@ -23,8 +23,5 @@ public class BroadCastEventListener {
         } catch (Exception e) {
             log.error("broadcast 실패 - eventName={}, payloadJson={}", event.getEventName(), event.getPayloadJson(), e);
         }
-
-        // todo : 2) 동시에 Kafka or BlockingQueue에 넣고
-        //  -> worker thread에서 분산 처리 (특히 FCM/WebPush 같은 외부 API면 더더욱!)
     }
 }

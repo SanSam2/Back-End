@@ -61,6 +61,7 @@ public class SseController {
     public ResponseEntity<SseEmitter> subscribe(@PathVariable Long userId) {
         try {
             SseEmitter emitter = pushConnector.connect(userId);
+            log.info("🔔 SSE 구독 요청 들어옴 - userId={}", userId);
             return ResponseEntity.ok().contentType(MediaType.TEXT_EVENT_STREAM).body(emitter);
         } catch (EmitterException e) {
             log.error("SSE 연결 실패 - userId: {}", userId, e);
