@@ -30,6 +30,5 @@ public interface WishJpaRepository extends JpaRepository<Wish, Long> {
     @Query(value = "select w.user from Wish w where w.product.id = :productId")
     List<User> findUsersByProduct_Id(Long productId);
 
-    @Query("select Count(*) from Wish w where w.product.id = :productId")
-    Long countByProductId(Long productId);
+    long countByProductId(Long productId);
 }
