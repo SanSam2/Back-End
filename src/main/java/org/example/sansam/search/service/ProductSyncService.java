@@ -44,7 +44,7 @@ public class ProductSyncService {
         GROUP BY p.product_id, p.product_name, p.price, p.brand_name, 
                  c.big_name, c.middle_name, c.small_name, 
                  fd.url, p.created_at, p.view_count
-    """;
+        """;
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
         log.info("DB rows to index: {}", rows.size());
@@ -64,7 +64,6 @@ public class ProductSyncService {
                 createdAt = ldt;
             }
 
-            // wishCount 가져오기 (쿼리에서 바로 SELECT 한 값 사용)
             Long wishCount = ((Number) row.get("wish_count")).longValue();
 
             ProductDoc doc = ProductDoc.builder()
@@ -78,7 +77,7 @@ public class ProductSyncService {
                     .smallCategory((String) row.get("small"))
                     .viewCount(((Number) row.get("view_count")).longValue())
                     .createdAt(createdAt)
-                    .wishCount(wishCount) // ✅ 추가
+                    .wishCount(wishCount)
                     .build();
 
             br.operations(op -> op.index(idx -> idx
@@ -90,11 +89,10 @@ public class ProductSyncService {
 
             if (counter % batchSize == 0) {
                 executeBulk(br, counter);
-                br = new BulkRequest.Builder(); // 새 builder로 교체
+                br = new BulkRequest.Builder();
             }
         }
 
-        // 남은 데이터 처리
         if (counter % batchSize != 0) {
             executeBulk(br, counter);
         }
@@ -115,5 +113,6 @@ public class ProductSyncService {
             log.info("Bulk executed successfully for {} documents", counter);
         }
     }
+
 }
 
