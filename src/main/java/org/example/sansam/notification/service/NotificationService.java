@@ -34,7 +34,6 @@ public class NotificationService {
     private final ApplicationEventPublisher publisher;
     private final ObjectMapper objectMapper;
 
-    // public 메서드
     private void sendNotification(User user, NotificationType type, String titleParam, String messageParam) {
         Notification template = getTemplateOrThrow(type.getTemplateId());
 
