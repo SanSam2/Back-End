@@ -1,14 +1,14 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   address: 0.0.0.0
 
   servlet:
     session:
       timeout: 120m
       cookie:
-        name: JSESSIONID        # 쿠키 이름
-        http-only: true         # JS에서 접근 불가
-        secure: false           # https에서만 필요 시 true
+        name: JSESSIONID
+        http-only: true
+        secure: true
         same-site: none
 
 spring:
@@ -18,10 +18,11 @@ spring:
     name: SanSam
 
   datasource:
-    url: jdbc:mysql://sansam.c3240ygmgpix.ap-northeast-2.rds.amazonaws.com:3306/sansam
-    username: admin
-    password: sansam333!
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -29,13 +30,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-    open-in-view: false # 이것도 찾아보세요!!!
+    open-in-view: false
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: sansam250721@gmail.com
-    password: dgwj cvlz wpqt vfdo         # 앱 비밀번호
+    host: ${SPRING_MAIL_HOST}
+    port: ${SPRING_MAIL_PORT}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}    # 앱 비밀번호 (환경변수)
     properties:
       mail:
         smtp:
@@ -45,10 +46,9 @@ spring:
     default-encoding: UTF-8
 
 toss:
-  secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
-  confirm-url: https://api.tosspayments.com/v1/payments/confirm
-  cancel-url: https://api.tosspayments.com/v1/payments
-
+  secret-key: ${TOSS_SECRET_KEY}
+  confirm-url: ${TOSS_CONFIRM_URL}
+  cancel-url: ${TOSS_CANCEL_URL}
 
 management:
   endpoints:
@@ -69,7 +69,7 @@ cloud:
       bucket: ${AWS_BUCKET_NAME}
       custom:
         dir: /images
-        defaultUrl: https://your-bucket-name.s3.ap-northeast-2.amazonaws.com/
+        defaultUrl: https://${AWS_BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/
       path:
         review: reviews
     region:
@@ -79,7 +79,9 @@ cloud:
     credentials:
       accessKey: ${AWS_ACCESS_KEY}
       secretKey: ${AWS_SECRET_KEY}
+
 cors:
-  allowed-origins: http://localhost:3000
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
 websocket:
-  allowed-origins: "http://localhost:3000"
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS}
