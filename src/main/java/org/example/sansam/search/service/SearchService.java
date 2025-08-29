@@ -151,8 +151,7 @@ public class SearchService {
         redisTemplate.opsForValue().set(cacheKey, cacheData, CACHE_TTL, TimeUnit.SECONDS);
     }
 
-
-    //ES 조회 및 결과 반환 +_ 정렬
+    //ES 조회 및 결과 반환 + 정렬
     private SearchResponse<SearchProductDocument> executeSearch(
             BoolQuery boolQuery, String sort, int page, int size
     ) throws IOException {

@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.4'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 }
 
 group = 'org.example'
@@ -21,6 +22,54 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven { url "https://repo.spring.io/milestone" }
+}
+
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+tasks.test {
+    useJUnitPlatform()
+    ignoreFailures = true
+    finalizedBy tasks.jacocoTestReport
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn tasks.test
+
+    violationRules {
+        rule {
+
+            element = 'BUNDLE'
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.00
+            }
+
+            limit {
+                counter = 'METHOD'
+                value = 'COVEREDRATIO'
+                minimum = 0.00
+            }
+        }
+    }
+}
+
+tasks.jacocoTestReport {
+    dependsOn tasks.test  // 테스트 후 리포트 생성
+    reports {
+        html.required.set(true)  // 로컬에서 브라우저로 보기
+        xml.required.set(true)   // CI나 Sonar 연동용
+        csv.required.set(false)
+    }
+    classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, include: ['org/example/sansam/product/**', 'org/example/sansam/search/**'],
+                        exclude: ['**/dto/**', '**/config/**', '**/Q*.*'])
+            })
+    )
 }
 
 dependencies {
@@ -28,24 +77,28 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
-
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
-    implementation 'org.json:json:20240303'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
-    implementation 'com.amazonaws:aws-java-sdk-ses:1.12.3'
-    implementation 'org.springframework.retry:spring-retry:1.3.4'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
     implementation 'org.springframework.boot:spring-boot-configuration-processor'
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-}
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-tasks.named('test') {
-    useJUnitPlatform()
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    implementation 'com.amazonaws:aws-java-sdk-ses:1.12.3'
+    implementation 'org.springframework.retry:spring-retry:1.3.4'
+    implementation 'org.json:json:20240303'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'co.elastic.clients:elasticsearch-java:8.11.2'
+    implementation 'org.elasticsearch.client:elasticsearch-rest-client:8.11.2'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
