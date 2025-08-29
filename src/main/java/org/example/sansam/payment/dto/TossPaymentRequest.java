@@ -12,4 +12,9 @@ public class TossPaymentRequest {
     private String orderId; //orderNumber
     private Long amount;
 
+    public TossPaymentRequest(String paymentKey, String orderId, Long amount) {
+        this.paymentKey = paymentKey;
+        this.orderId = orderId;
+        this.amount = amount;
+    }
 }

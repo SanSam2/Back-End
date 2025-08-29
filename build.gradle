@@ -14,6 +14,90 @@ java {
     }
 }
 
+jacoco {
+    // JaCoCo 버전
+    toolVersion = '0.8.11'
+}
+
+tasks.test {
+    useJUnitPlatform()
+    systemProperty "spring.profiles.active", "test"
+    finalizedBy tasks.jacocoTestReport
+}
+
+tasks.jacocoTestReport {
+    dependsOn tasks.test
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+    }
+    // 커버리지에서 제외할 클래스가 있으면 여기서 패턴으로 제외
+     classDirectories.setFrom(
+         files(classDirectories.files.collect {
+             fileTree(dir: it, exclude: [
+                 'org/example/sansam/**/config/**',
+                 'org/example/sansam/**/dto/**',
+                 'org/example/sansam/cart/**/**',
+                 'org/example/sansam/chat/**/**',
+                 'org/example/sansam/exception/**/**',
+                 'org/example/sansam/global/**/**',
+                 'org/example/sansam/notification/**/**',
+                 'org/example/sansam/product/**/**',
+                 'org/example/sansam/review/**/**',
+                 'org/example/sansam/s3/**/**',
+                 'org/example/sansam/search/**/**',
+                 'org/example/sansam/user/**/**',
+                 'org/example/sansam/wish/**/**',
+                 'org/example/sansam/wishlist/**/**',
+                 'org/example/sansam/SanSamApplication*',
+                 '**/Q*.*', '**/*$Q*.*',
+                 'org/example/sansam/timedeal/**/**',
+                 'org/example/sansam/stock/**/**',
+                 'org/example/sansam/payment/util/IdempotencyKeyUtil.class'
+             ])
+         })
+     )
+}
+
+jacocoTestCoverageVerification {
+    dependsOn test
+    classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                        'org/example/sansam/**/config/**',
+                        'org/example/sansam/**/dto/**',
+                        'org/example/sansam/cart/**/**',
+                        'org/example/sansam/chat/**/**',
+                        'org/example/sansam/exception/**/**',
+                        'org/example/sansam/global/**/**',
+                        'org/example/sansam/notification/**/**',
+                        'org/example/sansam/product/**/**',
+                        'org/example/sansam/review/**/**',
+                        'org/example/sansam/s3/**/**',
+                        'org/example/sansam/search/**/**',
+                        'org/example/sansam/user/**/**',
+                        'org/example/sansam/wish/**/**',
+                        'org/example/sansam/wishlist/**/**'
+                ])
+            })
+    )
+    violationRules {
+        rule {
+            element = 'CLASS'
+            limit {
+                counter = 'INSTRUCTION'
+                value   = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+tasks.check {
+    dependsOn tasks.jacocoTestCoverageVerification
+}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
@@ -22,102 +106,7 @@ configurations {
 
 repositories {
     mavenCentral()
-    maven { url "https://repo.spring.io/milestone" }
 }
-
-jacoco {
-    toolVersion = '0.8.12'
-}
-
-tasks.test {
-    useJUnitPlatform()
-    ignoreFailures = true
-    finalizedBy tasks.jacocoTestReport
-}
-
-tasks.jacocoTestCoverageVerification {
-    dependsOn tasks.test
-
-    violationRules {
-        rule {
-
-            element = 'BUNDLE'
-            limit {
-                counter = 'LINE'
-                value = 'COVEREDRATIO'
-                minimum = 0.00
-            }
-
-            limit {
-                counter = 'METHOD'
-                value = 'COVEREDRATIO'
-                minimum = 0.00
-            }
-        }
-    }
-}
-
-tasks.jacocoTestReport {
-    dependsOn tasks.test  // 테스트 후 리포트 생성
-    reports {
-        html.required.set(true)  // 로컬에서 브라우저로 보기
-        xml.required.set(true)   // CI나 Sonar 연동용
-        csv.required.set(false)
-    }
-    classDirectories.setFrom(
-            files(classDirectories.files.collect {
-                fileTree(dir: it, include: ['org/example/sansam/product/**', 'org/example/sansam/search/**'],
-                        exclude: ['**/dto/**', '**/config/**', '**/Q*.*'])
-            })
-    )
-}
-
-//jacoco {
-//    toolVersion = '0.8.12'
-//}
-//
-//tasks.test {
-//    useJUnitPlatform()
-//    ignoreFailures = true
-//    finalizedBy tasks.jacocoTestReport
-//}
-//
-//tasks.jacocoTestCoverageVerification {
-//    dependsOn tasks.test
-//
-//    violationRules {
-//        rule {
-//
-//            element = 'BUNDLE'
-//            limit {
-//                counter = 'LINE'
-//                value = 'COVEREDRATIO'
-//                minimum = 0.00
-//            }
-//
-//            limit {
-//                counter = 'METHOD'
-//                value = 'COVEREDRATIO'
-//                minimum = 0.00
-//            }
-//        }
-//    }
-//}
-//
-//tasks.jacocoTestReport {
-//    dependsOn tasks.test  // 테스트 후 리포트 생성
-//    reports {
-//        html.required.set(true)  // 로컬에서 브라우저로 보기
-//        xml.required.set(true)   // CI나 Sonar 연동용
-//        csv.required.set(false)
-//    }
-//    classDirectories.setFrom(
-//            files(classDirectories.files.collect {
-//                fileTree(dir: it, include: ['org/example/sansam/notification/**'],
-//                        exclude: ['**/dto/**', '**/config/**', '**/Q*.*','**/notification/exception/**','**/notification/controller/*Test*'])
-//            })
-//    )
-//}
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -125,11 +114,28 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.json:json:20240303'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'com.amazonaws:aws-java-sdk-ses:1.12.3'
     implementation 'org.springframework.retry:spring-retry:1.3.4'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
     implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    testImplementation 'com.h2database:h2'
+    testImplementation "org.assertj:assertj-core:3.25.3"
+
+    //mapStruct 추가
+    // MapStruct
+    implementation 'org.mapstruct:mapstruct:1.6.2'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
+    // Lombok ↔ MapStruct 바인딩
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    //QueryDSL 추가
+    implementation     "com.querydsl:querydsl-jpa:5.0.0:jakarta"
+    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -143,7 +149,6 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'co.elastic.clients:elasticsearch-java:8.11.2'
     implementation 'org.elasticsearch.client:elasticsearch-rest-client:8.11.2'
-
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
@@ -155,5 +160,18 @@ dependencies {
     testImplementation 'org.springframework.batch:spring-batch-test'
 
     //jpa 쿼리 값 확인
-//    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
+    //    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += "$buildDir/generated/sources/annotationProcessor/java/main"
+        }
+    }
+    test {
+        java {
+            srcDirs += "$buildDir/generated/sources/annotationProcessor/java/test"
+        }
+    }
 }
