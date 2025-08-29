@@ -3,11 +3,11 @@ package org.example.sansam.payment.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
 public class PaymentsType {
 
     @Id
@@ -18,6 +18,14 @@ public class PaymentsType {
     @Enumerated(EnumType.STRING)
     @Column(name="type_name")
     private PaymentMethodType typeName;
+
+    public PaymentsType() {
+        //JPA 기본 생성용 생성자
+    }
+
+    public PaymentsType(PaymentMethodType typeName) {
+        this.typeName = java.util.Objects.requireNonNull(typeName);
+    }
 
 
 }

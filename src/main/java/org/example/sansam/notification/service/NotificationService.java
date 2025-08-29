@@ -17,12 +17,24 @@ import org.example.sansam.notification.repository.NotificationHistoriesRepositor
 import org.example.sansam.notification.repository.NotificationsRepository;
 import org.example.sansam.notification.domain.NotificationType;
 import org.example.sansam.user.domain.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.task.TaskRejectedException;
+import org.springframework.core.task.TaskTimeoutException;
+import org.springframework.http.MediaType;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.IllegalFormatException;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -131,21 +143,9 @@ public class NotificationService {
         publisher.publishEvent(new BroadcastEvent(NotificationType.BROADCAST.getEventName(), payload));
     }
 
-    private static List<NotificationHistories> getAllNotificationsToSave(List<User> allActivatedUsers, Notification template,
-                                                                         String formattedTitle, String formattedContent) {
-        // NotificationHistories 리스트로 생성
-        return allActivatedUsers.stream()
-                .map(user -> NotificationHistories.builder()
-                        .user(user)
-                        .notification(template)
-                        .title(formattedTitle)
-                        .message(formattedContent)
-                        .createdAt(LocalDateTime.now())
-                        .expiredAt(LocalDateTime.now().plusDays(14))
-                        .isRead(false)
-                        .build())
-                .toList();
-    }
+            emitter.send(SseEmitter.event()
+                    .name(eventName)
+                    .data(payload, MediaType.APPLICATION_JSON));
 
     @Transactional(readOnly = true)
     public List<NotificationDTO> getNotificationHistories(Long userId) {
