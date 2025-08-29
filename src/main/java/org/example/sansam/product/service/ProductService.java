@@ -10,6 +10,7 @@ import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.s3.domain.FileManagement;
 import org.example.sansam.s3.service.FileService;
+import org.example.sansam.search.scheduler.ProductSyncScheduler;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
 import org.example.sansam.status.repository.StatusRepository;
@@ -35,6 +36,7 @@ public class ProductService {
     private final FileService fileService;
     private final ApplicationEventPublisher publisher;
     private final StatusRepository statusRepository;
+    private final ProductSyncScheduler scheduler;
 
     private final int MAX_TRY = 3;
     private final long BACKOFF_MS = 15;
@@ -93,11 +95,12 @@ public class ProductService {
 
 
     //default option 조회
-    @Transactional(readOnly = true)
+    @Transactional
     public ProductResponse getProduct(Long productId, Long userId) {
         Product product = productJpaRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다."));
         product.setViewCount(product.getViewCount() + 1);
+        scheduler.updateProductData(productId);
 
         Set<String> colors = new LinkedHashSet<>();
         Set<String> sizes = new LinkedHashSet<>();

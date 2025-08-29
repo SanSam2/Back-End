@@ -23,23 +23,13 @@ public interface WishJpaRepository extends JpaRepository<Wish, Long> {
 
     List<Wish> findByUserIdAndProductIdIn(Long userId, List<Long> productIds);
 
-    /**
-     * Retrieves a paginated list of Wish entities for the specified user ID, eagerly loading the associated product and its file management details.
-     *
-     * @param userId the ID of the user whose wishes are to be retrieved
-     * @param pageable pagination information for the result set
-     * @return a page of Wish entities for the given user, ordered by creation date descending
-     */
     @EntityGraph(attributePaths = {"product", "product.fileManagement"})
     @Query("SELECT w FROM Wish w WHERE w.user.id = :userId ORDER BY w.createdAt DESC")
     Page<Wish> findWishesByUserId(@Param("userId") Long userId, Pageable pageable);
 
-    /**
-     * Retrieves a list of users who have wished for the product with the specified ID.
-     *
-     * @param productId the ID of the product
-     * @return a list of users who have wished for the given product
-     */
     @Query(value = "select w.user from Wish w where w.product.id = :productId")
     List<User> findUsersByProduct_Id(Long productId);
+
+    @Query("select Count(*) from Wish w where w.product.id = :productId")
+    Long countByProductId(Long productId);
 }
