@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -52,4 +53,7 @@ public interface ProductJpaRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId ORDER BY p.viewCount DESC LIMIT 10")
     List<Product> findByCategoryIdOrderByViewCountDesc(@Param("categoryId") Long categoryId);
+
+    @Query("SELECT p FROM Product p WHERE p.createdAt > :createdAt")
+    List<Product> findAfterCreatedAt(LocalDateTime createdAt);
 }
