@@ -1,10 +1,7 @@
 package org.example.sansam.product.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.example.sansam.review.domain.Review;
 import org.example.sansam.s3.domain.FileManagement;
 import org.example.sansam.status.domain.Status;
@@ -16,6 +13,7 @@ import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Getter
 @Setter
 @Entity
