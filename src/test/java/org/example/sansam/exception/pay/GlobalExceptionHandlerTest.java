@@ -1,6 +1,5 @@
 package org.example.sansam.exception.pay;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -9,13 +8,12 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
 class GlobalExceptionHandlerTest {
 
-    private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
+    private final PayGlobalExceptionHandler handler = new PayGlobalExceptionHandler();
 
     static Stream<Arguments> mappingCases() {
         return Stream.of(
@@ -70,7 +68,7 @@ class GlobalExceptionHandlerTest {
         ErrorCode code = ErrorCode.valueOf(codeName);
         CustomException ex = new CustomException(code,expected);
 
-        ResponseEntity<GlobalExceptionHandler.ApiError> response = handler.handleCustom(ex);
+        ResponseEntity<PayGlobalExceptionHandler.ApiError> response = handler.handleCustom(ex);
 
         assertThat(response.getStatusCode()).isIn(HttpStatus.BAD_REQUEST, HttpStatus.BAD_GATEWAY);
         assertThat(response.getBody()).isNotNull();

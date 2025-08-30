@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class PayGlobalExceptionHandler {
 
     public static record ApiError(String code, String message){
         public static ApiError of(String code, String message){
