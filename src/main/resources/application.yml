@@ -37,7 +37,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
     open-in-view: false
-    open-in-view: false # 이것도 찾아보세요!!!
   batch:
     jdbc:
       initialize-schema: never   # 앱 실행 시 메타 테이블 자동 생성
