@@ -3,6 +3,7 @@ package org.example.sansam.order.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.example.sansam.order.domain.Order;
 
 @Getter
 @Setter
@@ -26,4 +27,5 @@ public class OrderItemResponseDto {
         this.quantity = quantity;
         this.orderProductImageUrl = orderProductImageUrl;
     }
+
 }

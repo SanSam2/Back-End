@@ -2,6 +2,9 @@ package org.example.sansam.payment.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.sansam.order.domain.OrderProduct;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,14 +24,14 @@ public class PaymentCancellation {
     @Column(name = "payment_key", nullable = false)
     private String paymentKey;
 
-    @Column(name = "cancel_amount")
-    private int cancelAmount;
+    @Column(name = "impotency_key")
+    private String idempotencyKey;
 
     @Column(name = "cancel_reason")
     private String cancelReason;
 
     @Column(name = "order_id", nullable = false)
-    private Long orderId;
+    private Long orderId; //이건 찐 orderId
 
     @Column(name = "refund_price")
     private Long refundPrice;
@@ -36,38 +39,31 @@ public class PaymentCancellation {
     @Column(name = "cancel_date_time")
     private LocalDateTime cancelDateTime;
 
-    @OneToMany(mappedBy = "paymentCancellation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PaymentCancellationHistory> histories = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "payment_cancellations_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private List<PaymentCancellationHistory> paymentCancellationHistories = new ArrayList<>();
 
 
-    private PaymentCancellation(String paymentKey, int cancelAmount,Long refundPrice,
-                                String cancelReason, Long orderId,
+    private PaymentCancellation(String paymentKey,Long refundPrice,
+                                String cancelReason, String idempotencyKey, Long orderId,
                                 LocalDateTime cancelDateTime) {
         this.paymentKey = paymentKey;
-        this.cancelAmount = cancelAmount;
         this.refundPrice = refundPrice;
         this.cancelReason = cancelReason;
+        this.idempotencyKey = idempotencyKey;
         this.orderId = orderId;
         this.cancelDateTime = cancelDateTime;
     }
 
-    public static PaymentCancellation create(String paymentKey, int cancelAmount, Long refundPrice,
-                                       String cancelReason, Long orderId,
+    public static PaymentCancellation create(String paymentKey, Long refundPrice,
+                                       String cancelReason,String idempotencyKey, Long orderId,
                                        LocalDateTime cancelDateTime) {
-        return new PaymentCancellation(paymentKey, cancelAmount,refundPrice, cancelReason, orderId, cancelDateTime);
+        return new PaymentCancellation(paymentKey,refundPrice, cancelReason,idempotencyKey,orderId, cancelDateTime);
     }
 
-    public void addHistory(PaymentCancellationHistory history) {
-        histories.add(history);
-        history.setPaymentCancellation(this);
+    public void addCancellationHistory(PaymentCancellationHistory cancelHistory){
+        this.paymentCancellationHistories.add(cancelHistory);
     }
-
-    //혹시나 여러개가 한번에 생성될 수가 있기 때문에.
-    public void addHistories(List<PaymentCancellationHistory> historyList) {
-        for (PaymentCancellationHistory history : historyList) {
-            addHistory(history);
-        }
-    }
-
 
 }

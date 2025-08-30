@@ -14,4 +14,13 @@ public class OrderItemDto {
     private String productColor;
     private int quantity;
 
+    public OrderItemDto(long productId , String productName, Long productPrice,
+                        String productSize, String productColor, int quantity) {
+        this.productId = productId;
+        this.productName = productName;
+        this.productPrice = productPrice;
+        this.productSize = productSize;
+        this.productColor = productColor;
+        this.quantity = quantity;
+    }
 }

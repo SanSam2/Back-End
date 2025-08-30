@@ -4,7 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.order.domain.OrderProduct;
-import org.example.sansam.order.repository.OrderProductRepository;
+import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.review.domain.Review;
@@ -38,7 +38,7 @@ public class ReviewService {
     private final FileJpaRepository fileJpaRepository;
     private final S3Service s3Service;
     private final FileDetailJpaRepository fileDetailJpaRepository;
-    private final OrderProductRepository orderProductRepository;
+    private final OrderRepository orderRepository;
 
     private final StatusRepository statusRepository;
 
@@ -59,10 +59,10 @@ public class ReviewService {
                 .message(request.getMessage())
                 .starRating(request.getRating())
                 .build();
-        OrderProduct orderProduct = orderProductRepository.findByOrder_OrderNumberAndProduct_Id(request.getOrderNumber(), request.getProductId())
+        OrderProduct orderProduct = orderRepository.findReviewTarget(request.getUserId(),request.getOrderNumber(), request.getProductId())
                         .orElseThrow(() -> new EntityNotFoundException("주문된 상품을 찾을 수 없습니다. "));
-        Status reviewCompleted = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_COMPLETED);
-        orderProduct.updateOrderProductStatus(reviewCompleted);
+
+        orderProduct.reviewCompletedStatusChange();
         reviewJpaRepository.save(review);
     }
 

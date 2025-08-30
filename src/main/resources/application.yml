@@ -6,9 +6,9 @@ server:
     session:
       timeout: 120m
       cookie:
-        name: JSESSIONID        # 쿠키 이름
-        http-only: true         # JS에서 접근 불가
-        secure: false           # https에서만 필요 시 true
+        name: JSESSIONID
+        http-only: true
+        secure: false
         same-site: none
 
 spring:
@@ -36,7 +36,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-    open-in-view: false
+        default_batch_fetch_size: 100
+    open-in-view: false # 이것도 찾아보세요!!!
   batch:
     jdbc:
       initialize-schema: never   # 앱 실행 시 메타 테이블 자동 생성
@@ -55,15 +56,6 @@ spring:
           starttls:
             enable: true
     default-encoding: UTF-8
-
-#    decorator:
-#      datasource:
-#        p6spy:
-#          enable-logging: true
-#          multiline: true
-#          logging: slf4j
-#          tracing:
-#            include-parameter-values: true
 
 toss:
   secret-key: ${TOSS_SECRET_KEY}
