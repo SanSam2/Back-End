@@ -2,6 +2,7 @@
 src/main/resources/application-local.yml
 src/main/resources/application-prod.yml
 src/main/resources/application-test.yml
+src/main/resources/firebase-service-account.json
 
 # Created by https://www.toptal.com/developers/gitignore/api/windows,java,gradle,intellij
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,java,gradle,intellij
