@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.s3.domain.FileManagement;
+import org.example.sansam.search.scheduler.ProductSyncScheduler;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.example.sansam.wish.domain.Wish;
@@ -29,6 +30,7 @@ public class WishService {
     private WishJpaRepository wishJpaRepository;
     private UserRepository userRepository;
     private ProductJpaRepository productJpaRepository;
+    private ProductSyncScheduler productSyncScheduler;
 
     @Transactional
     public void addWish(AddWishRequest request) {
@@ -37,6 +39,7 @@ public class WishService {
         Product product = productJpaRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다."));
         boolean isExist = wishJpaRepository.findByUserIdAndProductId(user.getId(), product.getId()).isPresent();
+        productSyncScheduler.updateProductData(product.getId());
         if (!isExist) {
             Wish wish = new Wish(user, product);
             wishJpaRepository.save(wish);
