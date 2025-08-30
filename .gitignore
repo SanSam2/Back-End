@@ -1,8 +1,5 @@
-#src/main/resources/application.yml
-src/main/resources/application-local.yml
-src/main/resources/application-prod.yml
-src/main/resources/application-test.yml
-src/main/resources/firebase-service-account.json
+src/main/resources/application.yml
+src/main/resources/application-aws.yml
 
 # Created by https://www.toptal.com/developers/gitignore/api/windows,java,gradle,intellij
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,java,gradle,intellij
@@ -18,8 +15,6 @@ src/main/resources/firebase-service-account.json
 .idea/**/dictionaries
 .idea/**/shelf
 .idea/modules.xml
-
-src/test
 
 # AWS User-specific
 .idea/**/aws.xml
@@ -105,11 +100,16 @@ fabric.properties
 # https://plugins.jetbrains.com/plugin/7238-sonarqube-community-plugin
 .idea/**/sonarIssues.xml
 
+.src/test
+
 # Markdown Navigator plugin
 # https://plugins.jetbrains.com/plugin/7896-markdown-navigator-enhanced
 .idea/**/markdown-navigator.xml
 .idea/**/markdown-navigator-enh.xml
 .idea/**/markdown-navigator/
+
+
+
 
 # Cache file creation bug
 # See https://youtrack.jetbrains.com/issue/JBR-2257

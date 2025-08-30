@@ -2,7 +2,6 @@ package org.example.sansam.order.batch;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sansam.order.repository.OrderProductRepository;
 import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
@@ -19,14 +18,12 @@ public class OrderCleanUpScheduler {
 
     private final OrderRepository orderRepository;
     private final StatusRepository statusRepository;
-    private final OrderProductRepository orderProductRepository;
 
     @Scheduled(cron = "0 0/10 * * * *")
     public void cleanUpExpiredOrders() {
         Status orderWaiting = statusRepository.findByStatusName(StatusEnum.ORDER_WAITING);
 
         LocalDateTime expiredtime = LocalDateTime.now().minusMinutes(30);
-        orderProductRepository.deleteByOrderStatusAndCreatedAt(orderWaiting, expiredtime);
         int deletedCount = orderRepository.deleteExpiredWaitingOrders(orderWaiting, expiredtime);
         log.error(String.valueOf(deletedCount));
     }

@@ -24,11 +24,7 @@ public class PaymentCancellationHistory {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id", nullable = false)
-    private Status status;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_cancellations_id")
-    private PaymentCancellation paymentCancellation;
+    private Status status; //Cancel_refunded = pg,결제단 정산 확정 / Cancel_Completed 부가 후처리까지 완료
 
     private PaymentCancellationHistory(Long orderProductId, int quantity, Status status) {
         this.orderProductId = orderProductId;
@@ -40,13 +36,21 @@ public class PaymentCancellationHistory {
         return new PaymentCancellationHistory(orderProductId, quantity, status);
     }
 
-    public void changeStatus(Status status){
+    private void changeStatus(Status status){
         this.status = status;
     }
 
-    public void setPaymentCancellation(PaymentCancellation paymentCancellation) {
-        this.paymentCancellation = paymentCancellation;
+    //Pg나 결제단에서 정산이 확정
+    public void changeStatusWhenCompleteCancel(Status status){
+        this.changeStatus(status);
     }
+
+    //CancelCompleted 부가 후처리까지 완료된 경우 사용
+    public void changeStatusWhenCompleteRefund(Status status){
+        this.changeStatus(status);
+    }
+
+
 
 
 }

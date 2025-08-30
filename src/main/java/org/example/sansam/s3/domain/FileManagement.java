@@ -1,10 +1,7 @@
 package org.example.sansam.s3.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -20,7 +17,7 @@ public class FileManagement {
     @Column(name = "file_management_id")
     private Long id;
 
-    @Column(name = "type_name", nullable = false)
+    @Column(name = "type_name")
     private String typeName;
 
     @OneToMany(mappedBy = "fileManagement", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

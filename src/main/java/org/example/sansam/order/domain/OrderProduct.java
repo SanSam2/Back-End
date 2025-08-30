@@ -3,11 +3,11 @@ package org.example.sansam.order.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
+import org.example.sansam.exception.pay.CustomException;
+import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.status.domain.Status;
-
-import java.util.Objects;
+import org.example.sansam.status.domain.StatusEnum;
 
 
 @Entity
@@ -21,22 +21,18 @@ public class OrderProduct {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="order_id", nullable = false)
-    private Order order;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id",nullable = false)
     private Product product;
 
-    private int quantity;
+    private int quantity; //주문한 상품 수량
 
     private Long orderedProductPrice;
 
     private String orderedProductSize;
 
-    private String orderedproductColor;
+    private String orderedProductColor;
 
-    private Long canceledQuantity=0L;
+    private int canceledQuantity=0;
 
     private String representativeURL;
 
@@ -48,36 +44,45 @@ public class OrderProduct {
 
     }
 
-    private OrderProduct(Order order, Product product, Long orderedProductPrice, int quantity,String orderedProductSize,String orderedproductColor,String representativeURL, Status status){
-        this.order = order;
+    private OrderProduct(Product product, Long orderedProductPrice, int quantity,String orderedProductSize,String orderedproductColor,String representativeURL, Status status){
         this.product = product;
         this.orderedProductPrice = orderedProductPrice;
         this.orderedProductSize = orderedProductSize;
-        this.orderedproductColor = orderedproductColor;
+        this.orderedProductColor= orderedproductColor;
         this.quantity = quantity;
-        this.canceledQuantity=0L;
+        this.canceledQuantity=0;
         this.representativeURL = representativeURL;
         this.status = status;
     }
 
-    public static OrderProduct create(Order order, Product product,Long orderedProductPrice, int quantity, String orderedProductSize, String orderedproductColor,String representativeURL, Status status){
-        return new OrderProduct(order,product,orderedProductPrice,quantity,orderedProductSize,orderedproductColor,representativeURL,status);
+    public static OrderProduct create(Product product,Long orderedProductPrice, int quantity, String orderedProductSize, String orderedproductColor,String representativeURL, Status status){
+        return new OrderProduct(product,orderedProductPrice,quantity,orderedProductSize,orderedproductColor,representativeURL,status);
     }
 
-    public void cancelQuantity(int amount, Status canceledStatus, Status partialCanceledStatus){
-        if(amount<=0)
-            throw new IllegalArgumentException("amount must be greater than 0");
-
-        this.canceledQuantity +=amount;
-        if(Objects.equals(this.canceledQuantity, this.quantity)){
-            this.status = canceledStatus;
+    //부분취소/전체취소 이후 상태값 변화 가져가기
+    public void cancelQuantityCheckChange(int quantity, Status canceledStatus, Status partialCanceledStatus){
+        if(quantity<=0){
+            throw new CustomException(ErrorCode.CANCEL_QUANTITY_MUST_MORE_THEN_ZERO);
+        }else if(quantity>this.quantity){
+            throw new CustomException(ErrorCode.CANNOT_CANCEL_MORE_THAN_ORDERED_QUANTITY);
+        }
+        this.canceledQuantity +=quantity;
+        if(this.canceledQuantity==this.quantity){
+            updateOrderProductStatus(canceledStatus);
         } else {
-            this.status = partialCanceledStatus;
+            updateOrderProductStatus(partialCanceledStatus);
         }
     }
 
-    public void updateOrderProductStatus(Status status){
-        this.status = status;
+    public void reviewCompletedStatusChange(){
+        updateOrderProductStatus(new Status(StatusEnum.ORDER_PRODUCT_REVIEW_COMPLETED));
+    }
+
+    protected void updateOrderProductStatus(Status newStatus){
+        if(newStatus==null){
+            throw new CustomException(ErrorCode.CHECK_STATUS);
+        }
+        this.status = newStatus;
     }
 
 }
