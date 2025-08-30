@@ -15,7 +15,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: sansam250721@gmail.com
-    password: dgwj cvlz wpqt vfdo         # 앱 비밀번호
+    password: dgwj cvlz wpqt vfdo
     properties:
       mail:
         smtp:
