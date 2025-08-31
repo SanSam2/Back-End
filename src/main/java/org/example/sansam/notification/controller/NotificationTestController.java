@@ -12,6 +12,7 @@ import org.example.sansam.notification.event.sse.ProductQuantityLowEvent;
 import org.example.sansam.product.domain.ProductDetail;
 import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
+import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
