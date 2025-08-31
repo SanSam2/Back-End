@@ -2,10 +2,7 @@ package org.example.sansam.notification.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -14,14 +11,13 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.yaml.snakeyaml.emitter.EmitterException;
 
 import java.time.LocalDateTime;
 
 @RestControllerAdvice(basePackages = "org.example.sansam.notification.controller")
 //@Order(Ordered.HIGHEST_PRECEDENCE) // 만약 다른 exceptionHandler가 있을 경우 우선 순위 둠
 @Log4j2
-public class GlobalExceptionHandler {
+public class NotificationGlobalExceptionHandler {
 
     // 1) 도메인 커스텀 예외
     @ExceptionHandler(CustomException.class)
