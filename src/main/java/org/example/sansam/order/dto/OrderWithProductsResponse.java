@@ -1,5 +1,6 @@
 package org.example.sansam.order.dto;
 
+import lombok.Builder;
 import lombok.Getter;
 import org.example.sansam.status.domain.StatusEnum;
 

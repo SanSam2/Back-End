@@ -135,4 +135,22 @@ public class OrderRepositoryImpl implements OrderRepositoryCustom{
         return o.user.id.eq(userId);
     }
 
+    public List<Long> findExpiredWaitingOrderIds(Status waiting, LocalDateTime expiredAt, int limit) {
+        return queryFactory
+                .select(o.id)
+                .from(o)
+                .where(o.status.eq(waiting), o.createdAt.lt(expiredAt))
+                .orderBy(o.createdAt.asc(), o.id.asc())
+                .limit(limit)
+                .fetch();
+    }
+
+    public Optional<Order> findByIdWithItems(Long id) {
+        return Optional.ofNullable(queryFactory
+                .selectFrom(o)
+                .leftJoin(o.orderProducts, op).fetchJoin()
+                .where(o.id.eq(id))
+                .fetchOne());
+    }
+
 }

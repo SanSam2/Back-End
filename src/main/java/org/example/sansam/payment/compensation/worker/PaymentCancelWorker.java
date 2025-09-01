@@ -25,8 +25,7 @@ import static org.springframework.transaction.annotation.Propagation.REQUIRES_NE
 public class PaymentCancelWorker {
 
     private final PaymentCancelOutBoxRepository repo;
-    private final PaymentApiClient paymentApiClient;
-
+    private final PaymentCancelProcessor processor;
 
     @Scheduled(fixedDelay = 30000L, initialDelay = 10000L)
     public void run() {
@@ -42,21 +41,7 @@ public class PaymentCancelWorker {
                 continue; // 누군가가 먼저 잡았음
 
             // 2) 각 잡 처리는 별도 트랜잭션으로 (부분 실패/성공 분리)
-            processOne(job.getId());
-        }
-    }
-
-    @Transactional(propagation = REQUIRES_NEW)
-    public void processOne(Long id) {
-        PaymentCancelOutBox job = repo.findById(id).orElse(null);
-        if (job == null)
-            return;
-
-        try {
-            paymentApiClient.tossPaymentCancel(job.getPaymentKey(), job.getAmount(), job.getReason(),job.getIdempotencyKey());
-            job.markSucceeded();
-        } catch (Exception ex) {
-            job.markFailedAndScheduleRetry(ex.getMessage());
+            processor.processOne(job.getId());
         }
     }
 }

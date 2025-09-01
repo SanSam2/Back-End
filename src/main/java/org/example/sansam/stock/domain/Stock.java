@@ -28,16 +28,5 @@ public class Stock {
         //JPA only
     }
 
-    public void decrease(int quantity){
-        if(this.stockQuantity < quantity){
-            throw new CustomException(ErrorCode.NOT_ENOUGH_STOCK);
-        }
-        this.stockQuantity -= quantity;
-    }
-
-    public void increase(int quantity){
-        this.stockQuantity += quantity;
-    }
-
 
 }
