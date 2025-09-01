@@ -1,0 +1,51 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL
+    username: sansam
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: sansam250721@gmail.com
+    password: dgwj cvlz wpqt vfdo
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    default-encoding: UTF-8
+
+cloud:
+  aws:
+    s3:
+      bucket: ${AWS_BUCKET_NAME:dummy-bucket}
+      custom:
+        dir: /images
+        defaultUrl: https://your-bucket-name.s3.ap-northeast-2.amazonaws.com/
+      path:
+        review: reviews
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+    credentials:
+      accessKey: ${AWS_ACCESS_KEY:dummy}
+      secretKey: ${AWS_SECRET_KEY:dummy}
+toss:
+  secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+  confirm-url: https://api.tosspayments.com/v1/payments/confirm
+  cancel-url: https://api.tosspayments.com/v1/payments
+
+cors:
+  allowed-origins: http://localhost:3000
+websocket:
+  allowed-origins: "http://localhost:3000"

@@ -11,7 +11,7 @@ import org.example.sansam.chat.dto.ChatMessageSendResponseDTO;
 import org.example.sansam.chat.repository.ChatMemberRepository;
 import org.example.sansam.chat.repository.ChatMessageRepository;
 import org.example.sansam.chat.repository.ChatRoomRepository;
-import org.example.sansam.notification.event.ChatEvent;
+import org.example.sansam.notification.event.sse.ChatEvent;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -52,19 +52,21 @@ public class ChatMessageService {
         }
         Pageable pageable = PageRequest.of(0, size);
 
-        Page<ChatMessage> messages;
+        List<ChatMessage> messages;
         if (lastMessageId == null) {
-            messages = chatMessageRepository.findByChatRoomOrderByCreatedAtDesc(chatRoom, pageable);
+            messages = chatMessageRepository.findMessagesWithSender(chatRoom, null, pageable);
         } else {
-            messages = chatMessageRepository.findByChatRoomAndIdLessThanOrderByCreatedAtDesc(chatRoom, lastMessageId, pageable);
+            messages = chatMessageRepository.findMessagesWithSender(chatRoom, lastMessageId, pageable);
         }
 
+        // DTO 변환 및 역순 처리
         List<ChatMessageResponseDTO> chatMessageResponseDTOS = messages.stream()
                 .map(msg -> ChatMessageResponseDTO.fromEntity(msg, msg.getSender().getName(), roomId))
                 .collect(Collectors.toList());
         Collections.reverse(chatMessageResponseDTOS);
 
-        return new PageImpl<>(chatMessageResponseDTOS, pageable, messages.getTotalElements());
+        long total = chatMessageRepository.countByChatRoom(chatRoom);
+        return new PageImpl<>(chatMessageResponseDTOS, pageable, total);
     }
 
     // 메세지 전송시, 데이터 베이스에 추가

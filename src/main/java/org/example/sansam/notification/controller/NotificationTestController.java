@@ -2,10 +2,13 @@ package org.example.sansam.notification.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sansam.chat.domain.ChatRoom;
 import org.example.sansam.chat.repository.ChatMemberRepository;
 import org.example.sansam.chat.repository.ChatRoomRepository;
-import org.example.sansam.notification.event.*;
+import org.example.sansam.notification.event.email.PaymentCanceledEmailEvent;
+import org.example.sansam.notification.event.email.PaymentCompleteEmailEvent;
+import org.example.sansam.notification.event.sse.PaymentCancelEvent;
+import org.example.sansam.notification.event.sse.PaymentCompleteEvent;
+import org.example.sansam.notification.event.sse.ProductQuantityLowEvent;
 import org.example.sansam.product.domain.ProductDetail;
 import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
@@ -16,8 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDateTime;
 
 @Slf4j
 @RestController
@@ -54,17 +55,15 @@ public class NotificationTestController {
 
             ProductDetail productDetail = productDetailJpaRepository.findById(1L).orElseThrow();
 
-            Long beforeQuantity = productDetail.getQuantity();
-            log.info("beforeQuantity: {}", beforeQuantity);
-            Long orderQuantity = 5L;
-            Long afterQuantity = beforeQuantity - orderQuantity;
-            log.info("afterQuantity: {}", afterQuantity);
+            User user = userRepository.findById(33L).orElseThrow();
+            String orderName = "무신사 반팔";
+            Long orderPrice = 10000L;
 
-            if (beforeQuantity > 50L && afterQuantity <= 50L) {
-                publisher.publishEvent(new ProductQuantityLowEvent(productDetail));
-            }
+//            publisher.publishEvent(new PaymentCompleteEvent(user, orderName, orderPrice));
+//            publisher.publishEvent(new PaymentCompleteEmailEvent(user, orderName, orderPrice));
 
-
+            publisher.publishEvent(new PaymentCancelEvent(user, orderName, orderPrice));
+            publisher.publishEvent(new PaymentCanceledEmailEvent(user, orderName, orderPrice));
 
 //            ChatRoom chatRoom = chatRoomRepository.findById(1L).orElseThrow();
 //            User sender = userRepository.findById(1L).orElseThrow();
@@ -72,7 +71,7 @@ public class NotificationTestController {
 //            publisher.publishEvent(new ChatEvent(chatRoom, sender,"이게 바로 테스트 성공"));
 
             return ResponseEntity.ok().build();
-        }catch (Exception e) {
+        } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }

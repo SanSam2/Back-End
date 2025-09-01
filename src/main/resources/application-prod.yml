@@ -1,0 +1,107 @@
+server:
+  port: 8080
+  address: 0.0.0.0
+
+  servlet:
+    session:
+      timeout: 120m
+      cookie:
+        name: JSESSIONID        # 쿠키 이름
+        http-only: true         # JS에서 접근 불가
+        secure: false           # https에서만 필요 시 true
+        same-site: none
+logging:
+  level:
+    org.springframework.transaction: WARN #spring 트랜잭션 매니저 로그
+    org.springframework.orm.jpa.JpaTransactionManager: WARN #JPA 연동 트랜잭션 매니저 클래스의 로그
+    org.hibernate.SQL: WARN
+
+spring:
+  thymeleaf:
+    encoding: UTF-8
+  application:
+    name: SanSam
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false # 이것도 찾아보세요!!!
+  batch:
+    jdbc:
+      initialize-schema: never   # 앱 실행 시 메타 테이블 자동 생성
+    job:
+      enabled: false              # 앱 시작할 때 배치 잡 자동 실행하지 않음 (테스트/스케줄러로만 실행)
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: sansam250721@gmail.com
+    password: dgwj cvlz wpqt vfdo         # 앱 비밀번호
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    default-encoding: UTF-8
+
+#    decorator:
+#      datasource:
+#        p6spy:
+#          enable-logging: true
+#          multiline: true
+#          logging: slf4j
+#          tracing:
+#            include-parameter-values: true
+
+toss:
+  secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+  confirm-url: https://api.tosspayments.com/v1/payments/confirm
+  cancel-url: https://api.tosspayments.com/v1/payments
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, info
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+cloud:
+  aws:
+    s3:
+      bucket: ${AWS_BUCKET_NAME}
+      custom:
+        dir: /images
+        defaultUrl: https://your-bucket-name.s3.ap-northeast-2.amazonaws.com/
+      path:
+        review: reviews
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+    credentials:
+      accessKey: ${AWS_ACCESS_KEY}
+      secretKey: ${AWS_SECRET_KEY}
+cors:
+  allowed-origins: http://localhost:3000
+websocket:
+  allowed-origins: "http://localhost:3000"

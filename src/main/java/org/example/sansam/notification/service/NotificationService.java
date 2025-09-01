@@ -2,32 +2,24 @@ package org.example.sansam.notification.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
+import org.example.sansam.notification.event.sse.BroadcastEvent;
+import org.example.sansam.user.repository.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.notification.domain.Notification;
 import org.example.sansam.notification.domain.NotificationHistories;
 import org.example.sansam.notification.dto.NotificationDTO;
-import org.example.sansam.notification.event.ChatEvent;
+import org.example.sansam.notification.event.sse.NotificationSavedEvent;
 import org.example.sansam.notification.exception.CustomException;
 import org.example.sansam.notification.exception.ErrorCode;
 import org.example.sansam.notification.repository.NotificationHistoriesRepository;
 import org.example.sansam.notification.repository.NotificationsRepository;
-import org.example.sansam.notification.template.NotificationType;
+import org.example.sansam.notification.domain.NotificationType;
 import org.example.sansam.user.domain.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.task.TaskRejectedException;
-import org.springframework.core.task.TaskTimeoutException;
-import org.springframework.http.MediaType;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.IllegalFormatException;
 import java.util.List;
@@ -40,112 +32,20 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NotificationService {
     private final NotificationsRepository notificationRepository;
     private final NotificationHistoriesRepository notificationHistoriesRepository;
-    private final Map<Long, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
-    private static final long DEFAULT_TIMEOUT = 60L * 1000 * 30; // 30분 설정, 리소스 점유 시간 절감
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    // public 메서드
-
-    public SseEmitter connect(Long userId) {
-
-        if (userId == null || userId <= 0) {
-            throw new IllegalArgumentException("Invalid userId: " + userId);
-        }
-
-        // 동시성 제어
-        synchronized (sseEmitters) {
-            SseEmitter existingEmitter = sseEmitters.get(userId);
-            if (existingEmitter != null) {
-                existingEmitter.complete(); // 이전 연결 정리
-                sseEmitters.remove(userId);
-            }
-
-            SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
-            sseEmitters.put(userId, emitter);
-
-            // 연결 종료 시 emitter 제거
-            emitter.onCompletion(() -> sseEmitters.remove(userId));
-            emitter.onTimeout(() -> sseEmitters.remove(userId));
-            emitter.onError(ex -> sseEmitters.remove(userId));
-
-            return emitter;
-        }
-    }
-
-    public List<NotificationDTO> getNotificationHistories(Long userId) {
-        return notificationHistoriesRepository.findAllByUser_Id(userId)
-                .stream().map(NotificationDTO::from).toList();
-    }
-
-    public Long getUnreadNotificationCount(Long userId) {
-        return notificationHistoriesRepository.countByUser_IdAndIsReadFalse(userId);
-    }
-
-    @Transactional
-    public void markAsRead(Long notificationHistoriesId) {
-        NotificationHistories notification = notificationHistoriesRepository.findById(notificationHistoriesId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_HISTORY_ID_NOT_FOUND));
-
-        if (!notification.isRead()) {
-            notification.setRead(true);
-        }
-    }
-
-    @Transactional
-    public void markAllAsRead(Long userId) {
-        List<NotificationHistories> unreadNotifications =
-                notificationHistoriesRepository.findAllByUser_IdAndIsReadFalse(userId);
-
-        unreadNotifications.forEach(n -> n.setRead(true));
-    }
-
-    public void deleteNotificationHistory(Long userId, Long notificationHistoriesId) {
-        notificationHistoriesRepository.deleteByUser_IdAndId(userId, notificationHistoriesId);
-    }
-
-    public void sendWelcomeNotification(User user) {
-        sendNotification(user, NotificationType.WELCOME, user.getName(), "");
-    }
-
-    public void sendPaymentCompleteNotification(User user, String orderName, Long orderPrice) {
-        String messageParam = user.getName() + "," + orderName + "," + orderPrice;
-        sendNotification(user, NotificationType.PAYMENT_COMPLETE, "", messageParam);
-    }
-
-    public void sendPaymentCancelNotification(User user, String orderName, Long refundPrice) {
-        String messageParam = user.getName() + "," + orderName + "," + refundPrice;
-        sendNotification(user, NotificationType.PAYMENT_CANCEL, "", messageParam);
-    }
-
-    public void sendCartLowNotification(User user, String productName) {
-        sendNotification(user, NotificationType.CART_LOW, "", productName);
-    }
-
-    public void sendWishListLowNotification(User user, String productName) {
-        sendNotification(user, NotificationType.WISH_LOW, "", productName);
-    }
-
-    public void sendReviewRequestNotification(User user, String orderName) {
-        String messageParam = user.getName() + "," + orderName;
-        sendNotification(user, NotificationType.REVIEW_REQUEST, "", messageParam);
-    }
-
-    public void sendChatNotification(User user, String chatRoomName, String message) {
-        sendNotification(user, NotificationType.CHAT, chatRoomName, message);
-    }
-
-    // private 메서드
+    private final UserRepository userRepository;
+    private final ApplicationEventPublisher publisher;
+    private final ObjectMapper objectMapper;
 
     private void sendNotification(User user, NotificationType type, String titleParam, String messageParam) {
         Notification template = getTemplateOrThrow(type.getTemplateId());
+
         String title = formatTitle(template.getTitle(), titleParam);
         String message = formatMessage(template.getMessage(), messageParam);
 
         NotificationHistories saved = saveNotificationHistory(user, template, title, message);
         String payload = serializeToJson(NotificationDTO.from(saved));
-        log.info(type.getEventName());
-        sendViaSSEAsync(user.getId(), payload, type.getEventName());
+
+        publisher.publishEvent(NotificationSavedEvent.of(user.getId(), type.getEventName(), payload));
     }
 
     private Notification getTemplateOrThrow(Long templateId) {
@@ -197,18 +97,15 @@ public class NotificationService {
                 .notification(template)
                 .title(title)
                 .message(message)
-                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
-                .expiredAt(Timestamp.valueOf(LocalDateTime.now().plusDays(14)))
+                .createdAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusDays(14))
                 .isRead(false)
                 .build();
 
-        NotificationHistories saved = notificationHistoriesRepository.save(notification);
-        if (saved.getId() == null) {
-            throw new CustomException(ErrorCode.NOTIFICATION_SAVE_FAILED);
-        }
-        return saved;
+        return notificationHistoriesRepository.save(notification);
     }
 
+    //TODO: 공통화 작업 필요
     private String serializeToJson(NotificationDTO dto) {
         try {
             return objectMapper.writeValueAsString(dto);
@@ -217,32 +114,104 @@ public class NotificationService {
         }
     }
 
-    @Async
-    @Retryable(
-            include = {TaskRejectedException.class, IOException.class},    // 이 리스트에 명시된 예외가 발생했을 때만 재시도
-            maxAttempts = 3,    // 최대 시도 횟수 (최초 실행 포함) 실패 시 예외 그대로 던짐
-            backoff = @Backoff(delay = 1000, multiplier = 2)    // 대기시간 1000, 2000, 4000ms
-    )
-    protected void sendViaSSEAsync(Long userId, String payload, String eventName) {
-        try {
-            SseEmitter emitter = sseEmitters.get(userId);
+    @Transactional
+    public void saveBroadcastNotification(String title, String content) {
+        Notification template = getTemplateOrThrow(NotificationType.BROADCAST.getTemplateId());
+        String formattedTitle = formatTitle(template.getTitle(), title);
+        String formattedContent = formatMessage(template.getMessage(), content);
 
-            if (emitter == null) {
-                return;
-            }
+        List<User> allActivatedUsers = userRepository.findAllByActivated(true);
 
-            emitter.send(SseEmitter.event()
-                    .name(eventName)
-                    .data(payload, MediaType.APPLICATION_JSON));
+        List<NotificationHistories> histories = getAllNotificationsToSave(allActivatedUsers, template, formattedTitle, formattedContent);
 
-        } catch (IOException e) {
-            log.error("SSE 전송 실패 - userId: {}, event: {}, error: {}", userId, eventName, e.getMessage());
+        // bulk insert (Hibernate JDBC batch랑 합쳐져서 효율적으로 실행)
+        notificationHistoriesRepository.saveAll(histories);
 
-            SseEmitter emitter = sseEmitters.get(userId);
-            if (emitter != null) {
-                emitter.completeWithError(e);
-                sseEmitters.remove(userId);
-            }
-        }
+        // 마지막 하나만 payload 직렬화해서 이벤트 발행
+        NotificationHistories lastSaved = histories.getLast();
+        String payload = serializeToJson(NotificationDTO.from(lastSaved));
+
+        publisher.publishEvent(new BroadcastEvent(NotificationType.BROADCAST.getEventName(), payload));
+    }
+
+    private static List<NotificationHistories> getAllNotificationsToSave(List<User> allActivatedUsers, Notification template,
+                                                                         String formattedTitle, String formattedContent) {
+        // NotificationHistories 리스트로 생성
+        return allActivatedUsers.stream()
+                .map(user -> NotificationHistories.builder()
+                        .user(user)
+                        .notification(template)
+                        .title(formattedTitle)
+                        .message(formattedContent)
+                        .createdAt(LocalDateTime.now())
+                        .expiredAt(LocalDateTime.now().plusDays(14))
+                        .isRead(false)
+                        .build())
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<NotificationDTO> getNotificationHistories(Long userId) {
+        return notificationHistoriesRepository.findAllByUser_Id(userId)
+                .stream().map(NotificationDTO::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Long getUnreadNotificationCount(Long userId) {
+        return notificationHistoriesRepository.countByUser_IdAndIsReadFalse(userId);
+    }
+
+    @Transactional
+    public void markAsRead(Long notificationHistoriesId) {
+        notificationHistoriesRepository.findByIsReadFalse(notificationHistoriesId);
+    }
+
+    @Transactional
+    public void markAllAsRead(Long userId) {
+        notificationHistoriesRepository.findAllByUser_IdAndIsReadFalse(userId);
+    }
+
+    @Transactional
+    public void deleteNotificationHistory(Long userId, Long notificationHistoriesId) {
+        notificationHistoriesRepository.deleteByUser_IdAndId(userId, notificationHistoriesId);
+    }
+
+
+    @Transactional
+    public void sendWelcomeNotification(User user) {
+        sendNotification(user, NotificationType.WELCOME, user.getName(), "");
+    }
+
+    @Transactional
+    public void sendPaymentCompleteNotification(User user, String orderName, Long orderPrice) {
+        String messageParam = user.getName() + "," + orderName + "," + orderPrice;
+        sendNotification(user, NotificationType.PAYMENT_COMPLETE, "", messageParam);
+    }
+
+    @Transactional
+    public void sendPaymentCancelNotification(User user, String orderName, Long refundPrice) {
+        String messageParam = user.getName() + "," + orderName + "," + refundPrice;
+        sendNotification(user, NotificationType.PAYMENT_CANCEL, "", messageParam);
+    }
+
+    @Transactional
+    public void sendCartLowNotification(User user, String productName) {
+        sendNotification(user, NotificationType.CART_LOW, "", productName);
+    }
+
+    @Transactional
+    public void sendWishListLowNotification(User user, String productName) {
+        sendNotification(user, NotificationType.WISH_LOW, "", productName);
+    }
+
+    @Transactional
+    public void sendReviewRequestNotification(User user, String orderName) {
+        String messageParam = user.getName() + "," + orderName;
+        sendNotification(user, NotificationType.REVIEW_REQUEST, "", messageParam);
+    }
+
+    @Transactional
+    public void sendChatNotification(User user, String chatRoomName, String message) {
+        sendNotification(user, NotificationType.CHAT, chatRoomName, message);
     }
 }

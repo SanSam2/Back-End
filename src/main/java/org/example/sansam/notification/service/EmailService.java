@@ -1,15 +1,18 @@
 package org.example.sansam.notification.service;
 
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
+
 import com.amazonaws.services.simpleemail.model.*;
+import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.user.domain.User;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.messaging.MessagingException;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -22,16 +25,16 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
 
-    /**
-     * Sends a welcome email to the specified user using a Thymeleaf template.
-     *
-     * @param user the user to receive the welcome email
-     * @throws RuntimeException if the email fails to send
-     */
+    @Retryable(
+            interceptor = "emailRetryInterceptor",
+            include = {MailSendException.class, MessagingException.class},
+            exclude = {AddressException.class}
+    )
     public void sendWelcomeEmail(User user) {
         try {
             MimeMessage message = createWelcomeMessage(user);
             if (user.getEmailAgree())javaMailSender.send(message);
+            log.info("회원 가입 이메일 전송 완료 - {}", user.getEmail());
         } catch (MessagingException | jakarta.mail.MessagingException e) {
             log.error("회원 가입 이메일 전송 실패 - {}", user.getEmail());
             throw new RuntimeException(e);
@@ -54,18 +57,16 @@ public class EmailService {
         return message;
     }
 
-    /**
-     * Sends a payment completion email to the specified user with order details and final price.
-     *
-     * @param user the recipient user
-     * @param orderName the name of the completed order
-     * @param finalPrice the final price paid for the order
-     * @throws RuntimeException if sending the email fails
-     */
+    @Retryable(
+            interceptor = "emailRetryInterceptor",
+            include = {MailSendException.class, MessagingException.class},
+            exclude = {AddressException.class}
+    )
     public void sendPaymentCompletedEmail(User user, String orderName, Long finalPrice) {
         try {
             MimeMessage message = createPaymentCompletedMessage(user, orderName, finalPrice);
             if (user.getEmailAgree()) javaMailSender.send(message);
+            log.info("결제 완료 이메일 전송 완료 - {}", user.getEmail());
         } catch (Exception e) {
             log.error("결제 완료 이메일 전송 실패 - {}", user.getEmail());
             throw new RuntimeException(e);
@@ -90,34 +91,22 @@ public class EmailService {
         return message;
     }
 
-    /**
-     * Sends a payment cancellation email to the specified user with order and refund details.
-     *
-     * @param user the recipient of the email
-     * @param orderName the name of the canceled order
-     * @param refundPrice the amount refunded to the user
-     * @throws RuntimeException if sending the email fails
-     */
+    @Retryable(
+            interceptor = "emailRetryInterceptor",
+            include = {MailSendException.class, MessagingException.class},
+            exclude = {AddressException.class}
+    )
     public void sendPaymentCanceledMessage(User user, String orderName, Long refundPrice) {
         try {
             MimeMessage message = createPaymentCanceledMessage(user, orderName, refundPrice);
             if (user.getEmailAgree())javaMailSender.send(message);
+            log.info("결제 취소 완료 이메일 전송 완료 - {}", user.getEmail());
         } catch (Exception e) {
             log.error("결제 취소 완료 이메일 전송 실패 - {}", user.getEmail());
             throw new RuntimeException(e);
         }
     }
 
-    /**
-     * Creates a MIME email message notifying the user of a payment cancellation, including order details and refund amount.
-     *
-     * @param user the recipient user
-     * @param orderName the name of the canceled order
-     * @param refundPrice the amount refunded to the user
-     * @return a MimeMessage containing the payment cancellation notification
-     * @throws MessagingException if an error occurs while constructing the message
-     * @throws jakarta.mail.MessagingException if a Jakarta Mail-specific error occurs
-     */
     private MimeMessage createPaymentCanceledMessage(User user, String orderName, Long refundPrice) throws MessagingException, jakarta.mail.MessagingException {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -132,7 +121,6 @@ public class EmailService {
 
         String html = templateEngine.process("email/payment-canceled", context);
         helper.setText(html, true);
-        System.out.println("Rendered HTML: " + html);
         return message;
     }
 

@@ -5,6 +5,7 @@ import lombok.*;
 import org.example.sansam.user.domain.User;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -28,13 +29,13 @@ public class NotificationHistories {
     @JoinColumn(name = "notification_id", nullable=false)
     private Notification notification;
 
-    @Column(name = "created_at", nullable = false)
-    private Timestamp createdAt;
+    @Column(updatable = false, nullable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "expired_at", nullable = false)
-    private Timestamp expiredAt;
+    @Column(updatable = false, nullable = false)
+    private LocalDateTime expiredAt;
 
-    @Column(name = "is_read", nullable = false)
+    @Column(nullable = false)
     private boolean isRead = false;
 
     @Column(nullable = false)

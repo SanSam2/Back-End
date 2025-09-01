@@ -1,4 +1,4 @@
-#src/main/resources/application.yml
+src/test
 
 # Created by https://www.toptal.com/developers/gitignore/api/windows,java,gradle,intellij
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,java,gradle,intellij
@@ -99,11 +99,16 @@ fabric.properties
 # https://plugins.jetbrains.com/plugin/7238-sonarqube-community-plugin
 .idea/**/sonarIssues.xml
 
+.src/test
+
 # Markdown Navigator plugin
 # https://plugins.jetbrains.com/plugin/7896-markdown-navigator-enhanced
 .idea/**/markdown-navigator.xml
 .idea/**/markdown-navigator-enh.xml
 .idea/**/markdown-navigator/
+
+
+
 
 # Cache file creation bug
 # See https://youtrack.jetbrains.com/issue/JBR-2257

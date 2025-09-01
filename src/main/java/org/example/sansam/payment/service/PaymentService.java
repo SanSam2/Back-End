@@ -1,87 +1,82 @@
 package org.example.sansam.payment.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
-import org.example.sansam.notification.event.PaymentCompleteEmailEvent;
-import org.example.sansam.notification.event.PaymentCompleteEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.repository.OrderRepository;
 
-import org.example.sansam.payment.domain.PaymentMethodType;
-import org.example.sansam.payment.domain.Payments;
-import org.example.sansam.payment.domain.PaymentsType;
+import org.example.sansam.payment.adapter.TossApprovalNormalizer;
+import org.example.sansam.payment.adapter.TossApprovalNormalizer.Normalized;
 import org.example.sansam.payment.dto.TossPaymentRequest;
-import org.example.sansam.payment.repository.PaymentsRepository;
-import org.example.sansam.payment.repository.PaymentsTypeRepository;
-import org.example.sansam.status.domain.Status;
-import org.example.sansam.status.domain.StatusEnum;
-import org.example.sansam.status.repository.StatusRepository;
-import org.example.sansam.user.domain.User;
-import org.springframework.context.ApplicationEventPublisher;
+import org.example.sansam.payment.dto.TossPaymentResponse;
+import org.example.sansam.payment.compensation.service.PaymentCancelOutBoxService;
+import org.example.sansam.payment.util.IdempotencyKeyGenerator;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 
-import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
 
     private final OrderRepository orderRepository;
-
-    private final PaymentsTypeRepository paymentsTypeRepository;
-    private final PaymentsRepository paymentsRepository;
-    private final StatusRepository statusRepository;
-
     private final PaymentApiClient paymentApiClient;
-    private final ApplicationEventPublisher eventPublisher;
+    private final TossApprovalNormalizer normalizer;
+    private final AfterConfirmTransactionService afterConfirmTransactionService;
+    private final PaymentCancelOutBoxService outboxService;
+    private final IdempotencyKeyGenerator idemGen;
 
 
-    @Transactional
-    public void confirmPayment(TossPaymentRequest request) throws Exception {
+    private static final String DB_FAILED_REASON = "db-failed";
+
+    public TossPaymentResponse confirmPayment(TossPaymentRequest request){
+        // 주문조회 -> 확실하게 결제 confirm해줘도 되는것인지에 대한 컨펌(?)
+        Order order = orderRepository.findByOrderNumber(request.getOrderId())
+                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+        String orderNumber = order.getOrderNumber();
+
+        //다시 진행하는 가격검증
+        if(!Objects.equals(order.getTotalAmount(), request.getAmount())){
+            throw new CustomException(ErrorCode.ORDER_AND_PAY_NOT_EQUAL);
+        }
+
+        //토스 payment로부터 온 응답 수령
+        Map<String, Object> response;
         try {
-            // 주문 상태 업데이트(강결합이 과연 좋을까? 단점이 뭐가 있을까?) -> 결국 분리를 해야한다
-            Order order = orderRepository.findByOrderNumber(request.getOrderId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
-            order.addPaymentKey(request.getPaymentKey()); //더티체킹 주의
-
-            Map<String, Object> response = paymentApiClient.confirmPayment(request);
-            String method = (String) response.get("method");
-            savePaymentInfo(method, request);
-
-
-            Status orderPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PAID);
-            Status orderProductPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_REQUIRED);
-            order.completePayment(orderPaid, orderProductPaid, request.getPaymentKey());
-
-            orderRepository.save(order);
-            PaymentCompleteEmailEvent event = new PaymentCompleteEmailEvent(order.getUser(), order.getOrderName(), order.getTotalAmount());
-            eventPublisher.publishEvent(event);
-            eventPublisher.publishEvent(new PaymentCompleteEvent(order.getUser(), order.getOrderName(), order.getTotalAmount()));
+            response = paymentApiClient.confirmPayment(request);
         } catch (Exception e) {
-            throw new CustomException(ErrorCode.PAYMENT_CONFIRM_FAILED);
+            throw new CustomException(ErrorCode.API_FAILED, e);
+        }
+
+        //정규화 진행
+        Normalized normalizePayment = normalizer.normalize(response, request.getPaymentKey());
+        try {
+            return afterConfirmTransactionService.approveInTransaction(orderNumber, normalizePayment);
+        } catch (RuntimeException e) {
+            String idempotencyKey = idemGen.forCancel(normalizePayment.paymentKey(), normalizePayment.totalAmount(), DB_FAILED_REASON);
+            log.error("[CONFIRM] approveInTransaction failed. orderId={}, paymentKey={}",
+                    order.getOrderNumber(), normalizePayment.paymentKey(), e);
+
+            boolean canceled = bestEffortCancel(normalizePayment.paymentKey(),(Long) response.get("totalAmount"),DB_FAILED_REASON,idempotencyKey);
+            if (!canceled) {
+                outboxService.enqueue(normalizePayment.paymentKey(), (Long) response.get("totalAmount"), DB_FAILED_REASON,idempotencyKey);
+            }
+
+            throw new CustomException(ErrorCode.PAYMENT_FAILED);
         }
     }
 
-    private void savePaymentInfo(String methodKorean, TossPaymentRequest request) {
-        // 주문 정보 조회(이거뭐죠??)
-        Order order = orderRepository.findByOrderNumber(request.getOrderId())
-                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
-
-        PaymentMethodType paymentMethodType = PaymentMethodType.fromKorean(methodKorean);
-        PaymentsType paymentsType = findPaymentsType(paymentMethodType);
-        Long totalPrice = request.getAmount();
-
-        // Payments 엔티티 생성과 저장
-        Payments payment = Payments.create(order,paymentsType,totalPrice, LocalDateTime.now());
-        paymentsRepository.save(payment);
-    }
-
-    private PaymentsType findPaymentsType(PaymentMethodType paymentMethodType){
-        return paymentsTypeRepository.findByTypeName(paymentMethodType)
-                .orElseThrow(()-> new CustomException(ErrorCode.UNSUPPORTED_PAYMENT_METHOD)); // restControllerAdvice
+    private boolean bestEffortCancel(String paymentKey,Long totalAmount, String reason, String idempotencyKey) {
+        try {
+            paymentApiClient.tossPaymentCancel(paymentKey, totalAmount, reason,idempotencyKey);
+            return true;
+        } catch (Exception ignore) {
+            return false;
+        }
     }
 }

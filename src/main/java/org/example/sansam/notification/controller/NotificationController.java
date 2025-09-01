@@ -17,8 +17,6 @@ import org.example.sansam.notification.service.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.yaml.snakeyaml.emitter.EmitterException;
 
 import java.util.List;
 
@@ -30,48 +28,6 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
-
-    @Operation(
-            summary = "SSE 구독 시작",
-            description = """
-        클라이언트가 서버와 SSE(EventSource) 연결을 맺습니다.
-        응답 스트림은 `text/event-stream`으로 유지됩니다.
-        """,
-            parameters = {
-                    @Parameter(
-                            name = "userId", in = ParameterIn.PATH, required = true,
-                            description = "구독할 사용자 ID", example = "1"
-                    )
-            }
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "SSE 연결 성공",
-                    content = @Content(mediaType = "text/event-stream",
-                            schema = @Schema(implementation = String.class),
-                            examples = @ExampleObject(
-                                    name = "EventStream",
-                                    value = "id: 1\nevent: notification\ndata: {\"title\":\"결제완료\",\"message\":\"주문이 완료되었습니다.\"}\n\n"
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "503", description = "SSE 연결 불가(서버 과부하/일시적 오류)"),
-            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-    })
-    @GetMapping(value = "/subscribe/{userId}", produces = "text/event-stream; charset=UTF-8")
-    public ResponseEntity<SseEmitter> subscribe(@PathVariable Long userId) {
-        try {
-            SseEmitter emitter = notificationService.connect(userId);
-            return ResponseEntity.ok(emitter);
-
-        } catch (EmitterException e) {
-            log.error("SSE 연결 실패 - userId: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
-
-        } catch (Exception e) {
-            log.error("알 수 없는 SSE 연결 오류 - userId: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
 
     @Operation(
             summary = "알림 이력 조회",
@@ -88,26 +44,26 @@ public class NotificationController {
                             examples = @ExampleObject(
                                     name = "ListExample",
                                     value = """
-                    [
-                      {
-                        "id": 1001,
-                        "title": "결제 완료",
-                        "message": "주문이 완료되었습니다.",
-                        "type": "PAYMENT_SUCCESS",
-                        "isRead": false,
-                        "createdAt": "2025-08-10T14:02:00"
-                      }
-                      ,
-                      {
-                        "id": 1002,
-                        "title": "결제 취소",
-                        "message": "결제가 취소되었습니다.",
-                        "type": "PAYMENT_CANCEL",
-                        "isRead": false,
-                        "createdAt": "2025-08-10T14:03:00"
-                      }
-                    ]
-                    """
+                                            [
+                                              {
+                                                "id": 1001,
+                                                "title": "결제 완료",
+                                                "message": "주문이 완료되었습니다.",
+                                                "type": "PAYMENT_SUCCESS",
+                                                "isRead": false,
+                                                "createdAt": "2025-08-10T14:02:00"
+                                              }
+                                              ,
+                                              {
+                                                "id": 1002,
+                                                "title": "결제 취소",
+                                                "message": "결제가 취소되었습니다.",
+                                                "type": "PAYMENT_CANCEL",
+                                                "isRead": false,
+                                                "createdAt": "2025-08-10T14:03:00"
+                                              }
+                                            ]
+                                            """
                             )
                     )
             ),
@@ -116,15 +72,11 @@ public class NotificationController {
     })
     @GetMapping("/list/{userId}")
     public ResponseEntity<List<NotificationDTO>> getNotificationList(@PathVariable Long userId) {
-        try {
-            List<NotificationDTO> histories = notificationService.getNotificationHistories(userId);
-            if (histories.isEmpty()) {
-                return ResponseEntity.noContent().build();
-            }
-            return ResponseEntity.ok(histories);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        List<NotificationDTO> histories = notificationService.getNotificationHistories(userId);
+        if (histories.isEmpty()) {
+            return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.ok(histories);
     }
 
     @Operation(
@@ -146,13 +98,8 @@ public class NotificationController {
     })
     @GetMapping("/unread-count/{userId}")
     public ResponseEntity<?> getUnreadNotificationCount(@PathVariable Long userId) {
-        try {
-            Long notificationCount = notificationService.getUnreadNotificationCount(userId);
-
-            return ResponseEntity.ok(notificationCount);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("읽지 않은 알림 카운트 실패");
-        }
+        Long notificationCount = notificationService.getUnreadNotificationCount(userId);
+        return ResponseEntity.ok(notificationCount);
     }
 
     @Operation(
@@ -170,16 +117,8 @@ public class NotificationController {
     })
     @PatchMapping("/read/{notificationHistoriesId}")
     public ResponseEntity<Void> markAsRead(@PathVariable Long notificationHistoriesId) {
-        try {
-            notificationService.markAsRead(notificationHistoriesId);
-
-            return ResponseEntity.ok().build();
-        } catch (CustomException e) {
-            return ResponseEntity.status(e.getErrorCode().getStatus())
-                    .build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        notificationService.markAsRead(notificationHistoriesId);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(
@@ -196,13 +135,8 @@ public class NotificationController {
     })
     @PatchMapping("/read-all/{userId}")
     public ResponseEntity<Void> markAllAsRead(@PathVariable Long userId) {
-        try {
-            notificationService.markAllAsRead(userId);
-
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        notificationService.markAllAsRead(userId);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(
@@ -221,15 +155,8 @@ public class NotificationController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     @DeleteMapping("/delete/{userId}/{notificationHistoriesId}")
-    public  ResponseEntity<Void> deleteNotification(@PathVariable Long userId, @PathVariable Long notificationHistoriesId) {
-        try {
-            notificationService.deleteNotificationHistory(userId, notificationHistoriesId);
-            return ResponseEntity.ok().build();
-        }catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-
-
-
+    public ResponseEntity<Void> deleteNotification(@PathVariable Long userId, @PathVariable Long notificationHistoriesId) {
+        notificationService.deleteNotificationHistory(userId, notificationHistoriesId);
+        return ResponseEntity.ok().build();
     }
 }

@@ -8,6 +8,16 @@ public class CustomException extends RuntimeException{
         this.errorCode=errorCode;
     }
 
+    public CustomException(ErrorCode errorCode, String overrideMessage) {
+        super(overrideMessage);
+        this.errorCode = errorCode;
+    }
+
+    public CustomException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode.getMessage(), cause);
+        this.errorCode = errorCode;
+    }
+
     public ErrorCode getErrorCode(){
         return errorCode;
     }

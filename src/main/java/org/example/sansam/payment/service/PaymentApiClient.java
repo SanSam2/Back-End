@@ -62,14 +62,13 @@ public class PaymentApiClient {
         }
     }
 
-    public Map<String, Object> tossPaymentCancel(String paymentKey, Long cancelAmount, String cancelReason) {
+    public Map<String, Object> tossPaymentCancel(String paymentKey, Long cancelAmount, String cancelReason,String idempotencyKey) {
         String url = tossCancelUrl + "/" + paymentKey + "/cancel";
-
-        RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBasicAuth(secretKey, "");
+        headers.set("Idempotency-Key", idempotencyKey);
 
         Map<String, String> requestBody = new HashMap<>();
         requestBody.put("cancelReason", cancelReason);
@@ -78,15 +77,10 @@ public class PaymentApiClient {
         HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    request,
-                    Map.class
-            );
+            ResponseEntity<Map> response = this.restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
             return response.getBody();
         } catch (Exception e) {
-            throw new IllegalStateException("결제 취소 요청 중 오류가 발생했습니다: " + e.getMessage());
+            throw new CustomException(ErrorCode.API_INTERNAL_ERROR);
         }
     }
 

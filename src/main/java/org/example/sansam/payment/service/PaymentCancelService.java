@@ -4,17 +4,16 @@ import lombok.RequiredArgsConstructor;
 
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
-import org.example.sansam.notification.event.PaymentCancelEvent;
-import org.example.sansam.notification.event.PaymentCanceledEmailEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.domain.OrderProduct;
+import org.example.sansam.payment.adapter.CancelResponseNormalize;
+import org.example.sansam.payment.util.IdempotencyKeyUtil;
+import org.example.sansam.payment.dto.CancelResponse;
+import org.example.sansam.payment.policy.CancellationPolicy;
 import org.example.sansam.order.repository.OrderRepository;
-import org.example.sansam.payment.domain.PaymentCancellation;
-import org.example.sansam.payment.domain.PaymentCancellationHistory;
+import org.example.sansam.payment.dto.CancelProductRequest;
 import org.example.sansam.payment.dto.PaymentCancelRequest;
-import org.example.sansam.payment.repository.PaymentsCancelRepository;
-import org.example.sansam.status.domain.Status;
-import org.example.sansam.status.domain.StatusEnum;
+import org.example.sansam.payment.repository.PaymentsRepository;
 import org.example.sansam.status.repository.StatusRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -22,112 +21,68 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PaymentCancelService {
 
     private final PaymentApiClient paymentApiClient;
-
-    private final PaymentsCancelRepository paymentsCancelRepository;
+    private final AfterConfirmTransactionService afterConfirmTransactionService;
 
     private final OrderRepository orderRepository;
-    private final StatusRepository statusRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final CancellationPolicy cancellationPolicy;
+    private final CancelResponseNormalize normalizeResponse;
 
 
     @Transactional
-    public String wantToCancel(PaymentCancelRequest request) {
-        try{
-            //orderId 즉, orderNumber를 받아서, order찾기 (주문과 주문 상품 한방에 fetch join으로 가져옴)
-            Order order = orderRepository.findOrderWithProducts(request.getOrderId());
-            Status cancelRequested = statusRepository.findByStatusName(StatusEnum.ORDER_CANCEL_REQUESTED);
-            Status orderPartialCanceled = statusRepository.findByStatusName(StatusEnum.ORDER_PARTIAL_CANCELED);
-            Status orderAllCanceled = statusRepository.findByStatusName(StatusEnum.ORDER_ALL_CANCELED);
-            Status cancelCompleted = statusRepository.findByStatusName(StatusEnum.CANCEL_COMPLETED);
+    public CancelResponse wantToCancel(PaymentCancelRequest request) {
 
-            order.changeStatus(cancelRequested);
-            Long cancelTotalAmount =order.getTotalAmount();
-            int cancelTotalQuantity = 0;
-
-            //orderProduct 상태값 변경
-            List<PaymentCancellationHistory> histories = new ArrayList<>();
-            for (OrderProduct op : order.getOrderProducts()) {
-                op.updateOrderProductStatus(orderAllCanceled);
-
-                PaymentCancellationHistory history = PaymentCancellationHistory.create(
-                        op.getId(),         // orderProductId
-                        op.getQuantity(),   // 전체수량만큼 취소
-                        cancelRequested     // 취소요청받은 상태
-                );
-                cancelTotalQuantity +=op.getQuantity();
-                histories.add(history);
-            }
-
-
-            //토스에서 진행
-            String paymentKey = order.getPaymentKey();
-            Map<String, Object> cancelResult = paymentApiClient.tossPaymentCancel(paymentKey,cancelTotalAmount, request.getCancelReason());
-
-            // 취소 결과 검증
-            if (cancelResult == null || !cancelResult.containsKey("status")) {
-                throw new CustomException(ErrorCode.API_INTERNAL_ERROR);
-            }
-
-            //취소 응답을 통한 결과값 가져오기 (확인하기 일부 취소 잘 된건지)
-            Object cancelsObj = cancelResult.get("cancels");
-            if(!(cancelsObj instanceof List<?> cancelsList) || cancelsList.isEmpty()){
-                throw new CustomException(ErrorCode.CANCEL_NOT_FOUND);
-            }
-
-            Object lastCancelObj = cancelsList.get(cancelsList.size()-1);
-            if(!(lastCancelObj instanceof Map<?, ?> lastCancelMap)){
-                throw new CustomException(ErrorCode.RESPONSE_FORM_NOT_RIGHT);
-            }
-
-            int cancelAmount = cancelTotalQuantity;
-            String cancelReason = (String) lastCancelMap.get("cancelReason");
-            String canceledAt = (String) lastCancelMap.get("canceledAt");
-            LocalDateTime cancelDateTime = LocalDateTime.parse(canceledAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-            Long refundPrice = lastCancelMap.get("cancelAmount")!= null ?
-                    Long.parseLong(lastCancelMap.get("cancelAmount").toString()) : null;
-
-            if(order.isAllCanceled()){
-                order.changeStatus(orderAllCanceled);
-            }else{
-                order.changeStatus(orderPartialCanceled);
-            }
-            for (OrderProduct op : order.getOrderProducts()) {
-                op.updateOrderProductStatus(orderAllCanceled);
-            }
-
-            // 취소 내역 저장
-            PaymentCancellation cancellation = PaymentCancellation.create(paymentKey,
-                    cancelAmount,
-                    refundPrice,
-                    cancelReason,
-                    order.getId(),
-                    cancelDateTime);
-            for(PaymentCancellationHistory history : histories){
-                history.changeStatus(cancelCompleted);
-            }
-            cancellation.addHistories(histories);
-            paymentsCancelRepository.save(cancellation);
-            PaymentCanceledEmailEvent event = new PaymentCanceledEmailEvent(order.getUser(), order.getOrderName(), cancelTotalAmount);
-            eventPublisher.publishEvent(event);
-            eventPublisher.publishEvent(new PaymentCancelEvent(order.getUser(), order.getOrderName(), cancelTotalAmount));
-
-            // 주문 상태 CANCELED
-            orderRepository.save(order);
-
-
-            return "취소가 완료되었습니다.";
-        }catch(Exception e){
-            return "취소가 실패하였습니다. : "+e.getMessage();
+        //컨트롤러 응답값 방어
+        if (request == null || request.getItems() == null || request.getItems().isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
+
+        //order 검증(policy를 통해, 존재하는지, 주문했던 재고에 맞게 취소하는건지, 상태가 취소할 수 있는 상태인지 (주문과 주문상태 둘다))
+        Order cancelOrder = orderRepository.findOrderByOrderNumber(request.getOrderId());
+        List<CancelProductRequest> productRequests = request.getItems();
+        cancellationPolicy.validate(cancelOrder, productRequests);
+
+        //토스에 보낼 정보 구하기 (취소 총 가격 + paymentKey)
+        Map<Long, Long> unitPriceByOpId = cancelOrder.getOrderProducts().stream()
+                .collect(Collectors.toMap(
+                        OrderProduct::getId,
+                        op -> op.getOrderedProductPrice()
+                ));
+
+        long cancelTotalAmount = request.getItems().stream()
+                .mapToLong(i -> {
+                    Long opId = i.getOrderProductId();
+                    if (opId == null)
+                        throw new CustomException(ErrorCode.INVALID_REQUEST);
+                    Long unit = unitPriceByOpId.get(opId);
+                    if (unit == null)
+                        throw new CustomException(ErrorCode.ORDER_PRODUCT_NOT_BELONGS_TO_ORDER);
+                    return Math.multiplyExact(unit, (long) i.getCancelQuantity());
+                })
+                .sum();
+
+        String paymentKey = Optional.ofNullable(cancelOrder.getPaymentKey())
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENTS_NOT_FOUND));
+
+        String idempotencyKey = IdempotencyKeyUtil.forCancel(
+                paymentKey,
+                cancelTotalAmount,
+                request.getCancelReason()
+        );
+
+
+        //토스로 취소 요청 보내기
+        Map<String, Object> cancelResult = paymentApiClient.tossPaymentCancel(paymentKey ,cancelTotalAmount, request.getCancelReason(),idempotencyKey);
+        CancelResponseNormalize.ParsedCancel parsed = normalizeResponse.parseTossCancelResponse(cancelResult);
+
+        return afterConfirmTransactionService.saveCancellation(cancelOrder,parsed,request,idempotencyKey);
     }
 
 }

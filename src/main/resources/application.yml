@@ -1,87 +1,11 @@
-server:
-  port: ${SERVER_PORT:8080}
-  address: 0.0.0.0
-
-  servlet:
-    session:
-      timeout: 120m
-      cookie:
-        name: JSESSIONID
-        http-only: true
-        secure: true
-        same-site: none
-
 spring:
   thymeleaf:
     encoding: UTF-8
   application:
     name: SanSam
-
-  datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-    open-in-view: false
-
-  mail:
-    host: ${SPRING_MAIL_HOST}
-    port: ${SPRING_MAIL_PORT}
-    username: ${SPRING_MAIL_USERNAME}
-    password: ${SPRING_MAIL_PASSWORD}    # 앱 비밀번호 (환경변수)
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-    default-encoding: UTF-8
-
-toss:
-  secret-key: ${TOSS_SECRET_KEY}
-  confirm-url: ${TOSS_CONFIRM_URL}
-  cancel-url: ${TOSS_CANCEL_URL}
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: prometheus, health, info
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  endpoint:
-    health:
-      probes:
-        enabled: true
-
-cloud:
-  aws:
-    s3:
-      bucket: ${AWS_BUCKET_NAME}
-      custom:
-        dir: /images
-        defaultUrl: https://${AWS_BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/
-      path:
-        review: reviews
-    region:
-      static: ap-northeast-2
-    stack:
-      auto: false
-    credentials:
-      accessKey: ${AWS_ACCESS_KEY}
-      secretKey: ${AWS_SECRET_KEY}
-
-cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS}
-
-websocket:
-  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS}
+  profiles:
+    default: local  # 기본은 local로
+    group:
+      prod: prod
+      local: local
+      test: test

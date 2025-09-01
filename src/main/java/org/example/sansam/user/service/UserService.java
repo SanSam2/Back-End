@@ -2,8 +2,8 @@ package org.example.sansam.user.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sansam.notification.event.UserWelcomeEmailEvent;
-import org.example.sansam.notification.event.WelcomeNotificationEvent;
+import org.example.sansam.notification.event.email.UserWelcomeEmailEvent;
+import org.example.sansam.notification.event.sse.WelcomeNotificationEvent;
 import org.example.sansam.user.domain.Role;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.dto.RegisterRequest;
@@ -12,7 +12,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
