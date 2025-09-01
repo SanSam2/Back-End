@@ -1,5 +1,6 @@
-src/main/resources/application.yml
-src/main/resources/application-aws.yml
+src/test
+src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
 
 # Created by https://www.toptal.com/developers/gitignore/api/windows,java,gradle,intellij
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,java,gradle,intellij

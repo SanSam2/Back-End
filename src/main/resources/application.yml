@@ -24,9 +24,9 @@ spring:
       test: test
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:mysql://localhost:3305/sansam
+    username: root
+    password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -45,10 +45,10 @@ spring:
       enabled: false              # 앱 시작할 때 배치 잡 자동 실행하지 않음 (테스트/스케줄러로만 실행)
 
   mail:
-    host: ${SPRING_MAIL_HOST}
-    port: ${SPRING_MAIL_PORT}
-    username: ${SPRING_MAIL_USERNAME}
-    password: ${SPRING_MAIL_PASSWORD}    # 앱 비밀번호 (환경변수)
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}    # 앱 비밀번호 (환경변수)
     properties:
       mail:
         smtp:
@@ -69,7 +69,7 @@ management:
         include: prometheus, health, info
   metrics:
     tags:
-      application: ${spring.application.name}
+      application: SanSam
   endpoint:
     health:
       probes:
