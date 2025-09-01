@@ -40,7 +40,6 @@ public class PaymentCancelWorker {
             if (updated == 0)
                 continue; // 누군가가 먼저 잡았음
 
-            ß
             // 2) 각 잡 처리는 별도 트랜잭션으로 (부분 실패/성공 분리)
             processor.processOne(job.getId());
         }
