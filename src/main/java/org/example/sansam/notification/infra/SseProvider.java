@@ -15,7 +15,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile({"local", "test"})
+@Profile({"local","prod","test"})
 public class SseProvider implements PushProvider {
 
     private final SseConnector sseConnector;
