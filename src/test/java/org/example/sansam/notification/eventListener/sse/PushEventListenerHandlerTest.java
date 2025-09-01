@@ -50,12 +50,12 @@ class PushEventListenerHandlerTest {
 
         doThrow(new RuntimeException("SSE 실패"))
                 .when(pushProvider)
-                .push(anyLong(), anyLong(), anyString(), anyString());
+                .push(anyLong(), anyString(), anyString());
 
         // when & then (예외가 외부로 전파되면 테스트 실패)
         assertThrows(RuntimeException.class, () -> handler.onNotificationSaved(event));
 
         verify(pushProvider, times(1))
-                .push(2L, 200L,"WELCOME", "{\"msg\":\"hello\"}");
+                .push(2L, "WELCOME", "{\"msg\":\"hello\"}");
     }
 }

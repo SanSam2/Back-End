@@ -89,8 +89,6 @@ class SseProviderTest {
     void broadcast_when_all_users_have_emitters_then_call_send_method_of_all_emitters() throws IOException {
         // given
         SseConnector sseConnector = mock(SseConnector.class);
-        Executor executor = Runnable::run;
-        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         SseEmitter emitter1 = mock(SseEmitter.class);
         SseEmitter emitter2 = mock(SseEmitter.class);
 
@@ -101,10 +99,10 @@ class SseProviderTest {
                 )
         );
 
-        SseProvider sseProvider = new SseProvider(sseConnector, executor, meterRegistry);
+        SseProvider sseProvider = new SseProvider(sseConnector);
         // when
 
-        sseProvider.broadcast(200L, "welcomeMessage", "{\"msg\":\"hi\"}");
+        sseProvider.broadcast("welcomeMessage", "{\"msg\":\"hi\"}");
         // then
         verify(emitter1, times(1)).send(any(SseEmitter.SseEventBuilder.class));
         verify(emitter2, times(1)).send(any(SseEmitter.SseEventBuilder.class));
@@ -117,22 +115,21 @@ class SseProviderTest {
         // given
         SseConnector sseConnector = mock(SseConnector.class);
         SseEmitter badEmitter = mock(SseEmitter.class);
-        Executor executor = Runnable::run;
-        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+
 
         doThrow(new RuntimeException("boom"))
                 .when(badEmitter).send(any(SseEmitter.SseEventBuilder.class));
 
         when(sseConnector.getAllEmitters()).thenReturn(Map.of(1L, List.of(badEmitter)));
 
-        SseProvider sseProvider = new SseProvider(sseConnector, executor, meterRegistry);
+        SseProvider sseProvider = new SseProvider(sseConnector);
 
         // when
-        sseProvider.broadcast(200L, "welcomeMessage", "{\"msg\":\"hi\"}");
+        sseProvider.broadcast("welcomeMessage", "{\"msg\":\"hi\"}");
 
         // then
         verify(badEmitter, times(1)).completeWithError(any(RuntimeException.class));
-        verify(sseConnector, times(1)).removeEmitter(badEmitter);
+        verify(sseConnector, times(1)).removeEmitter(1L, badEmitter);
     }
 
     @DisplayName("broadcast 중 Broken pipe IOException 발생 시 debug 로그를 찍고 emitter를 제거한다.")
@@ -141,86 +138,18 @@ class SseProviderTest {
         // given
         SseConnector sseConnector = mock(SseConnector.class);
         SseEmitter badEmitter = mock(SseEmitter.class);
-        Executor executor = Runnable::run;
-        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
 
         doThrow(new IOException("Broken pipe"))
                 .when(badEmitter).send(any(SseEmitter.SseEventBuilder.class));
 
         when(sseConnector.getAllEmitters()).thenReturn(Map.of(1L, List.of(badEmitter)));
-        SseProvider sseProvider = new SseProvider(sseConnector, executor, meterRegistry);
+        SseProvider sseProvider = new SseProvider(sseConnector);
 
         // when
-        sseProvider.broadcast(200L, "welcomeMessage", "{\"msg\":\"Broken pipe test\"}");
+        sseProvider.broadcast("welcomeMessage", "{\"msg\":\"Broken pipe test\"}");
 
         // then
         verify(badEmitter, times(1)).completeWithError(any(IOException.class));
-        verify(sseConnector, times(1)).removeEmitter(badEmitter);
-    }
-
-    @DisplayName("resend - missed가 비어있으면 아무 일도 하지 않는다.")
-    @Test
-    void resend_when_missed_is_empty_then_do_nothing() {
-        // given
-        SseConnector sseConnector = mock(SseConnector.class);
-        Executor executor = Runnable::run;
-        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
-        SseProvider sseProvider = spy(new SseProvider(sseConnector, executor, meterRegistry));
-
-        // when
-        sseProvider.resend(1L, List.of());
-
-        // then
-        verify(sseProvider, never()).push(anyLong(), anyLong(), anyString(), anyString());
-    }
-
-    @DisplayName("resend - missed 알림이 있으면 push를 호출한다.")
-    @Test
-    void resend_when_missed_is_not_empty_then_call_push() {
-        // given
-        SseConnector sseConnector = mock(SseConnector.class);
-        Executor executor = Runnable::run;
-        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
-        SseProvider sseProvider = spy(new SseProvider(sseConnector, executor, meterRegistry));
-
-        NotificationHistories nh = NotificationHistories.builder()
-                .id(10L)
-                .eventName("welcomeMessage")
-                .title("t1")
-                .message("m1")
-                .createdAt(java.time.LocalDateTime.now())
-                .expiredAt(java.time.LocalDateTime.now().plusDays(1))
-                .isRead(false)
-                .build();
-
-        // when
-        sseProvider.resend(1L, List.of(nh));
-
-        // then
-        verify(sseProvider, times(1))
-                .push(eq(1L), eq(10L), eq("welcomeMessage"), anyString());
-    }
-
-    @DisplayName("resend - 직렬화 실패 시 예외를 삼키고 로그만 찍는다.")
-    @Test
-    void resend_when_serialization_fails_then_catch_exception() {
-        // given
-        SseConnector sseConnector = mock(SseConnector.class);
-        Executor executor = Runnable::run;
-        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
-        SseProvider sseProvider = spy(new SseProvider(sseConnector, executor, meterRegistry));
-
-        NotificationHistories nh = mock(NotificationHistories.class);
-
-        try (MockedStatic<NotificationDTO> mocked = mockStatic(NotificationDTO.class)) {
-            mocked.when(() -> NotificationDTO.from(nh))
-                    .thenThrow(new RuntimeException("Serialization failed"));
-
-            // when
-            sseProvider.resend(1L, List.of(nh));
-
-            // then
-            verify(sseProvider, never()).push(anyLong(), anyLong(), anyString(), anyString());
-        }
+        verify(sseConnector, times(1)).removeEmitter(1L, badEmitter);
     }
 }
