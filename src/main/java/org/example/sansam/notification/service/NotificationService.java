@@ -102,15 +102,6 @@ public class NotificationService {
                 .isRead(false)
                 .build();
 
-//        NotificationHistories saved = notificationHistoriesRepository.save(notification);
-        //        if (saved.getId() == null) { //fix:이부분 확인 필요
-//            throw new CustomException(ErrorCode.NOTIFICATION_SAVE_FAILED);
-//        }
-        // think: 성공/실패 기준으로 부적절함.
-        //  save() 호출 뒤에 플러시나 커밋 시점이 생길 수도 있기 때문에 오류가 발생
-        //  (내가 생각한 부분은 saved.getId() == null)이 반영이 안 될 가능성도 있기 때문에 굳이?인 코드였다.
-        //  그리고 실패는 예외로 구분하는 것이 맞기 때문에 불필요한 분기/중복이다.
-        //  저장 성공 여부는 영속성 계층의 책임.
         return notificationHistoriesRepository.save(notification);
     }
 
