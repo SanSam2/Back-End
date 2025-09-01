@@ -18,7 +18,7 @@ public class StockRestoreOutBoxService {
         try {
             repo.save(StockRestoreOutBox.create(orderId, detailId, qty, idemKey));
         } catch (DataIntegrityViolationException e) {
-            // uk_sro_idem(=idempotencyKey) 중복 이미 큐에 있으니 OK로 취급
+            // idempotencyKey 중복 이미 큐에 있으니 OK로 취급
         }
     }
 }
