@@ -22,7 +22,7 @@ public interface PaymentMapper {
 
     default String mapMethod(Payments payment) {
         if (payment == null || payment.getPaymentsType() == null) return null;
-        var type = payment.getPaymentsType().getTypeName(); // enum PaymentMethodType
+        PaymentMethodType type = payment.getPaymentsType().getTypeName();
         if (type == null) return null;
         try {
             return type.toKorean();

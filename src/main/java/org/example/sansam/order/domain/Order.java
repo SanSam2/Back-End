@@ -98,6 +98,10 @@ public class Order {
         this.status = status;
     }
 
+    public void changeStatusMarkExpired(Status orderExpired){
+        changeStatus(orderExpired);
+    }
+
     public void changeStatusWhenCompletePayment(Status orderPaid, Status orderProductPaid) {
         if(orderProducts.isEmpty()){
             throw new CustomException(ErrorCode.NO_ITEM_IN_ORDER);

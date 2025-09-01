@@ -52,6 +52,7 @@ public class OrderService {
     private final OrderNumberPolicy orderNumberPolicy;
     private final PricingPolicy pricingPolicy;
     private final OrderSummaryMapper mapper;
+    private int cnt=0;
 
 
     @Transactional
@@ -62,7 +63,7 @@ public class OrderService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.NO_USER_ERROR));
 
-        //상품 정규화 -> 예를 들어서 그럴 일은 없으나, 상품 정보가 막 겹쳐서 들어오면? + 데드락 방지
+        //상품 정규화 -> 예를 들어서 그럴 일은 없으나, 상품 정보가 막 겹쳐서 들어오면?
         List<OrderItemDto> items = normalize(request.getItems());
         if (items.isEmpty()) throw new CustomException(ErrorCode.NO_ITEM_IN_ORDER);
 
@@ -85,6 +86,7 @@ public class OrderService {
                     it.getProductColor(), it.getProductSize(), it.getProductId()
             );
 
+            stockService.checkItemStock(detailId);
             stockService.decreaseStock(detailId,it.getQuantity());
         }
 
@@ -108,6 +110,9 @@ public class OrderService {
 
         orderRepository.save(order);
         List<OrderItemResponseDto> responseDtos = fromOrderToResponse(order);
+        log.info(Thread.currentThread().getName() + " 저장 성공");
+        cnt++;
+        log.info("cnt= {}", cnt);
         return new OrderResponse(order, responseDtos);
     }
 
