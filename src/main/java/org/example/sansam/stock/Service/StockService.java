@@ -1,13 +1,15 @@
 package org.example.sansam.stock.Service;
 
 
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
+import lombok.Synchronized;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.stock.domain.Stock;
 import org.example.sansam.stock.repository.StockRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,18 +19,23 @@ public class StockService {
 
 
     @Transactional
-    public int checkItemStock(Long detailId){
-        Stock stock = stockRepository.findByProductDetailsId(detailId)
-                .orElseThrow(()->new CustomException(ErrorCode.ZERO_STOCK));
-        return stock.getStockQuantity();
+    public void decreaseStock(Long productDetailId, int quantity) {
+        int updated = stockRepository.decreaseIfEnough(productDetailId, quantity);
+        if (updated == 0) {
+            throw new CustomException(ErrorCode.NOT_ENOUGH_STOCK);
+        }
     }
 
     @Transactional
-    public void decreaseStock(Long productDetailId, int quanitty){
-        Stock stock = stockRepository.findByProductDetailsId(productDetailId)
-                .orElseThrow(()->new CustomException(ErrorCode.ZERO_STOCK));
-        stock.decrease(quanitty);
+    public void increaseStock(Long productDetailId, int quantity) {
+        stockRepository.increase(productDetailId, quantity);
     }
 
+    @Transactional(readOnly = true)
+    public int checkItemStock(Long detailId){
+        return stockRepository.findByProductDetailsId(detailId)
+                .map(Stock::getStockQuantity)
+                .orElse(0);
+    }
 
 }

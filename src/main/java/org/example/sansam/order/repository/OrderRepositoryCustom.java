@@ -19,4 +19,6 @@ public interface OrderRepositoryCustom {
     List<Order> findOrdersWithItemsByIds(List<Long> ids);
 
     int deleteExpiredWaitingOrders(Status status, LocalDateTime expiredAt);
+    List<Long> findExpiredWaitingOrderIds(Status waiting, LocalDateTime expiredAt, int limit);
+    Optional<Order> findByIdWithItems(Long id);
 }

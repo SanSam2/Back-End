@@ -1,6 +1,7 @@
 package org.example.sansam.payment.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.order.domain.Order;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -36,6 +38,7 @@ public class PaymentService {
         // 주문조회 -> 확실하게 결제 confirm해줘도 되는것인지에 대한 컨펌(?)
         Order order = orderRepository.findByOrderNumber(request.getOrderId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+        String orderNumber = order.getOrderNumber();
 
         //다시 진행하는 가격검증
         if(!Objects.equals(order.getTotalAmount(), request.getAmount())){
@@ -53,9 +56,11 @@ public class PaymentService {
         //정규화 진행
         Normalized normalizePayment = normalizer.normalize(response, request.getPaymentKey());
         try {
-            return afterConfirmTransactionService.approveInTransaction(order, normalizePayment);
+            return afterConfirmTransactionService.approveInTransaction(orderNumber, normalizePayment);
         } catch (RuntimeException e) {
             String idempotencyKey = idemGen.forCancel(normalizePayment.paymentKey(), normalizePayment.totalAmount(), DB_FAILED_REASON);
+            log.error("[CONFIRM] approveInTransaction failed. orderId={}, paymentKey={}",
+                    order.getOrderNumber(), normalizePayment.paymentKey(), e);
 
             boolean canceled = bestEffortCancel(normalizePayment.paymentKey(),(Long) response.get("totalAmount"),DB_FAILED_REASON,idempotencyKey);
             if (!canceled) {

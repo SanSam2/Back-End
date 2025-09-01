@@ -9,6 +9,7 @@ import org.example.sansam.notification.event.email.PaymentCompleteEmailEvent;
 import org.example.sansam.notification.event.sse.PaymentCompleteEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.domain.OrderProduct;
+import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.payment.Mapper.PaymentMapper;
 import org.example.sansam.payment.adapter.CancelResponseNormalize;
 import org.example.sansam.payment.domain.PaymentCancellation;
@@ -40,17 +41,19 @@ public class AfterConfirmTransactionService {
     private final StatusRepository statusRepository;
     private final PaymentMapper paymentMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final OrderRepository orderRepository;
 
 
     private final PaymentsCancelRepository paymentsCancelRepository;
 
     @Transactional
-    public TossPaymentResponse approveInTransaction(Order order, Normalized normalizePayment) {
+    public TossPaymentResponse approveInTransaction(String orderNumber, Normalized normalizePayment) {
         // 멱등성보장 : 같은 paymentKey면 기존 결과 반환
         Payments existing = paymentsRepository.findByPaymentKey(normalizePayment.paymentKey()).orElse(null);
         if (existing != null)
             return paymentMapper.toTossPaymentResponse(existing);
 
+        Order order =  orderRepository.findOrderByOrderNumber(orderNumber);
         Status paymentComplete = statusRepository.findByStatusName(StatusEnum.PAYMENT_COMPLETED);
 
         // 결제 엔티티 생성 & 영속화
@@ -67,9 +70,9 @@ public class AfterConfirmTransactionService {
         Status opPaid    = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_REQUIRED);
         order.changeStatusWhenCompletePayment(orderPaid, opPaid);
 
-        // 현재 트랜잭션 안에서 발행되고 있음,...Listener가 afterCommit이어야함
-        eventPublisher.publishEvent(new PaymentCompleteEmailEvent(order.getUser(), order.getOrderName(), order.getTotalAmount()));
-        eventPublisher.publishEvent(new PaymentCompleteEvent(order.getUser(), order.getOrderName(), order.getTotalAmount()));
+//        // 현재 트랜잭션 안에서 발행되고 있음,...Listener가 afterCommit이어야함
+//        eventPublisher.publishEvent(new PaymentCompleteEmailEvent(order.getUser(), order.getOrderName(), order.getTotalAmount()));
+//        eventPublisher.publishEvent(new PaymentCompleteEvent(order.getUser(), order.getOrderName(), order.getTotalAmount()));
 
         return paymentMapper.toTossPaymentResponse(payment);
     }
