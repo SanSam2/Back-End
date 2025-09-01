@@ -6,6 +6,6 @@ spring:
   profiles:
     default: local  # 기본은 local로
     group:
-      prod: prod
+      perf: [perf, prod]
       local: local
       test: test
