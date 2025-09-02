@@ -118,6 +118,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     // note: data-jpa가 jdbc/aop를 끌어오므로 별도 선언 불필요
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'org.springframework.boot:spring-boot-starter-mail'

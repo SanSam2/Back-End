@@ -13,7 +13,7 @@ import org.example.sansam.exception.pay.ErrorCode;
 public class Stock {
 
     @Id
-    @Column(name="stock_id")
+    @Column(name = "stock_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -24,7 +24,7 @@ public class Stock {
     private Long productDetailsId;
 
 
-    protected Stock(){
+    protected Stock() {
         //JPA only
     }
 
