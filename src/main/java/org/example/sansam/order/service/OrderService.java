@@ -64,13 +64,24 @@ public class OrderService {
         if (items.isEmpty())
             throw new CustomException(ErrorCode.NO_ITEM_IN_ORDER);
 
+        LocalDateTime start1 = LocalDateTime.now();
         Preloaded pre = readOnlyOrderService.preloadReadOnly(request.getUserId(), items);
+        LocalDateTime end1 = LocalDateTime.now();
+        log.error(" preload time : {} ", end1.toInstant(java.time.ZoneOffset.UTC).toEpochMilli() - start1.toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
         Map<Long, String> productImageUrl = new HashMap<>();
 
+        LocalDateTime start2 = LocalDateTime.now();
         for (Product p : pre.productMap().values()) {
             productImageUrl.put(p.getId(), fileService.getImageUrl(p.getFileManagement().getId()));
         }
-        return afterConfirmOrderService.placeOrderTransaction(pre, items, productImageUrl);
+        LocalDateTime end2 = LocalDateTime.now();
+        log.error(" getImageUrl time : {} ", end2.toInstant(java.time.ZoneOffset.UTC).toEpochMilli() - start2.toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
+        LocalDateTime start3 = LocalDateTime.now();
+        OrderResponse orderResponse = afterConfirmOrderService.placeOrderTransaction(pre, items, productImageUrl);
+        LocalDateTime end3 = LocalDateTime.now();
+        log.error(" placeOrderTransaction time : {} ", end3.toInstant(java.time.ZoneOffset.UTC).toEpochMilli() - start3.toInstant(java.time.ZoneOffset.UTC).toEpochMilli());
+
+        return orderResponse;
     }
 
     //같은 요청이 들어오는 경우 병합해야지????
