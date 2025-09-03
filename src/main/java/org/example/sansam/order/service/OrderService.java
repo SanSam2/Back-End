@@ -11,6 +11,7 @@ import org.example.sansam.order.domain.nameformatter.KoreanOrdernameFormatter;
 import org.example.sansam.order.domain.ordernumber.OrderNumberPolicy;
 import org.example.sansam.order.domain.pricing.PricingPolicy;
 import org.example.sansam.order.dto.*;
+import org.example.sansam.order.mapper.OrderResponseMapper;
 import org.example.sansam.order.mapper.OrderSummaryMapper;
 import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.product.domain.Product;
@@ -44,90 +45,32 @@ public class OrderService {
     private final ProductService productService;
 
     private final FileService fileService;
-    private final UserRepository userRepository;
-    private final StatusRepository statusRepository;
-    private final ProductJpaRepository productJpaRepository;
+
+
     private final StockService stockService;
+    private final AfterConfirmOrderService afterConfirmOrderService;
+    private final ReadOnlyOrderService readOnlyOrderService;
 
     private final OrderNumberPolicy orderNumberPolicy;
     private final PricingPolicy pricingPolicy;
     private final OrderSummaryMapper mapper;
+
     private int cnt=0;
 
 
-    @Transactional
     public OrderResponse saveOrder(OrderRequest request){
-        Status waiting = statusRepository.findByStatusName(StatusEnum.ORDER_WAITING);
-        Status opWaiting = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_WAITING);
-
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new CustomException(ErrorCode.NO_USER_ERROR));
-
         //상품 정규화 -> 예를 들어서 그럴 일은 없으나, 상품 정보가 막 겹쳐서 들어오면?
         List<OrderItemDto> items = normalize(request.getItems());
-        if (items.isEmpty()) throw new CustomException(ErrorCode.NO_ITEM_IN_ORDER);
+        if (items.isEmpty())
+            throw new CustomException(ErrorCode.NO_ITEM_IN_ORDER);
 
-        //상품 가격에서 한방에 로딩해서 불러와야되니까...
-        Map<Long, Product> productMap = productJpaRepository.findAllById(
-                items.stream().map(OrderItemDto::getProductId).toList()
-        ).stream().collect(Collectors.toMap(Product::getId, p -> p));
+        Preloaded pre = readOnlyOrderService.preloadReadOnly(request.getUserId(), items);
+        Map<Long, String> productImageUrl = new HashMap<>();
 
-        //가격 검증, 재고  차감
-        for (OrderItemDto it : items) {
-            Product p = Optional.ofNullable(productMap.get(it.getProductId()))
-                    .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-
-            // 클라 가격 검증 (불일치 시 예외)
-            if (!Objects.equals(p.getPrice(), it.getProductPrice())) {
-                throw new CustomException(ErrorCode.PRICE_TAMPERING);
-            }
-
-            Long detailId = productService.getDetailId(
-                    it.getProductColor(), it.getProductSize(), it.getProductId()
-            );
-
-            stockService.checkItemStock(detailId);
-            stockService.decreaseStock(detailId,it.getQuantity());
+        for (Product p : pre.productMap().values()) {
+            productImageUrl.put(p.getId(), fileService.getImageUrl(p.getFileManagement().getId()));
         }
-
-        //order
-        Order order = Order.create(user, waiting, orderNumberPolicy, LocalDateTime.now());
-
-        //order에 필요한 OrderProduct 생성
-        for (OrderItemDto it : items) {
-            Product p = productMap.get(it.getProductId());
-            String repUrl=fileService.getImageUrl(p.getFileManagement().getId());
-
-            OrderProduct op = OrderProduct.create(
-                    p, p.getPrice(), it.getQuantity(),
-                    it.getProductSize(), it.getProductColor(), repUrl, opWaiting
-            );
-            order.addOrderProduct(op);
-        }
-
-        order.addOrderName(KoreanOrdernameFormatter.INSTANCE);
-        order.calcTotal(pricingPolicy);
-
-        orderRepository.save(order);
-        List<OrderItemResponseDto> responseDtos = fromOrderToResponse(order);
-        log.info(Thread.currentThread().getName() + " 저장 성공");
-        cnt++;
-        log.info("cnt= {}", cnt);
-        return new OrderResponse(order, responseDtos);
-    }
-
-    private List<OrderItemResponseDto> fromOrderToResponse(Order order){
-        return order.getOrderProducts().stream().map(
-                op-> new OrderItemResponseDto(
-                        op.getProduct().getId(),
-                        op.getProduct().getProductName(),
-                        op.getOrderedProductPrice(),
-                        op.getOrderedProductSize(),
-                        op.getOrderedProductColor(),
-                        op.getQuantity(),
-                        op.getRepresentativeURL()
-                )
-        ).toList();
+        return afterConfirmOrderService.placeOrderTransaction(pre, items, productImageUrl);
     }
 
     //같은 요청이 들어오는 경우 병합해야지????
