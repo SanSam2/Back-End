@@ -40,7 +40,6 @@ public class AfterConfirmTransactionService {
     private final PaymentsRepository paymentsRepository;
     private final StatusRepository statusRepository;
     private final PaymentMapper paymentMapper;
-    private final ApplicationEventPublisher eventPublisher;
     private final OrderRepository orderRepository;
 
 
