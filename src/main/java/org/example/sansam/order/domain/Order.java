@@ -15,7 +15,10 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "orders")
@@ -33,6 +36,8 @@ public class Order {
 
 
     private String orderName;
+
+
     private String orderNumber;
     private Long totalAmount;
     private String paymentKey;
@@ -47,7 +52,7 @@ public class Order {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "order_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private List<OrderProduct> orderProducts = new ArrayList<>();
+    private final List<OrderProduct> orderProducts = new ArrayList<>();
 
     protected Order() {
         // JPA getDeclaredConstructor().newInstance() 메서드를 통하여 객체를 만들어내기 위해 사용하는 생성자

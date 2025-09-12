@@ -15,6 +15,10 @@ src/test
 .idea/**/shelf
 .idea/modules.xml
 
+.env.sansam.local
+docker-compose.jaeger.yml
+docker-compose.sansam.yml
+Dockerfile
 # AWS User-specific
 .idea/**/aws.xml
 
