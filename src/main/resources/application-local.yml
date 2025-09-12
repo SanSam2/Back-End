@@ -1,6 +1,9 @@
 server:
   port: 8080
   address: 0.0.0.0
+  tomcat:
+    mbeanregistry:
+      enabled: true
 
   servlet:
     session:
@@ -13,9 +16,14 @@ server:
 
 logging:
   level:
-    org.springframework.transaction: WARN #spring 트랜잭션 매니저 로그
-    org.springframework.orm.jpa.JpaTransactionManager: WARN #JPA 연동 트랜잭션 매니저 클래스의 로그
-    org.hibernate.SQL: WARN
+    root: INFO
+    org.springframework: DEBUG
+    org.springframework.transaction: DEBUG
+    org.springframework.orm.jpa.JpaTransactionManager: DEBUG
+    org.hibernate: ERROR
+    org.hibernate.SQL: OFF
+    org.hibernate.type.descriptor.sql: OFF
+    com.zaxxer.hikari: DEBUG
 
 spring:
   thymeleaf:
@@ -25,7 +33,27 @@ spring:
   config:
     activate:
       on-profile: local
-#  mvc:
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: initialCapacity=10,maximumSize=100,expireAfterWrite=24h
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: dev
+    password: dev
+    template:
+      mandatory: true
+    publisher-confirm-type: correlated
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 200  #쌓을 수 있는 최대 양인데, 이거 맞나 200개면 500개 버티는데, 200개면 충분하겠지.
+        concurrency: 3 #동시에 3개 적당한가...이것도 고민좀 해보고
+
+  #  mvc:
 #    async:
 #      request-timeout: 1800000   # 30분 (ms 단위)
 
@@ -39,11 +67,20 @@ spring:
     username: ${LOCAL_DB_USERNAME}
     password: ${LOCAL_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 40
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      keepalive-time: 300000
   jpa:
     hibernate:
       ddl-auto: update
-#    show-sql: true
+    show-sql: false
     properties:
+      hibernate.show_sql: false
+      hibernate.format_sql: false
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
     open-in-view: false # 이것도 찾아보세요!!!
@@ -85,14 +122,24 @@ management:
   endpoints:
     web:
       exposure:
-        include: prometheus, health, info
+        include: prometheus, health, info, metrics
   metrics:
     tags:
       application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+      slo:
+        "[http.server.requests]": 200ms,500ms,1s,2s,5s,10s,30s
+    enable:
+      tomcat: true
   endpoint:
     health:
       probes:
-        enabled: true
+         enabled: true
+      group:
+        readiness:
+          exclude: elasticsearch
 
 cloud:
   aws:

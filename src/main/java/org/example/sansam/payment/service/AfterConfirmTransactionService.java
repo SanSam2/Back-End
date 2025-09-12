@@ -4,14 +4,12 @@ package org.example.sansam.payment.service;
 import lombok.RequiredArgsConstructor;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
-
-import org.example.sansam.notification.event.email.PaymentCompleteEmailEvent;
-import org.example.sansam.notification.event.sse.PaymentCompleteEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.domain.OrderProduct;
 import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.payment.Mapper.PaymentMapper;
 import org.example.sansam.payment.adapter.CancelResponseNormalize;
+import org.example.sansam.payment.adapter.TossApprovalNormalizer.Normalized;
 import org.example.sansam.payment.domain.PaymentCancellation;
 import org.example.sansam.payment.domain.PaymentCancellationHistory;
 import org.example.sansam.payment.domain.Payments;
@@ -23,14 +21,12 @@ import org.example.sansam.payment.repository.PaymentsCancelRepository;
 import org.example.sansam.payment.repository.PaymentsRepository;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
-import org.example.sansam.status.repository.StatusRepository;
-import org.springframework.context.ApplicationEventPublisher;
-import org.example.sansam.payment.adapter.TossApprovalNormalizer.Normalized;
+import org.example.sansam.status.service.StatusCachingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,10 +34,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AfterConfirmTransactionService {
     private final PaymentsRepository paymentsRepository;
-    private final StatusRepository statusRepository;
+    private final StatusCachingService statusCachingService;
     private final PaymentMapper paymentMapper;
     private final OrderRepository orderRepository;
-
 
     private final PaymentsCancelRepository paymentsCancelRepository;
 
@@ -53,7 +48,8 @@ public class AfterConfirmTransactionService {
             return paymentMapper.toTossPaymentResponse(existing);
 
         Order order =  orderRepository.findOrderByOrderNumber(orderNumber);
-        Status paymentComplete = statusRepository.findByStatusName(StatusEnum.PAYMENT_COMPLETED);
+        //TODO: 캐싱
+        Status paymentComplete = statusCachingService.get(StatusEnum.PAYMENT_COMPLETED);
 
         // 결제 엔티티 생성 & 영속화
         Payments payment = paymentsRepository.save(
@@ -65,8 +61,8 @@ public class AfterConfirmTransactionService {
         order.addPaymentKey(normalizePayment.paymentKey());
 
         // 주문 상태 전이 (결제 승인 완료만-> 애초에 null일 수가 없음)
-        Status orderPaid = statusRepository.findByStatusName(StatusEnum.ORDER_PAID);
-        Status opPaid    = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_REQUIRED);
+        Status orderPaid = statusCachingService.get(StatusEnum.ORDER_PAID);
+        Status opPaid    = statusCachingService.get(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_REQUIRED);
         order.changeStatusWhenCompletePayment(orderPaid, opPaid);
 
 //        // 현재 트랜잭션 안에서 발행되고 있음,...Listener가 afterCommit이어야함
@@ -79,11 +75,11 @@ public class AfterConfirmTransactionService {
     @Transactional
     public CancelResponse saveCancellation (Order cancelOrder, CancelResponseNormalize.ParsedCancel parsed, PaymentCancelRequest request, String idempotencyKey){
         //TODO: 상태값이 주기적으로 변화하지않는 값이라면 DB 부하를 줄여보자.(ex. 캐싱)
-        Status orderAllCanceled = statusRepository.findByStatusName(StatusEnum.ORDER_ALL_CANCELED);
-        Status orderPartialCanceled = statusRepository.findByStatusName(StatusEnum.ORDER_PARTIAL_CANCELED);
-        Status cancelCompleted = statusRepository.findByStatusName(StatusEnum.CANCEL_COMPLETED);
-        Status orderProductCanceled = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_CANCELED);
-        Status orderProductPartiallyCanceled = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_PARTIALLY_CANCELED);
+        Status orderAllCanceled = statusCachingService.get(StatusEnum.ORDER_ALL_CANCELED);
+        Status orderPartialCanceled = statusCachingService.get(StatusEnum.ORDER_PARTIAL_CANCELED);
+        Status cancelCompleted = statusCachingService.get(StatusEnum.CANCEL_COMPLETED);
+        Status orderProductCanceled = statusCachingService.get(StatusEnum.ORDER_PRODUCT_CANCELED);
+        Status orderProductPartiallyCanceled = statusCachingService.get(StatusEnum.ORDER_PRODUCT_PARTIALLY_CANCELED);
 
         PaymentCancellation pc = PaymentCancellation.create(
                 parsed.paymentKey(),

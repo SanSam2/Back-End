@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class PayGlobalExceptionHandler {
 
-    public static record ApiError(String code, String message){
+    public record ApiError(String code, String message){
         public static ApiError of(String code, String message){
             return new ApiError(code, message);
         }
@@ -21,11 +21,10 @@ public class PayGlobalExceptionHandler {
                 .body(ApiError.of(e.getErrorCode().name(), e.getMessage()));
     }
 
-
     private HttpStatus toStatus(ErrorCode code) {
         return switch (code) {
             // 400
-            case INVALID_REQUEST, RESPONSE_FORM_NOT_RIGHT, CHECK_STATUS, NO_ITEM_IN_ORDER, ORDER_NOT_CANCELABLE,ORDER_PRODUCT_NOT_BELONGS_TO_ORDER
+            case INVALID_REQUEST, RESPONSE_FORM_NOT_RIGHT, CHECK_STATUS, NO_ITEM_IN_ORDER, ORDER_NOT_CANCELABLE,ORDER_PRODUCT_NOT_BELONGS_TO_ORDER, OUTBOX_PAYLOAD_PARSE_ERROR
                     -> HttpStatus.BAD_REQUEST;
 
             // 404

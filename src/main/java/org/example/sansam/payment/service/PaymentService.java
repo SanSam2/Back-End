@@ -6,15 +6,13 @@ import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.repository.OrderRepository;
-
 import org.example.sansam.payment.adapter.TossApprovalNormalizer;
 import org.example.sansam.payment.adapter.TossApprovalNormalizer.Normalized;
+import org.example.sansam.payment.compensation.service.PaymentCancelOutBoxService;
 import org.example.sansam.payment.dto.TossPaymentRequest;
 import org.example.sansam.payment.dto.TossPaymentResponse;
-import org.example.sansam.payment.compensation.service.PaymentCancelOutBoxService;
 import org.example.sansam.payment.util.IdempotencyKeyGenerator;
 import org.springframework.stereotype.Service;
-
 
 import java.util.Map;
 import java.util.Objects;
@@ -36,8 +34,12 @@ public class PaymentService {
 
     public TossPaymentResponse confirmPayment(TossPaymentRequest request){
         // 주문조회 -> 확실하게 결제 confirm해줘도 되는것인지에 대한 컨펌(?)
+
+        //TODO: select * from order where ~~, select order_number from order where ~~ 랑 DB 측면에서 다르다!!!
+        // Order를 다갖고오는게 맞을까????
         Order order = orderRepository.findByOrderNumber(request.getOrderId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+
         String orderNumber = order.getOrderNumber();
 
         //다시 진행하는 가격검증

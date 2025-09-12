@@ -12,9 +12,12 @@ server:
         same-site: none
 logging:
   level:
-    org.springframework.transaction: WARN #spring 트랜잭션 매니저 로그
-    org.springframework.orm.jpa.JpaTransactionManager: WARN #JPA 연동 트랜잭션 매니저 클래스의 로그
-    org.hibernate.SQL: WARN
+    root: ERROR
+    org.springframework: ERROR
+    org.springframework.transaction: ERROR
+    org.springframework.orm.jpa.JpaTransactionManager: ERROR
+    org.hibernate: ERROR
+    org.hibernate.SQL: ERROR
 
 spring:
   thymeleaf:
@@ -24,6 +27,11 @@ spring:
   config:
     activate:
       on-profile: prod
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: initialCapacity=10,maximumSize=100,expireAfterWrite=24h
 
   datasource:
     url: ${SPRING_DATASOURCE_URL}
