@@ -16,14 +16,12 @@ server:
         http-only: true         # JS에서 접근 불가
         secure: false           # https에서만 필요 시 true
         same-site: none
+
 logging:
   level:
-    root: ERROR
-    org.springframework: ERROR
-    org.springframework.transaction: ERROR
-    org.springframework.orm.jpa.JpaTransactionManager: ERROR
-    org.hibernate: ERROR
-    org.hibernate.SQL: ERROR
+    org.springframework.transaction: WARN #spring 트랜잭션 매니저 로그
+    org.springframework.orm.jpa.JpaTransactionManager: WARN #JPA 연동 트랜잭션 매니저 클래스의 로그
+    org.hibernate.SQL: WARN
 
 spring:
   thymeleaf:
@@ -32,33 +30,17 @@ spring:
     name: SanSam
   config:
     activate:
-      on-profile: prod
-
-  cache:
-    type: caffeine
-    caffeine:
-      spec: initialCapacity=10,maximumSize=100,expireAfterWrite=24h
-
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: dev
-    password: dev
-    template:
-      mandatory: true
-    publisher-confirm-type: correlated
-    listener:
-      simple:
-        acknowledge-mode: manual
-        prefetch: 200  #쌓을 수 있는 최대 양인데, 이거 맞나 200개면 500개 버티는데, 200개면 충분하겠지.
-        concurrency: 3 #동시에 3개 적당한가...이것도 고민좀 해보고
-
+      on-profile: local
+  #  mvc:
+  #    async:
+  #      request-timeout: 1800000   # 30분 (ms 단위)
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: ${LOCAL_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -74,10 +56,10 @@ spring:
       enabled: false              # 앱 시작할 때 배치 잡 자동 실행하지 않음 (테스트/스케줄러로만 실행)
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: sansam250721@gmail.com
-    password: dgwj cvlz wpqt vfdo         # 앱 비밀번호
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}    # 앱 비밀번호 (환경변수)
     properties:
       mail:
         smtp:
@@ -108,7 +90,7 @@ management:
         include: prometheus, metrics, health, info
   metrics:
     tags:
-      application: ${spring.application.name}
+      application: SanSam
   endpoint:
     health:
       probes:
@@ -122,7 +104,7 @@ cloud:
       bucket: ${AWS_BUCKET_NAME}
       custom:
         dir: /images
-        defaultUrl: https://your-bucket-name.s3.ap-northeast-2.amazonaws.com/
+        defaultUrl: https://${AWS_BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/
       path:
         review: reviews
     region:
@@ -133,6 +115,6 @@ cloud:
       accessKey: ${AWS_ACCESS_KEY}
       secretKey: ${AWS_SECRET_KEY}
 cors:
-  allowed-origins: http://localhost:3000
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
 websocket:
-  allowed-origins: "http://localhost:3000"
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS}
