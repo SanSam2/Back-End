@@ -6,9 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.notification.event.sse.ProductQuantityLowEvent;
 import org.example.sansam.product.domain.*;
 import org.example.sansam.product.dto.*;
+import org.example.sansam.product.repository.CategoryJpaRepository;
 import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
-import org.example.sansam.s3.domain.FileManagement;
 import org.example.sansam.s3.service.FileService;
 import org.example.sansam.search.scheduler.ProductSyncScheduler;
 import org.example.sansam.status.domain.Status;
@@ -21,8 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
-import java.util.*;
 import java.time.LocalDateTime;
+import java.util.*;
 
 
 @Service
@@ -37,6 +37,7 @@ public class ProductService {
     private final ApplicationEventPublisher publisher;
     private final StatusRepository statusRepository;
     private final ProductSyncScheduler scheduler;
+    private final CategoryJpaRepository categoryJpaRepository;
 
     private final int MAX_TRY = 3;
     private final long BACKOFF_MS = 15;
@@ -322,6 +323,17 @@ public class ProductService {
         if (s == null) return null;
         return Normalizer.normalize(s.trim(), Normalizer.Form.NFKC)
                 .toUpperCase(Locale.ROOT);
+    }
+
+    public List<Long> getCategorysId(String categoryName) {
+        log.info("getCategorysId: {}", categoryName);
+        List<Long> categoryIds = categoryJpaRepository.findCategoryName(categoryName);
+        return categoryIds;
+    }
+
+    public Long getCategoryId(String big, String middle, String small) {
+        Category category = categoryJpaRepository.findCategoryByBigNameAndMiddleNameAndSmallName(big, middle, small);
+        return category.getId();
     }
 
 //    public Product createProduct(String name) {

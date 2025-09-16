@@ -1,7 +1,6 @@
 package org.example.sansam.product.dto;
 
 import lombok.*;
-import org.example.sansam.cart.dto.SearchCartResponse;
 
 import java.util.List;
 

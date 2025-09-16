@@ -1,7 +1,10 @@
 package org.example.sansam.product.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.sansam.product.dto.*;
+import org.example.sansam.product.dto.ChangStockRequest;
+import org.example.sansam.product.dto.ProductStatusResponse;
+import org.example.sansam.product.dto.SearchStockRequest;
+import org.example.sansam.product.dto.SearchStockResponse;
 import org.example.sansam.product.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

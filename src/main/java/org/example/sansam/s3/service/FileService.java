@@ -3,14 +3,13 @@ package org.example.sansam.s3.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sansam.s3.domain.FileManagement;
 import org.example.sansam.s3.domain.FileDetail;
+import org.example.sansam.s3.domain.FileManagement;
 import org.example.sansam.s3.repository.FileDetailJpaRepository;
 import org.example.sansam.s3.repository.FileJpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.util.List;
 
 @Slf4j

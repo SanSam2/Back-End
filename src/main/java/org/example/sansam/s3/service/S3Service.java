@@ -2,25 +2,22 @@ package org.example.sansam.s3.service;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sansam.review.domain.Review;
 import org.example.sansam.review.repository.ReviewJpaRepository;
-import org.example.sansam.s3.domain.FileDetail;
 import org.example.sansam.s3.dto.PresignedResponse;
 import org.example.sansam.s3.repository.FileDetailJpaRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,6 +34,22 @@ public class S3Service {
 	private String dir;
 	@Value("${cloud.aws.s3.custom.defaultUrl}")
 	private String defaultUrl;
+
+	public List<String> getMainImageUrls() {
+		ListObjectsV2Request request = new ListObjectsV2Request()
+				.withBucketName(bucketName)
+				.withPrefix("main/");
+
+		ListObjectsV2Result result = amazonS3.listObjectsV2(request);
+
+		List<String> imgUrls = result.getObjectSummaries().stream()
+				.map(S3ObjectSummary::getKey)
+				.filter(key -> key.matches(".*\\.(png|jpg|jpeg|gif|webp)$")) // 이미지 확장자 필터
+				.map(key -> defaultUrl + key) // CloudFront URL 조합
+				.collect(Collectors.toList());
+		log.info("service ----", imgUrls.size());
+		return imgUrls;
+	}
 
 	public PresignedResponse generatePresignedUploadUrl(String originalFileName, String type, Float sizeMb) {
 		String uuidFileName = UUID.randomUUID() + "_" + originalFileName;
