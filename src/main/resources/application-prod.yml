@@ -33,6 +33,21 @@ spring:
     caffeine:
       spec: initialCapacity=10,maximumSize=100,expireAfterWrite=24h
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: dev
+    password: dev
+    template:
+      mandatory: true
+    publisher-confirm-type: correlated
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 200  #쌓을 수 있는 최대 양인데, 이거 맞나 200개면 500개 버티는데, 200개면 충분하겠지.
+        concurrency: 3 #동시에 3개 적당한가...이것도 고민좀 해보고
+
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
