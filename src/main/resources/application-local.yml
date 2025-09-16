@@ -154,7 +154,7 @@ cloud:
       bucket: ${AWS_BUCKET_NAME}
       custom:
         dir: /images
-        defaultUrl: https://your-bucket-name.s3.ap-northeast-2.amazonaws.com/
+        defaultUrl: https://${AWS_BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/
       path:
         review: reviews
     region:
