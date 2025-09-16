@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -38,6 +38,12 @@ public class S3Controller {
 		} catch (Exception e) {
 			return ResponseEntity.status(400).body(e.getMessage());
 		}
+	}
+
+	@GetMapping("/main")
+	public ResponseEntity<?> getMainImages() {
+		List<String> urls = s3Service.getMainImageUrls();
+		return ResponseEntity.ok(urls);
 	}
 
 }

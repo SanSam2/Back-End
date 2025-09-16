@@ -1,7 +1,6 @@
 package org.example.sansam.product.repository;
 
 import org.example.sansam.product.domain.ProductConnect;
-import org.example.sansam.product.domain.ProductDetail;
 import org.example.sansam.product.domain.ProductOption;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
