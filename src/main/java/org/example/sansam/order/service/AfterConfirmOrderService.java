@@ -53,7 +53,7 @@ public class AfterConfirmOrderService {
 
         StockDecreaseRequestedEvent evt =
                 StockDecreaseRequestedEvent.of(order.getOrderNumber(), lines);
-        stockEventPublisher.publishDecreaseRequested(evt);
+        stockEventPublisher.publishStockDecreaseEvent(evt);
 
         for (OrderItemDto it : items) {
             Product p = pre.productMap().get(it.getProductId());

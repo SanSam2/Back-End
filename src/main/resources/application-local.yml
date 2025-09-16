@@ -39,19 +39,36 @@ spring:
     caffeine:
       spec: initialCapacity=10,maximumSize=100,expireAfterWrite=24h
 
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: dev
-    password: dev
-    template:
-      mandatory: true
-    publisher-confirm-type: correlated
+  kafka:
+    bootstrap-servers: kafka:9092
+
+    # 요청 produce (detailId=Long, value=RequestedEvent)
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+    # 결과 consume (orderId=String, value=ResultEvent)
+    consumer:
+      max-poll-records: 1000
+      group-id: order-payment-result-listener
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        fetch.min.bytes: 1
+        fetch-min-size: 1048576
+        max-partition-fetch-bytes: 1048576
+        fetch.max.wait.ms: 500
+        spring.json.trusted.packages: "org.example.sansam*,org.example.sansamstock*"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: "org.example.sansam.global.event.StockDecreaseResultEvent"
+      auto-offset-reset: latest
+      enable-auto-commit: false
+
     listener:
-      simple:
-        acknowledge-mode: manual
-        prefetch: 200  #쌓을 수 있는 최대 양인데, 이거 맞나 200개면 500개 버티는데, 200개면 충분하겠지.
-        concurrency: 3 #동시에 3개 적당한가...이것도 고민좀 해보고
+      ack-mode: BATCH
+      concurrency: 12
 
   #  mvc:
 #    async:
@@ -102,6 +119,17 @@ spring:
           starttls:
             enable: true
     default-encoding: UTF-8
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 500ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 1
 
 #    decorator:
 #      datasource:

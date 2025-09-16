@@ -30,7 +30,7 @@ public class StockRestoreProcessor {
 
         try {
             StockIncreaseRequestedEvent event = StockIncreaseRequestedEvent.of(job.getIdempotencyKey(),job.getProductDetailId(),job.getQuantity());
-            stockEventPublisher.publishIncreaseRequested(event);
+            stockEventPublisher.publishStockIncreaseEvent(event);
             job.markSucceeded();
             repo.saveAndFlush(job);
 
