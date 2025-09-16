@@ -11,14 +11,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.example.sansam.notification.infra.PushConnector;
+import org.example.sansam.notification.service.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.yaml.snakeyaml.emitter.EmitterException;
 
@@ -29,14 +26,14 @@ import org.yaml.snakeyaml.emitter.EmitterException;
 @Tag(name = "Notifications", description = "SSE 구독 API")
 public class SseController {
 
-    private final PushConnector pushConnector;
+    private final NotificationService notificationService;
 
     @Operation(
             summary = "SSE 구독 시작",
             description = """
-        클라이언트가 서버와 SSE(EventSource) 연결을 맺습니다.
-        응답 스트림은 `text/event-stream`으로 유지됩니다.
-        """,
+                    클라이언트가 서버와 SSE(EventSource) 연결을 맺습니다.
+                    응답 스트림은 `text/event-stream`으로 유지됩니다.
+                    """,
             parameters = {
                     @Parameter(
                             name = "userId", in = ParameterIn.PATH, required = true,
@@ -58,10 +55,9 @@ public class SseController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     @GetMapping(value = "/subscribe/{userId}", produces = "text/event-stream; charset=UTF-8")
-    public ResponseEntity<SseEmitter> subscribe(@PathVariable Long userId) {
+    public ResponseEntity<SseEmitter> subscribe(@RequestHeader(value = "Last-Event_ID", required = false) String lastEventId, @PathVariable Long userId) {
         try {
-            SseEmitter emitter = pushConnector.connect(userId);
-            log.info("🔔 SSE 구독 요청 들어옴 - userId={}", userId);
+            SseEmitter emitter = notificationService.subscribe(userId, lastEventId);
             return ResponseEntity.ok().contentType(MediaType.TEXT_EVENT_STREAM).body(emitter);
         } catch (EmitterException e) {
             log.error("SSE 연결 실패 - userId: {}", userId, e);

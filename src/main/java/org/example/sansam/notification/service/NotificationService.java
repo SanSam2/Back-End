@@ -1,8 +1,8 @@
 package org.example.sansam.notification.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.sansam.notification.event.sse.BroadcastEvent;
+import org.example.sansam.notification.infra.SseConnector;
+import org.example.sansam.notification.infra.SseProvider;
 import org.example.sansam.user.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +19,14 @@ import org.example.sansam.notification.domain.NotificationType;
 import org.example.sansam.user.domain.User;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
 import java.util.IllegalFormatException;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +36,32 @@ public class NotificationService {
     private final NotificationHistoriesRepository notificationHistoriesRepository;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher publisher;
-    private final ObjectMapper objectMapper;
+
+    private final SseConnector sseConnector;
+    private final SseProvider sseProvider;
+    private final BroadcastInsertService broadcastInsertService;
+    private final NotificationHistoryReader notificationHistoryReader;
+    private final Executor virtualHistoryExecutor;
+
+    public SseEmitter subscribe(Long userId, String lastEventId) {
+        SseEmitter emitter = sseConnector.connect(userId);
+
+        // Histories에서 lastEventId 이후 알림 조회
+        if (lastEventId != null) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    List<NotificationHistories> missed = notificationHistoryReader.getMissedHistories(userId, lastEventId);
+
+                    if (!missed.isEmpty()){
+                        sseProvider.resend(userId, missed);
+                    }
+                }catch (Exception e){
+                    log.error("Missed history 조회 실패 - userId={}, lastEventId={}", userId, lastEventId, e);
+                }
+            }, virtualHistoryExecutor);
+        }
+        return emitter;
+    }
 
     private void sendNotification(User user, NotificationType type, String titleParam, String messageParam) {
         Notification template = getTemplateOrThrow(type.getTemplateId());
@@ -42,10 +69,11 @@ public class NotificationService {
         String title = formatTitle(template.getTitle(), titleParam);
         String message = formatMessage(template.getMessage(), messageParam);
 
-        NotificationHistories saved = saveNotificationHistory(user, template, title, message);
-        String payload = serializeToJson(NotificationDTO.from(saved));
+        NotificationHistories saved = saveNotificationHistory(user, type, template, title, message);
+        String payload = NotificationDTO.from(saved).toJson();
 
-        publisher.publishEvent(NotificationSavedEvent.of(user.getId(), type.getEventName(), payload));
+        publisher.publishEvent(NotificationSavedEvent.of(user.getId(), saved.getId(), type.getEventName(), payload));
+
     }
 
     private Notification getTemplateOrThrow(Long templateId) {
@@ -91,9 +119,10 @@ public class NotificationService {
         return count;
     }
 
-    private NotificationHistories saveNotificationHistory(User user, Notification template, String title, String message) {
+    private NotificationHistories saveNotificationHistory(User user, NotificationType type, Notification template, String title, String message) {
         NotificationHistories notification = NotificationHistories.builder()
                 .user(user)
+                .eventName(type.getEventName())
                 .notification(template)
                 .title(title)
                 .message(message)
@@ -105,46 +134,43 @@ public class NotificationService {
         return notificationHistoriesRepository.save(notification);
     }
 
-    //TODO: 공통화 작업 필요
-    private String serializeToJson(NotificationDTO dto) {
-        try {
-            return objectMapper.writeValueAsString(dto);
-        } catch (JsonProcessingException e) {
-            throw new CustomException(ErrorCode.NOTIFICATION_SERIALIZATION_FAILED);
-        }
-    }
-
     @Transactional
-    public void saveBroadcastNotification(String title, String content) {
+    public void saveBroadcastNotification(String title, String content, LocalDateTime createdAt) {
+        log.info("1.saveBroadcastNotification 시작 - title={}, content={}", title, content);
         Notification template = getTemplateOrThrow(NotificationType.BROADCAST.getTemplateId());
         String formattedTitle = formatTitle(template.getTitle(), title);
-        String formattedContent = formatMessage(template.getMessage(), content);
+        String formattedMessage = formatMessage(template.getMessage(), content);
 
         List<User> allActivatedUsers = userRepository.findAllByActivated(true);
+        log.info("2. 활성 유저 조회 완료 - size={}", allActivatedUsers.size());
+        List<NotificationHistories> histories = createNotificationHistories(allActivatedUsers, template, formattedTitle, formattedMessage, createdAt);
+        log.info("3. 히스토리 객체 생성 완료 - size={}", histories.size());
 
-        List<NotificationHistories> histories = getAllNotificationsToSave(allActivatedUsers, template, formattedTitle, formattedContent);
+        long insertStart = System.currentTimeMillis();
+        // 병렬 Bulk Insert 호출
+        broadcastInsertService.saveBroadcastNotification(histories);
+        log.info("4. DB 저장 완료 - elapsed={}ms", System.currentTimeMillis() - insertStart);
 
-        // bulk insert (Hibernate JDBC batch랑 합쳐져서 효율적으로 실행)
-        notificationHistoriesRepository.saveAll(histories);
+        NotificationHistories lastSaved = notificationHistoryReader.getLastBroadcastHistory();
+        String payload = NotificationDTO.from(histories.getLast()).toJson();
 
-        // 마지막 하나만 payload 직렬화해서 이벤트 발행
-        NotificationHistories lastSaved = histories.getLast();
-        String payload = serializeToJson(NotificationDTO.from(lastSaved));
-
-        publisher.publishEvent(new BroadcastEvent(NotificationType.BROADCAST.getEventName(), payload));
+        log.info("5. BroadcastEvent 발행 - lastSavedId={}", lastSaved.getId());
+        publisher.publishEvent(new BroadcastEvent(lastSaved.getId(), NotificationType.BROADCAST.getEventName(), payload));
     }
 
-    private static List<NotificationHistories> getAllNotificationsToSave(List<User> allActivatedUsers, Notification template,
-                                                                         String formattedTitle, String formattedContent) {
-        // NotificationHistories 리스트로 생성
+    private static List<NotificationHistories> createNotificationHistories(List<User> allActivatedUsers, Notification template,
+                                                                           String formattedTitle, String formattedMessage, LocalDateTime createdAt) {
+
         return allActivatedUsers.stream()
                 .map(user -> NotificationHistories.builder()
                         .user(user)
                         .notification(template)
+
+                        .eventName(NotificationType.BROADCAST.getEventName())
                         .title(formattedTitle)
-                        .message(formattedContent)
-                        .createdAt(LocalDateTime.now())
-                        .expiredAt(LocalDateTime.now().plusDays(14))
+                        .message(formattedMessage)
+                        .createdAt(createdAt)
+                        .expiredAt(createdAt.plusDays(14))
                         .isRead(false)
                         .build())
                 .toList();

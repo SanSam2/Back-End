@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.sansam.user.domain.User;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Getter
@@ -37,6 +36,8 @@ public class NotificationHistories {
 
     @Column(nullable = false)
     private boolean isRead = false;
+
+    private String eventName;
 
     @Column(nullable = false)
     private String title;

@@ -14,7 +14,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class SseConnector implements PushConnector {
 
     private final Map<Long, List<SseEmitter>> sseEmitters = new ConcurrentHashMap<>();
-    private static final long DEFAULT_TIMEOUT = 60L * 1000 * 30; // 30분 설정, 리소스 점유 시간 절감
+
+    private static final long DEFAULT_TIMEOUT = 60L * 1000 * 15; // 5분 설정, 리소스 점유 시간 절감
 
     @Override
     public SseEmitter connect(Long userId) {
@@ -26,16 +27,17 @@ public class SseConnector implements PushConnector {
         sseEmitters.computeIfAbsent(userId, key -> new CopyOnWriteArrayList<>())
                 .add(emitter);
 
-        int userEmitterCount = sseEmitters.get(userId).size();
-        int totalEmitterCount = getTotalEmitterCount();
-
-        log.info("✅ Emitter 생성 - userId={}, 현재 user별 emitter 수={}, 전체 emitter 수={}",
-                userId, userEmitterCount, totalEmitterCount);
+//
+//        int userEmitterCount = sseEmitters.get(userId).size();
+//        int totalEmitterCount = getTotalEmitterCount();
+//
+//        log.info("✅ Emitter 생성 - userId={}, 현재 user별 emitter 수={}, 전체 emitter 수={}",
+//                userId, userEmitterCount, totalEmitterCount);
 
         // 연결 종료 시 emitter 제거
-        emitter.onCompletion(() -> removeEmitter(userId, emitter));
-        emitter.onTimeout(() -> removeEmitter(userId, emitter));
-        emitter.onError(ex -> removeEmitter(userId, emitter));
+        emitter.onCompletion(() -> removeEmitter(emitter));
+        emitter.onTimeout(() -> removeEmitter(emitter));
+        emitter.onError(ex -> removeEmitter(emitter));
 
         return emitter;
     }
@@ -48,19 +50,11 @@ public class SseConnector implements PushConnector {
         return sseEmitters;
     }
 
-    public void removeEmitter(Long userId, SseEmitter emitter) {
-        List<SseEmitter> emitters = sseEmitters.get(userId);
-        if (emitters != null) {
-            emitters.remove(emitter);
-            int userEmitterCount = emitters.size();
-            int totalEmitterCount = getTotalEmitterCount();
 
-            log.info("❌ Emitter 제거 - userId={}, 남은 user별 emitter 수={}, 전체 emitter 수={}",
-                    userId, userEmitterCount, totalEmitterCount);
-            if (emitters.isEmpty()) {
-                sseEmitters.remove(userId); // 메모리 정리
-            }
-        }
+    public void removeEmitter(SseEmitter emitter) {
+        sseEmitters.forEach((userId, emitters) -> {
+            emitters.remove(emitter);
+        });
     }
 
     private int getTotalEmitterCount() {

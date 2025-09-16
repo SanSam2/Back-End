@@ -8,6 +8,7 @@ import org.example.sansam.chat.dto.ChatMessageRequestDTO;
 import org.example.sansam.chat.dto.ChatMessageResponseDTO;
 
 import org.example.sansam.chat.dto.ChatMessageSendResponseDTO;
+import org.example.sansam.chat.event.ChatRoomUpdateEvent;
 import org.example.sansam.chat.repository.ChatMemberRepository;
 import org.example.sansam.chat.repository.ChatMessageRepository;
 import org.example.sansam.chat.repository.ChatRoomRepository;
@@ -88,7 +89,8 @@ public class ChatMessageService {
                 .build();
 
         chatMessageRepository.save(chatMessage);
-        chatRoom.setLastMessageAt(chatMessage.getCreatedAt());
+        eventPublisher.publishEvent(new ChatRoomUpdateEvent(roomId, chatMessage.getCreatedAt()));
+//        chatRoom.setLastMessageAt(chatMessage.getCreatedAt());
         eventPublisher.publishEvent(new ChatEvent(chatRoom, user, chatMessage.getMessage()));
 
         return ChatMessageSendResponseDTO.fromEntity(chatMessage,user.getName(), roomId, userId);

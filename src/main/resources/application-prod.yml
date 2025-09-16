@@ -74,10 +74,10 @@ spring:
       enabled: false              # 앱 시작할 때 배치 잡 자동 실행하지 않음 (테스트/스케줄러로만 실행)
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: sansam250721@gmail.com
-    password: dgwj cvlz wpqt vfdo         # 앱 비밀번호
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}    # 앱 비밀번호 (환경변수)
     properties:
       mail:
         smtp:
@@ -122,7 +122,7 @@ cloud:
       bucket: ${AWS_BUCKET_NAME}
       custom:
         dir: /images
-        defaultUrl: https://your-bucket-name.s3.ap-northeast-2.amazonaws.com/
+        defaultUrl: https://${AWS_BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/
       path:
         review: reviews
     region:
@@ -133,6 +133,6 @@ cloud:
       accessKey: ${AWS_ACCESS_KEY}
       secretKey: ${AWS_SECRET_KEY}
 cors:
-  allowed-origins: http://localhost:3000
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
 websocket:
-  allowed-origins: "http://localhost:3000"
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS}
