@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class BroadcastEvent {
-    private final Long nhId;
     private final String eventName;
     private final String payloadJson;
 }

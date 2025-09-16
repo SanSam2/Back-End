@@ -1,7 +1,6 @@
 src/test
 src/test/resources/application-test.yml
 
-src/main/resources/application-test.yml
 # Created by https://www.toptal.com/developers/gitignore/api/windows,java,gradle,intellij
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,java,gradle,intellij
 

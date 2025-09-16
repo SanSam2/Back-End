@@ -8,10 +8,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface NotificationHistoriesRepository extends JpaRepository<NotificationHistories, Long> {
@@ -21,8 +20,6 @@ public interface NotificationHistoriesRepository extends JpaRepository<Notificat
     int deleteByExpiredAtBefore(@Param("now") LocalDateTime now);
 
     List<NotificationHistories> findAllByUser_Id(Long userId);
-
-    List<NotificationHistories> findByUser_IdAndIdGreaterThan(Long userId, Long lastId);
 
     @Modifying
     void deleteByUser_IdAndId(Long userId, Long id);
@@ -45,6 +42,4 @@ public interface NotificationHistoriesRepository extends JpaRepository<Notificat
         WHERE n.id = :notificationHistoriesId
     """)
     void findByIsReadFalse(Long notificationHistoriesId);
-
-    Optional<NotificationHistories> findTopByEventNameOrderByIdDesc(String eventName);
 }

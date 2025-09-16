@@ -36,7 +36,6 @@
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.host.port" />
         <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
-        <property name="com.intellij.clouds.kubernetes.db.resource.type" value="Deployment" />
         <property name="com.intellij.clouds.kubernetes.db.container.port" />
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
@@ -49,7 +48,6 @@
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.host.port" />
         <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
-        <property name="com.intellij.clouds.kubernetes.db.resource.type" value="Deployment" />
         <property name="com.intellij.clouds.kubernetes.db.container.port" />
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
@@ -63,7 +61,6 @@
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.host.port" />
         <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
-        <property name="com.intellij.clouds.kubernetes.db.resource.type" value="Deployment" />
         <property name="com.intellij.clouds.kubernetes.db.container.port" />
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
@@ -77,7 +74,6 @@
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.host.port" />
         <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
-        <property name="com.intellij.clouds.kubernetes.db.resource.type" value="Deployment" />
         <property name="com.intellij.clouds.kubernetes.db.container.port" />
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
@@ -101,19 +97,6 @@
       <synchronize>true</synchronize>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
       <jdbc-url>jdbc:mysql://172.16.24.132:3306/sansam</jdbc-url>
-      <jdbc-additional-properties>
-        <property name="com.intellij.clouds.kubernetes.db.host.port" />
-        <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
-        <property name="com.intellij.clouds.kubernetes.db.container.port" />
-      </jdbc-additional-properties>
-      <working-dir>$ProjectFileDir$</working-dir>
-    </data-source>
-    <data-source source="LOCAL" name="testdb" uuid="98d5c8af-3ac7-48ed-b352-38f4b9ee42d2">
-      <driver-ref>h2.unified</driver-ref>
-      <synchronize>true</synchronize>
-      <imported>true</imported>
-      <jdbc-driver>org.h2.Driver</jdbc-driver>
-      <jdbc-url>jdbc:h2:mem:testdb;MODE=MySQL</jdbc-url>
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.host.port" />
         <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />

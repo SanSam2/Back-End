@@ -7,11 +7,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificationSavedEvent {
     private final Long userId;
-    private final Long nhId;
     private final String eventName;
     private final String payloadJson;
 
-    public static NotificationSavedEvent of(Long userId, Long nhId, String eventName, String payloadJson) {
-        return new NotificationSavedEvent(userId, nhId, eventName, payloadJson);
+    public static NotificationSavedEvent of(Long userId, String eventName, String payloadJson) {
+        return new NotificationSavedEvent(userId, eventName, payloadJson);
     }
 }

@@ -4,11 +4,6 @@ server:
   tomcat:
     mbeanregistry:
       enabled: true
-    max-connections: 25000
-    accept-count: 5000
-    threads:
-      max: 500
-      min-spare: 100
 
   servlet:
     session:
@@ -145,15 +140,14 @@ management:
       group:
         readiness:
           exclude: elasticsearch
-    prometheus:
-      access: unrestricted
+
 cloud:
   aws:
     s3:
       bucket: ${AWS_BUCKET_NAME}
       custom:
         dir: /images
-        defaultUrl: https://${AWS_BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/
+        defaultUrl: https://your-bucket-name.s3.ap-northeast-2.amazonaws.com/
       path:
         review: reviews
     region:
@@ -164,6 +158,6 @@ cloud:
       accessKey: ${AWS_ACCESS_KEY}
       secretKey: ${AWS_SECRET_KEY}
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  allowed-origins: http://localhost:3000
 websocket:
-  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS}
+  allowed-origins: "http://localhost:3000"
