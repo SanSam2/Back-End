@@ -12,8 +12,11 @@ import org.example.sansam.payment.compensation.service.PaymentCancelOutBoxServic
 import org.example.sansam.payment.dto.TossPaymentRequest;
 import org.example.sansam.payment.dto.TossPaymentResponse;
 import org.example.sansam.payment.util.IdempotencyKeyGenerator;
+import org.example.sansam.stockreservation.domain.StockReservation;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
@@ -28,6 +31,7 @@ public class PaymentService {
     private final AfterConfirmTransactionService afterConfirmTransactionService;
     private final PaymentCancelOutBoxService outboxService;
     private final IdempotencyKeyGenerator idemGen;
+    private final StockReservationGate stockReservationGate;
 
 
     private static final String DB_FAILED_REASON = "db-failed";
@@ -35,8 +39,6 @@ public class PaymentService {
     public TossPaymentResponse confirmPayment(TossPaymentRequest request){
         // 주문조회 -> 확실하게 결제 confirm해줘도 되는것인지에 대한 컨펌(?)
 
-        //TODO: select * from order where ~~, select order_number from order where ~~ 랑 DB 측면에서 다르다!!!
-        // Order를 다갖고오는게 맞을까????
         Order order = orderRepository.findByOrderNumber(request.getOrderId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
@@ -46,6 +48,22 @@ public class PaymentService {
         if(!Objects.equals(order.getTotalAmount(), request.getAmount())){
             throw new CustomException(ErrorCode.ORDER_AND_PAY_NOT_EQUAL);
         }
+
+        //재고 감소에 대한 검증
+        Instant start = Instant.now();
+        StockReservation.Status status = stockReservationGate.waitStatus(orderNumber, 4500);
+
+
+        if (status != StockReservation.Status.CONFIRMED) {
+            if(status == StockReservation.Status.REJECTED) {
+                throw new CustomException(ErrorCode.NOT_ENOUGH_STOCK);
+            }else{
+                throw new CustomException(ErrorCode.STOCK_TIMEOUT);
+            }
+        }
+
+        long ms = Duration.between(start, Instant.now()).toMillis();
+        log.error("재고감소 확인 및 검증에 걸린 시간 = {}", ms);
 
         //토스 payment로부터 온 응답 수령
         Map<String, Object> response;

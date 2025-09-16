@@ -28,6 +28,24 @@ spring:
     activate:
       on-profile: prod
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    properties:
+      enable.idempotence: true
+      acks: all
+      linger.ms: 5
+      max.in.flight.requests.per.connection: 1
+      # 선택: 성능 & 안정성
+      # compression.type: lz4
+      # delivery.timeout.ms: 120000
+      # request.timeout.ms: 30000
+      # retries: 10
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
   cache:
     type: caffeine
     caffeine:

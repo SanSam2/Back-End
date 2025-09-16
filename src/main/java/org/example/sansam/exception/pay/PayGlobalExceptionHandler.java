@@ -32,7 +32,7 @@ public class PayGlobalExceptionHandler {
                     -> HttpStatus.NOT_FOUND;
 
             // 409
-            case NOT_ENOUGH_STOCK, NO_ITEM, ZERO_STOCK, NOT_EQUAL_COST, PRICE_TAMPERING, ORDER_ALREADY_FINISHED
+            case NOT_ENOUGH_STOCK, NO_ITEM, ZERO_STOCK, NOT_EQUAL_COST, PRICE_TAMPERING, ORDER_ALREADY_FINISHED,STOCK_TIMEOUT
                     -> HttpStatus.CONFLICT;
 
             // 결제/수단

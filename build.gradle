@@ -137,8 +137,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
 
-    //RabbitMQ설정
-    implementation("org.springframework.boot:spring-boot-starter-amqp")
+    //Kafka 설정
+    implementation "org.springframework.kafka:spring-kafka"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
 
 
