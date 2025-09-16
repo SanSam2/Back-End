@@ -113,9 +113,9 @@ spring:
 #            include-parameter-values: true
 
 toss:
-  secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
-  confirm-url: https://api.tosspayments.com/v1/payments/confirm
-  cancel-url: https://api.tosspayments.com/v1/payments
+  secret-key: ${TOSS_SECRET_KEY}
+  confirm-url: ${TOSS_CONFIRM_URL}
+  cancel-url: ${TOSS_CANCEL_URL}
 
 
 management:
