@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Map;
 
+
 @Component
 @RequiredArgsConstructor
 public class TossApprovalNormalizer {
@@ -23,6 +24,7 @@ public class TossApprovalNormalizer {
     private final ObjectMapper objectMapper;
 
     public Normalized normalize(Map<String, Object> resp, String paymentKey) {
+
         String methodKor = String.valueOf(resp.get("method"));
         PaymentMethodType methodType = PaymentMethodType.fromKorean(methodKor);
 
@@ -34,7 +36,6 @@ public class TossApprovalNormalizer {
 
         PaymentsType paymentsType = paymentsTypeRepository.findByTypeName(methodType)
                 .orElseThrow(() -> new CustomException(ErrorCode.UNSUPPORTED_PAYMENT_METHOD));
-
 
         return new Normalized(paymentKey, paymentsType, totalPrice, finalPrice, requestedAt, approvedAt);
     }

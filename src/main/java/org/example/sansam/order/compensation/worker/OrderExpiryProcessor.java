@@ -21,12 +21,11 @@ public class OrderExpiryProcessor {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public int expireAndEnqueue(Long orderId, Status orderExpired) {
-        // 트랜잭션 안에서 다시 로드 (연관 로딩/일관성 보장)
+        // 트랜잭션 안에서 다시
         Order order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new IllegalStateException("order not found: " + orderId));
 
-        // 이미 EXPIRED면 스킵 (보호 로직)
-        // if (order.getStatus() == orderExpired) return 0;
+        // 이미 EXPIRED면 스킵
 
         order.changeStatusMarkExpired(orderExpired);
 

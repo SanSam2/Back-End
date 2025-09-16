@@ -2,9 +2,10 @@ package org.example.sansam.order.compensation.worker;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.sansam.global.event.StockIncreaseRequestedEvent;
 import org.example.sansam.order.compensation.domain.StockRestoreOutBox;
 import org.example.sansam.order.compensation.repository.StockRestoreOutBoxRepository;
-import org.example.sansam.stock.repository.StockRepository;
+import org.example.sansam.order.publish.StockEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +17,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class StockRestoreProcessor {
 
     private final StockRestoreOutBoxRepository repo;
-    private final StockRepository stockRepository;
+    private final StockEventPublisher stockEventPublisher;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void process(Long id) {
@@ -28,10 +29,8 @@ public class StockRestoreProcessor {
             return;
 
         try {
-            int updated = stockRepository.increase(job.getProductDetailId(), job.getQuantity());
-            if (updated == 0)
-                throw new IllegalStateException("stock row not found: detailId=" + job.getProductDetailId());
-
+            StockIncreaseRequestedEvent event = StockIncreaseRequestedEvent.of(job.getIdempotencyKey(),job.getProductDetailId(),job.getQuantity());
+            stockEventPublisher.publishIncreaseRequested(event);
             job.markSucceeded();
             repo.saveAndFlush(job);
 
