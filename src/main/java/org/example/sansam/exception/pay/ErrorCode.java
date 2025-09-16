@@ -30,7 +30,8 @@ public enum ErrorCode {
     API_SERVER_ERROR("토스 API 서버에 이상이 발생했습니다."),
     ORDER_NOT_CANCELABLE("취소하지 못하는 주문입니다."),
     ORDER_PRODUCT_NOT_BELONGS_TO_ORDER("주문과 주문상품이 매칭되지 않습니다."),
-    PAYMENTS_NOT_FOUND("결제 정보를 찾을 수 없습니다.");
+    PAYMENTS_NOT_FOUND("결제 정보를 찾을 수 없습니다."),
+    OUTBOX_PAYLOAD_PARSE_ERROR("메시지큐 파싱 에러");
 
     private final String message;
 
