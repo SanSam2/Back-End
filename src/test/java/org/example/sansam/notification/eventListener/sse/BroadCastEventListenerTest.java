@@ -29,12 +29,12 @@ class BroadCastEventListenerTest {
         // given
         String eventName = "broadcastMessage";
         String payloadJson = "{\"msg\":\"hello\"}";
-        BroadcastEvent event = new BroadcastEvent(eventName, payloadJson);
+        BroadcastEvent event = new BroadcastEvent(200L, eventName, payloadJson);
         // when
         broadCastEventListener.handleBroadcastEvent(event);
 
         // then
-        verify(pushProvider, times(1)).broadcast(eventName, payloadJson);
+        verify(pushProvider, times(1)).broadcast(200L, eventName, payloadJson);
     }
 
     @DisplayName("pushProvider.broadcast에서 예외가 발생해도 에러 로그를 남기고 예외를 전파하지 않는다.")
@@ -43,16 +43,16 @@ class BroadCastEventListenerTest {
         // given
         String eventName = "broadcastMessage";
         String payloadJson = "{\"msg\":\"hello\"}";
-        BroadcastEvent event = new BroadcastEvent(eventName, payloadJson);
+        BroadcastEvent event = new BroadcastEvent(200L, eventName, payloadJson);
 
         doThrow(new RuntimeException("push 실패"))
-                .when(pushProvider).broadcast(eventName, payloadJson);
+                .when(pushProvider).broadcast(200L, eventName, payloadJson);
 
         // when
         // then
 
         broadCastEventListener.handleBroadcastEvent(event);
 
-        verify(pushProvider, times(1)).broadcast(eventName, payloadJson);
+        verify(pushProvider, times(1)).broadcast(200L, eventName, payloadJson);
     }
 }

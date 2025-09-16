@@ -17,6 +17,6 @@ public class PushEventListenerHandler {
     @Async("pushExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onNotificationSaved(NotificationSavedEvent event){
-        pushProvider.push(event.getUserId(), event.getEventName(), event.getPayloadJson());
+        pushProvider.push(event.getUserId(), event.getNhId(), event.getEventName(), event.getPayloadJson());
     }
 }

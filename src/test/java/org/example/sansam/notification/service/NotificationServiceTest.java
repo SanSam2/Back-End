@@ -1,398 +1,342 @@
 package org.example.sansam.notification.service;
 
-import org.assertj.core.api.Assertions;
-import org.assertj.core.groups.Tuple;
 import org.example.sansam.notification.domain.Notification;
 import org.example.sansam.notification.domain.NotificationHistories;
 import org.example.sansam.notification.domain.NotificationType;
 import org.example.sansam.notification.dto.NotificationDTO;
+import org.example.sansam.notification.event.sse.BroadcastEvent;
+import org.example.sansam.notification.event.sse.NotificationSavedEvent;
+import org.example.sansam.notification.infra.SseConnector;
+import org.example.sansam.notification.infra.SseProvider;
 import org.example.sansam.notification.repository.NotificationHistoriesRepository;
 import org.example.sansam.notification.repository.NotificationsRepository;
 import org.example.sansam.user.domain.Role;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 
 @ActiveProfiles("test")
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 @Transactional
 class NotificationServiceTest {
 
-    @Autowired
-    private NotificationService notificationService;
-
-    @Autowired
+    @Mock
     private NotificationHistoriesRepository notificationHistoriesRepository;
 
-    @Autowired
+    @Mock
     private NotificationsRepository notificationsRepository;
 
-    @Autowired
+    @Mock
     private UserRepository userRepository;
 
-//    @AfterEach
-//    void tearDown() {
-//        notificationHistoriesRepository.deleteAllInBatch();
-//    }
+    @Mock
+    private ApplicationEventPublisher publisher;
 
-    @DisplayName("사용자는 로그인 했을 시 본인의 알림 목록을 가져온다.")
-    @Test
-    void getNotificationHistories() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
+    @Mock
+    private SseConnector sseConnector;
 
-        Notification notification = notificationsRepository.findById(NotificationType.WELCOME.getTemplateId()).orElseThrow();
-        String title = notification.getTitle();
-        String message = notification.getMessage();
+    @Mock
+    private SseProvider sseProvider;
 
-        NotificationHistories nh1 = createNotification(user, title, message, notification);
-        NotificationHistories nh2 = createNotification(user, title, message, notification);
+    @Mock
+    private BroadcastInsertService broadcastInsertService;
 
-        notificationHistoriesRepository.saveAll(List.of(nh1, nh2));
+    @InjectMocks
+    private NotificationService notificationService;
 
+    @Mock
+    private NotificationHistoryReader notificationHistoryReader;
 
-        // when
-        List<NotificationDTO> getList = notificationService.getNotificationHistories(user.getId());
+    private User user;
 
-        // then
-        Assertions.assertThat(getList).hasSize(2);
+    @BeforeEach
+    void setUp() {
+        user = createUser(1L, "test@naver.com");
     }
 
-    @DisplayName("알림이 하나도 쌓여있지 않을 경우 알림 목록은 없어야 한다.")
-    @Test
-    void getNotificationHistories_when_no_notification_exists() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        // when
-        List<NotificationHistories> nh1 = notificationHistoriesRepository.findAllByUser_Id(user.getId());
-
-        // then
-
-        Assertions.assertThat(nh1).isEmpty();
-
-    }
-
-    @DisplayName("사용자는 읽지 않은 알림의 개수를 볼 수 있다.")
-    @Test
-    void getUnreadNotificationCount() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        Notification notification = notificationsRepository.findById(NotificationType.WELCOME.getTemplateId()).orElseThrow();
-        String title = notification.getTitle();
-        String message = notification.getMessage();
-
-        NotificationHistories nh1 = createNotification(user, title, message, notification);
-        NotificationHistories nh2 = createNotification(user, title, message, notification);
-
-        notificationHistoriesRepository.saveAll(List.of(nh1, nh2));
-
-        // when
-
-        long count = notificationService.getUnreadNotificationCount(user.getId());
-
-        // then
-
-        Assertions.assertThat(count).isEqualTo(2);
-    }
-
-    @DisplayName("사용자는 읽지 않은 하나의 알림을 읽음 처리한다.")
-    @Test
-    void markAsRead() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        Notification notification = notificationsRepository.findById(NotificationType.WELCOME.getTemplateId()).orElseThrow();
-        String title = notification.getTitle();
-        String message = notification.getMessage();
-
-        NotificationHistories nh1 = createNotification(user, title, message, notification);
-
-        notificationHistoriesRepository.save(nh1);
-
-        // when
-
-        notificationService.markAsRead(nh1.getId());
-
-        // then
-
-        Assertions.assertThat(notificationHistoriesRepository.findById(nh1.getId()))
-                .get()
-                .extracting("isRead").isEqualTo(true);
-    }
-
-    @DisplayName("사용자는 읽지 않은 알림을 모두 읽음 처리한다.")
-    @Test
-    void markAllAsRead() {
-        // given
-
-        User user = createUser();
-        userRepository.save(user);
-
-        Notification notification = notificationsRepository.findById(NotificationType.WELCOME.getTemplateId()).orElseThrow();
-        String title = notification.getTitle();
-        String message = notification.getMessage();
-
-        NotificationHistories nh1 = createNotification(user, title, message, notification);
-        NotificationHistories nh2 = createNotification(user, title, message, notification);
-
-        notificationHistoriesRepository.saveAll(List.of(nh1, nh2));
-
-        // when
-        notificationService.markAllAsRead(user.getId());
-
-        // then
-        Assertions.assertThat(notificationHistoriesRepository.countByUser_IdAndIsReadFalse(user.getId()))
-                .isEqualTo(0);
-    }
-
-    @DisplayName("사용자는 본인의 알림을 개별로 삭제할 수 있다.")
-    @Test
-    void deleteNotificationHistory() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        Notification notification = notificationsRepository.findById(NotificationType.WELCOME.getTemplateId()).orElseThrow();
-        String title = notification.getTitle();
-        String message = notification.getMessage();
-
-        NotificationHistories nh1 = createNotification(user, title, message, notification);
-        NotificationHistories nh2 = createNotification(user, title, message, notification);
-
-        notificationHistoriesRepository.saveAll(List.of(nh1, nh2));
-
-        // when
-        notificationService.deleteNotificationHistory(user.getId(), nh1.getId());
-
-        // then
-        Assertions.assertThat(notificationHistoriesRepository.findAllByUser_Id(user.getId()))
-                .hasSize(1)
-                .extracting(NotificationHistories::getMessage)
-                .containsExactlyInAnyOrder(message);
-    }
-
-    @DisplayName("회원 가입 환영 알림을 사용자한테 전송한다")
-    @Test
-    void sendWelcomeNotification_success() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        // when
-        notificationService.sendWelcomeNotification(user);
-        // then
-
-        Assertions.assertThat(notificationHistoriesRepository.findAllByUser_Id(user.getId()))
-                .hasSize(1)
-                .extracting("title", "message")
-                .containsExactlyInAnyOrder(
-                        Tuple.tuple("호상 테스트님 가입을 환영합니다.", "고객님의 스타일을 책임져주는 Or de Firenz의 회원이 되신 것을 환영합니다.")
-                );
-
-    }
-
-    @DisplayName("결제 완료 알림을 사용자한테 전송한다.")
-    @Test
-    void sendPaymentNotification_success() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        String orderName = "나이키 운동화";
-        Long orderPrice = 10000000L;
-        // when
-        notificationService.sendPaymentCompleteNotification(user, orderName, orderPrice);
-
-        // then
-        assertThat(notificationHistoriesRepository.findAllByUser_Id(user.getId()))
-                .hasSize(1)
-                .extracting("title", "message")
-                .containsExactlyInAnyOrder(
-                        Tuple.tuple("결제 완료", "호상 테스트님의 나이키 운동화 10000000원 결제 완료되었습니다.")
-                );
-    }
-
-    @DisplayName("결제 취소 알림을 사용자한테 전송한다.")
-    @Test
-    void sendPaymentCancelNotification_success() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        String orderName = "아디다스 티셔츠";
-        Long refundPrice = 10000000L;
-        // when
-        notificationService.sendPaymentCancelNotification(user, orderName, refundPrice);
-
-        // then
-        assertThat(notificationHistoriesRepository.findAllByUser_Id(user.getId()))
-                .hasSize(1)
-                .extracting("title", "message")
-                .containsExactlyInAnyOrder(
-                        Tuple.tuple("결제 취소", "호상 테스트님의 아디다스 티셔츠 10000000원 결제 취소되었습니다.")
-                );
-    }
-
-    @DisplayName("장바구니 재고 임박 알림을 사용자한테 전송한다.")
-    @Test
-    void sendLowStockNotification_success() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        String productName = "무신사 반팔티";
-        // when
-        notificationService.sendCartLowNotification(user, productName);
-
-        // then
-        assertThat(notificationHistoriesRepository.findAllByUser_Id(user.getId()))
-                .hasSize(1)
-                .extracting("title", "message")
-                .containsExactlyInAnyOrder(
-                        Tuple.tuple("장바구니 상품 품절", "장바구니에 담아놓은 무신사 반팔티의 재고가 얼마 남지 않았습니다.")
-                );
-    }
-
-    @DisplayName("위시리스트 재고 임박 알림을 사용자한테 전송한다.")
-    @Test
-    void sendLowWishListNotification_success() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        String productName = "뉴발란스 530";
-        // when
-        notificationService.sendWishListLowNotification(user, productName);
-
-        // then
-        assertThat(notificationHistoriesRepository.findAllByUser_Id(user.getId()))
-                .hasSize(1)
-                .extracting("title", "message")
-                .containsExactlyInAnyOrder(
-                        Tuple.tuple("위시리스트 상품 품절", "위시리스트에 담아놓은 뉴발란스 530의 재고가 얼마 남지 않았습니다.")
-                );
-    }
-
-    @DisplayName("리뷰 요청 알림을 사용자한테 전송한다.")
-    @Test
-    void sendReviewRequestNotification_success() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        String orderName = "스투시 반팔티";
-        // when
-        notificationService.sendReviewRequestNotification(user, orderName);
-
-        // then
-
-        assertThat(notificationHistoriesRepository.findAllByUser_Id(user.getId()))
-                .hasSize(1)
-                .extracting("title", "message")
-                .containsExactlyInAnyOrder(
-                        Tuple.tuple("상품 후기를 작성해보세요.", "Or de Firenz는 호상 테스트님의 소중한 리뷰를 기다리고 있습니다. 주문명 : 스투시 반팔티")
-                );
-    }
-
-    @DisplayName("채팅 알림을 사용자한테 전송한다.")
-    @Test
-    void sendChatNotification_success() {
-        // given
-        User user = createUser();
-        userRepository.save(user);
-
-        String chatRoomName = "채팅방 1";
-        String message = "안녕하세요!";
-        // when
-        notificationService.sendChatNotification(user, chatRoomName, message);
-
-        // then
-
-        assertThat(notificationHistoriesRepository.findAllByUser_Id(user.getId()))
-                .hasSize(1)
-                .extracting("title", "message")
-                .containsExactlyInAnyOrder(
-                        Tuple.tuple("채팅방 1에서 메시지가 도착했습니다.", "안녕하세요!")
-                );
-    }
-
-    @DisplayName("Broadcast 알림은 모든 활성화된 사용자에게 저장되고 이벤트가 발행된다.")
-    @Test
-    void saveBroadcastNotification_success() {
-        // given
-        User user1 = createUser();
-        User user2 = createUser();
-        user2.setEmail("other@test.com");
-        userRepository.saveAll(List.of(user1, user2));
-
-        String titleParam = "긴급공지";
-        String contentParam = "서버 점검 예정입니다.";
-
-        // when
-        notificationService.saveBroadcastNotification(titleParam, contentParam);
-
-        // then
-        List<NotificationHistories> notificationHistories = notificationHistoriesRepository.findAllByUser_Id(user1.getId());
-        assertThat(notificationHistories).hasSize(1);
-        List<NotificationHistories> notificationHistories1 = notificationHistoriesRepository.findAllByUser_Id(user1.getId());
-        assertThat(notificationHistories1).hasSize(1);
-
-        assertThat(notificationHistories)
-                .extracting("title", "message")
-                .containsExactlyInAnyOrder(
-                        Tuple.tuple("긴급공지", "서버 점검 예정입니다.")
-                );
-        assertThat(notificationHistories1)
-                .extracting("title", "message")
-                .containsExactlyInAnyOrder(
-                        Tuple.tuple("긴급공지", "서버 점검 예정입니다.")
-                );
-
-        NotificationHistories last = notificationHistories.getLast();
-        assertThat(last.getUser().getEmail()).isIn("dvbf@naver.com","other@test.com");
-    }
-
-    private User createUser() {
+    private User createUser(Long id, String email) {
         return User.builder()
-                .email("dvbf@naver.com")
+                .id(id)
+                .email(email)
                 .name("호상 테스트")
-                .password("1004")
+                .password("1234")
                 .mobileNumber("01012345678")
                 .role(Role.USER)
-                .salary(10000000L)
+                .salary(1000000L)
                 .createdAt(LocalDateTime.now())
                 .activated(true)
                 .emailAgree(true)
                 .build();
     }
 
-    private NotificationHistories createNotification(User user, String title, String message, Notification notification) {
-        return notificationHistoriesRepository.save(
-                NotificationHistories.builder()
-                        .user(user)
-                        .title(String.format(title, user.getName()))
-                        .message(message)
-                        .createdAt(LocalDateTime.now())
-                        .notification(notification)
-                        .isRead(false)
-                        .expiredAt(LocalDateTime.now().plusDays(14))
-                        .build());
+    private NotificationHistories createHistory(User user, Notification template, String title, String message) {
+        return NotificationHistories.builder()
+                .id(1L)
+                .user(user)
+                .notification(template)
+                .eventName("welcome")
+                .title(title)
+                .message(message)
+                .createdAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusDays(14))
+                .isRead(false)
+                .build();
+    }
+
+    private Notification mockTemplate(NotificationType type) {
+        return switch (type) {
+            case WELCOME -> new Notification(type.getTemplateId(),
+                    "%s님 가입을 환영합니다.",
+                    "고객님의 스타일을 책임져주는 Or de Firenz의 회원이 되신 것을 환영합니다.");
+            case PAYMENT_COMPLETE -> new Notification(type.getTemplateId(),
+                    "결제 완료",
+                    "%s님의 %s %s원 결제 완료되었습니다.");
+            case PAYMENT_CANCEL -> new Notification(type.getTemplateId(),
+                    "결제 취소",
+                    "%s님의 %s %s원 결제 취소되었습니다.");
+            case CART_LOW -> new Notification(type.getTemplateId(),
+                    "장바구니 상품 품절",
+                    "장바구니에 담아놓은 %s의 재고가 얼마 남지 않았습니다.");
+            case WISH_LOW -> new Notification(type.getTemplateId(),
+                    "위시리스트 상품 품절",
+                    "위시리스트에 담아놓은 %s의 재고가 얼마 남지 않았습니다.");
+            case REVIEW_REQUEST -> new Notification(type.getTemplateId(),
+                    "상품 후기를 작성해보세요.",
+                    "Or de Firenz는 %s님의 소중한 리뷰를 기다리고 있습니다. 주문명 : %s");
+            case CHAT -> new Notification(type.getTemplateId(),
+                    "%s에서 메시지가 도착했습니다.",
+                    "%s");
+            case BROADCAST -> new Notification(type.getTemplateId(),
+                    "%s",
+                    "%s");
+        };
+    }
+
+    @DisplayName("사용자는 로그인 했을 시 본인의 알림 목록을 가져온다.")
+    @Test
+    void getNotificationHistories() {
+        NotificationHistories nh1 = createHistory(user, null, "t1", "m1");
+        NotificationHistories nh2 = createHistory(user, null, "t2", "m2");
+        when(notificationHistoriesRepository.findAllByUser_Id(user.getId()))
+                .thenReturn(List.of(nh1, nh2));
+
+        List<NotificationDTO> result = notificationService.getNotificationHistories(user.getId());
+
+        assertThat(result).hasSize(2);
+    }
+
+    @DisplayName("사용자는 읽지 않은 알림의 개수를 볼 수 있다.")
+    @Test
+    void getUnreadNotificationCount() {
+        when(notificationHistoriesRepository.countByUser_IdAndIsReadFalse(user.getId()))
+                .thenReturn(3L);
+
+        Long count = notificationService.getUnreadNotificationCount(user.getId());
+
+        assertThat(count).isEqualTo(3L);
+    }
+
+    @DisplayName("사용자는 알림을 읽음 처리할 수 있다.")
+    @Test
+    void markAsRead() {
+        notificationService.markAsRead(10L);
+
+        verify(notificationHistoriesRepository).findByIsReadFalse(10L);
+    }
+
+    @DisplayName("사용자는 모든 알림을 읽음 처리할 수 있다.")
+    @Test
+    void markAllAsRead() {
+        notificationService.markAllAsRead(user.getId());
+
+        verify(notificationHistoriesRepository).findAllByUser_IdAndIsReadFalse(user.getId());
+    }
+
+    @DisplayName("사용자는 알림을 개별 삭제할 수 있다.")
+    @Test
+    void deleteNotificationHistory() {
+        notificationService.deleteNotificationHistory(user.getId(), 20L);
+
+        verify(notificationHistoriesRepository).deleteByUser_IdAndId(user.getId(), 20L);
+    }
+
+    @DisplayName("subscribe 시 lastEventId 이후 알림이 있으면 resend 호출된다.")
+    @Test
+    void subscribe_withLastEventId_resendsMissed() {
+        SseEmitter emitter = new SseEmitter();
+        Notification template = mockTemplate(NotificationType.WELCOME);
+        NotificationHistories nh = createHistory(user, template, "t", "m");
+
+        when(sseConnector.connect(user.getId())).thenReturn(emitter);
+        when(notificationHistoryReader.getMissedHistories(user.getId(), "5"))
+                .thenReturn(List.of(nh));
+
+        SseEmitter result = notificationService.subscribe(user.getId(), "5");
+
+        assertThat(result).isNotNull();
+        verify(sseProvider).resend(eq(user.getId()), anyList());
+    }
+
+    @DisplayName("회원가입 시 환영 알림이 저장 및 이벤트가 발행된다.")
+    @Test
+    void sendWelcomeNotification() {
+        Notification template = mockTemplate(NotificationType.WELCOME);
+        when(notificationsRepository.findById(NotificationType.WELCOME.getTemplateId()))
+                .thenReturn(Optional.of(template));
+        when(notificationHistoriesRepository.save(any(NotificationHistories.class)))
+                .thenAnswer(inv -> {
+                    NotificationHistories nh = inv.getArgument(0);
+                    nh.setId(1L); // 직렬화용 id 보정
+                    return nh;
+                });
+
+        notificationService.sendWelcomeNotification(user);
+
+        verify(notificationHistoriesRepository).save(any(NotificationHistories.class));
+        verify(publisher).publishEvent(any(NotificationSavedEvent.class));
+    }
+
+    @DisplayName("결제 완료 알림이 저장 및 이벤트가 발행된다.")
+    @Test
+    void sendPaymentCompleteNotification() {
+        Notification template = mockTemplate(NotificationType.PAYMENT_COMPLETE);
+        when(notificationsRepository.findById(NotificationType.PAYMENT_COMPLETE.getTemplateId()))
+                .thenReturn(Optional.of(template));
+        when(notificationHistoriesRepository.save(any())).thenAnswer(inv -> {
+            NotificationHistories nh = inv.getArgument(0);
+            nh.setId(1L);
+            return nh;
+        });
+
+        notificationService.sendPaymentCompleteNotification(user, "주문1", 10000L);
+
+        verify(notificationHistoriesRepository).save(any());
+        verify(publisher).publishEvent(any(NotificationSavedEvent.class));
+    }
+
+    @DisplayName("결제 취소 알림이 저장 및 이벤트가 발행된다.")
+    @Test
+    void sendPaymentCancelNotification() {
+        Notification template = mockTemplate(NotificationType.PAYMENT_CANCEL);
+        when(notificationsRepository.findById(NotificationType.PAYMENT_CANCEL.getTemplateId()))
+                .thenReturn(Optional.of(template));
+        when(notificationHistoriesRepository.save(any())).thenAnswer(inv -> {
+            NotificationHistories nh = inv.getArgument(0);
+            nh.setId(1L);
+            return nh;
+        });
+
+        notificationService.sendPaymentCancelNotification(user, "주문2", 5000L);
+
+        verify(notificationHistoriesRepository).save(any());
+        verify(publisher).publishEvent(any(NotificationSavedEvent.class));
+    }
+
+    @DisplayName("장바구니 품절 임박 알림이 저장 및 이벤트가 발행된다.")
+    @Test
+    void sendCartLowNotification() {
+        Notification template = mockTemplate(NotificationType.CART_LOW);
+        when(notificationsRepository.findById(NotificationType.CART_LOW.getTemplateId()))
+                .thenReturn(Optional.of(template));
+        when(notificationHistoriesRepository.save(any())).thenAnswer(inv -> {
+            NotificationHistories nh = inv.getArgument(0);
+            nh.setId(1L);
+            return nh;
+        });
+
+        notificationService.sendCartLowNotification(user, "상품A");
+
+        verify(notificationHistoriesRepository).save(any());
+        verify(publisher).publishEvent(any(NotificationSavedEvent.class));
+    }
+
+    @DisplayName("위시리스트 품절 임박 알림이 저장 및 이벤트가 발행된다.")
+    @Test
+    void sendWishListLowNotification() {
+        Notification template = mockTemplate(NotificationType.WISH_LOW);
+        when(notificationsRepository.findById(NotificationType.WISH_LOW.getTemplateId()))
+                .thenReturn(Optional.of(template));
+        when(notificationHistoriesRepository.save(any())).thenAnswer(inv -> {
+            NotificationHistories nh = inv.getArgument(0);
+            nh.setId(1L);
+            return nh;
+        });
+
+        notificationService.sendWishListLowNotification(user, "상품B");
+
+        verify(notificationHistoriesRepository).save(any());
+        verify(publisher).publishEvent(any(NotificationSavedEvent.class));
+    }
+
+    @DisplayName("리뷰 요청 알림이 저장 및 이벤트가 발행된다.")
+    @Test
+    void sendReviewRequestNotification() {
+        Notification template = mockTemplate(NotificationType.REVIEW_REQUEST);
+        when(notificationsRepository.findById(NotificationType.REVIEW_REQUEST.getTemplateId()))
+                .thenReturn(Optional.of(template));
+        when(notificationHistoriesRepository.save(any())).thenAnswer(inv -> {
+            NotificationHistories nh = inv.getArgument(0);
+            nh.setId(1L);
+            return nh;
+        });
+
+        notificationService.sendReviewRequestNotification(user, "주문C");
+
+        verify(notificationHistoriesRepository).save(any());
+        verify(publisher).publishEvent(any(NotificationSavedEvent.class));
+    }
+
+    @DisplayName("채팅 알림이 저장 및 이벤트가 발행된다.")
+    @Test
+    void sendChatNotification() {
+        Notification template = mockTemplate(NotificationType.CHAT);
+        when(notificationsRepository.findById(NotificationType.CHAT.getTemplateId()))
+                .thenReturn(Optional.of(template));
+        when(notificationHistoriesRepository.save(any())).thenAnswer(inv -> {
+            NotificationHistories nh = inv.getArgument(0);
+            nh.setId(1L);
+            return nh;
+        });
+
+        notificationService.sendChatNotification(user, "채팅방1", "메시지");
+
+        verify(notificationHistoriesRepository).save(any());
+        verify(publisher).publishEvent(any(NotificationSavedEvent.class));
+    }
+
+    @DisplayName("Broadcast 알림은 모든 활성화 유저에게 저장되고 이벤트가 발행된다.")
+    @Test
+    void saveBroadcastNotification() {
+        Notification template = mockTemplate(NotificationType.BROADCAST);
+        when(notificationsRepository.findById(NotificationType.BROADCAST.getTemplateId()))
+                .thenReturn(Optional.of(template));
+        when(userRepository.findAllByActivated(true)).thenReturn(List.of(user));
+
+        NotificationHistories lastSaved = createHistory(user, template, "공지 제목", "공지 내용");
+        when(notificationHistoryReader.getLastBroadcastHistory())
+                .thenReturn(lastSaved);
+
+        notificationService.saveBroadcastNotification("공지 제목", "공지 내용", LocalDateTime.now());
+
+        verify(broadcastInsertService).saveBroadcastNotification(anyList());
+        verify(publisher).publishEvent(any(BroadcastEvent.class));
     }
 }

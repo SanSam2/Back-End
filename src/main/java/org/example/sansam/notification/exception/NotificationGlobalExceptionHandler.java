@@ -10,8 +10,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice(basePackages = "org.example.sansam.notification.controller")
@@ -25,6 +27,23 @@ public class NotificationGlobalExceptionHandler {
         log.warn("CustomException: {}", e.getMessage());
         return ResponseEntity.status(e.getErrorCode().getStatus())
                 .body(ErrorResponse.of(e.getErrorCode()));
+    }
+
+    @ExceptionHandler({AsyncRequestTimeoutException.class, IOException.class})
+    public ResponseEntity<Void> handleSseError(HttpServletRequest req) {
+        if (req.getRequestURI().contains("/api/notifications/subscribe")) {
+            return ResponseEntity.status(503).build();
+        }
+        return ResponseEntity.internalServerError().build();
+    }
+
+    @ExceptionHandler({IllegalStateException.class})
+    public ResponseEntity<Void> handleIllegalState(IllegalStateException e, HttpServletRequest req) {
+        if (req.getRequestURI().contains("/api/notifications/subscribe")) {
+            log.debug("SSE IllegalState 무시: {}", e.getMessage());
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.internalServerError().build();
     }
 
     // 2) 유효성 검증 실패 (DTO @Valid)

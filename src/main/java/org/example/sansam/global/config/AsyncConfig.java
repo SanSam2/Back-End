@@ -1,5 +1,6 @@
 package org.example.sansam.global.config;
 
+import org.apache.tomcat.util.threads.VirtualThreadExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.annotation.EnableRetry;
@@ -7,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
@@ -25,16 +27,16 @@ public class AsyncConfig {
         return executor;
     }
 
-    @Bean(name = "broadcastExecutor")
-    public Executor broadcastExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(5);
-        executor.setMaxPoolSize(20);
-        executor.setQueueCapacity(1000);
-        executor.setThreadNamePrefix("SSE-BROADCAST");
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        executor.initialize();
-        return executor;
+    @Bean(name = "virtualBroadcastExecutor")
+    public Executor virtualBroadcastExecutor() {
+        // 작업(task)마다 Virtual Thread 하나씩 생성
+        return Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    @Bean(name = "virtualHistoryExecutor")
+    public Executor virtualHistoryExecutor() {
+        // 각 DB 조회 task를 Virtual Thread로 실행
+        return Executors.newVirtualThreadPerTaskExecutor();
     }
 
     /*

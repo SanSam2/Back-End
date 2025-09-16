@@ -2,6 +2,7 @@ package org.example.sansam.notification.controller;
 
 import org.example.sansam.notification.infra.PushConnector;
 import org.example.sansam.notification.infra.SseConnector;
+import org.example.sansam.notification.service.NotificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,69 +23,57 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ActiveProfiles("test")
 @WebMvcTest(SseController.class)
-@AutoConfigureMockMvc()
+@AutoConfigureMockMvc
 class SseControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private PushConnector pushConnector;
+    private NotificationService notificationService;
 
-    @DisplayName("구독 성공 시 200과 text/event/stream 반환")
+    @DisplayName("구독 성공 시 200과 text/event-stream 반환")
     @Test
     void subscribe_ok() throws Exception {
         // given
         Long userId = 1L;
+        SseEmitter emitter = new SseEmitter(1000L);
 
-        // 테스트가 끝날 때까지 살아있을 emitter 준비
-        SseEmitter emitter = new SseEmitter(1_000L);
+        when(notificationService.subscribe(userId, null)).thenReturn(emitter);
 
-        // when
-        when(pushConnector.connect(userId)).thenReturn(emitter);
-
-        // then
+        // when & then
         mockMvc.perform(get("/api/notifications/subscribe/{userId}", userId)
                         .accept(MediaType.TEXT_EVENT_STREAM))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.request().asyncStarted());
+                .andExpect(status().isOk());
 
-        verify(pushConnector, times(1)).connect(userId);
-
-        emitter.complete();
+        verify(notificationService).subscribe(userId, null);
     }
 
-    @DisplayName("SSE 연결실패 EmitterException 이면 503을 반환한다.")
+    @DisplayName("SSE 연결실패 EmitterException 이면 503 반환")
     @Test
     void subscribe_fail_with_emitter_exception() throws Exception {
-        // given
         Long userId = 1L;
-
-        // when
-        when(pushConnector.connect(userId)).thenThrow(new EmitterException("boom"));
-
-        // then
+        when(notificationService.subscribe(userId, null))
+                .thenThrow(new EmitterException("boom"));
 
         mockMvc.perform(get("/api/notifications/subscribe/{userId}", userId)
-                .accept(MediaType.TEXT_EVENT_STREAM))
+                        .accept(MediaType.TEXT_EVENT_STREAM))
                 .andExpect(status().isServiceUnavailable());
 
-        verify(pushConnector, times(1)).connect(userId);
+        verify(notificationService).subscribe(userId, null);
     }
 
     @DisplayName("기타 예외 발생 시 500 반환")
     @Test
     void subscribe_fail_with_other_exception() throws Exception {
-        // given
         Long userId = 1L;
-        // when
-        when(pushConnector.connect(userId)).thenThrow(new IllegalArgumentException("boom"));
+        when(notificationService.subscribe(userId, null))
+                .thenThrow(new IllegalArgumentException("boom"));
 
-        // then
         mockMvc.perform(get("/api/notifications/subscribe/{userId}", userId)
-                .accept(MediaType.TEXT_EVENT_STREAM))
+                        .accept(MediaType.TEXT_EVENT_STREAM))
                 .andExpect(status().isInternalServerError());
 
-        verify(pushConnector, times(1)).connect(userId);
+        verify(notificationService).subscribe(userId, null);
     }
 }

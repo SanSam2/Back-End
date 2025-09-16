@@ -4,6 +4,11 @@ server:
   tomcat:
     mbeanregistry:
       enabled: true
+    max-connections: 25000
+    accept-count: 5000
+    threads:
+      max: 500
+      min-spare: 100
 
   servlet:
     session:
@@ -140,6 +145,8 @@ management:
       group:
         readiness:
           exclude: elasticsearch
+    prometheus:
+      access: unrestricted
 
 cloud:
   aws:
@@ -158,6 +165,6 @@ cloud:
       accessKey: ${AWS_ACCESS_KEY}
       secretKey: ${AWS_SECRET_KEY}
 cors:
-  allowed-origins: http://localhost:3000
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
 websocket:
-  allowed-origins: "http://localhost:3000"
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS}

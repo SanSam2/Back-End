@@ -74,4 +74,42 @@ class SseConnectorTest {
     //Spring MVC 내부가 실행해줘야 하므로 단위 테스트에서는 절대 제대로 검증할 수 없습니다.
     //(= 테스트 코드에서 emitter.complete() 호출해도 callback 이 안 돌죠)
 
+    @DisplayName("removeEmitter - emitter를 제거하면 해당 user의 emitter 수가 줄어든다.")
+    @Test
+    void removeEmitter_removes_one_emitter() {
+        // given
+        SseConnector connector = new SseConnector();
+        Long userId = 1L;
+        SseEmitter emitter1 = connector.connect(userId);
+        SseEmitter emitter2 = connector.connect(userId);
+
+        assertThat(connector.getEmitters(userId)).hasSize(2);
+
+        // when
+        connector.removeEmitter(emitter1);
+
+        // then
+        List<SseEmitter> remaining = connector.getEmitters(userId);
+        assertThat(remaining).containsExactly(emitter2);
+        assertThat(connector.getAllEmitters()).containsKey(userId);
+    }
+
+    @DisplayName("removeEmitter - 마지막 emitter 제거 시 userId 키가 Map에서 삭제된다.")
+    @Test
+    void removeEmitter_removes_last_emitter_and_cleans_map() {
+        // given
+        SseConnector connector = new SseConnector();
+        Long userId = 2L;
+        SseEmitter emitter = connector.connect(userId);
+
+        assertThat(connector.getEmitters(userId)).hasSize(1);
+
+        // when
+        connector.removeEmitter(emitter);
+
+        // then
+        assertThat(connector.getEmitters(userId)).isEmpty();
+        assertThat(connector.getAllEmitters()).doesNotContainKey(userId);
+    }
+
 }

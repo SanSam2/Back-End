@@ -1,15 +1,14 @@
 package org.example.sansam.notification.service;
 
 
-import com.amazonaws.services.simpleemail.model.*;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.user.domain.User;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.messaging.MessagingException;
 import org.springframework.retry.annotation.Retryable;
@@ -22,7 +21,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 @Slf4j
 public class EmailService {
 
-    private final JavaMailSender javaMailSender;
+    private final JavaMailSender javaMailSender = new JavaMailSenderImpl();
     private final SpringTemplateEngine templateEngine;
 
     @Retryable(

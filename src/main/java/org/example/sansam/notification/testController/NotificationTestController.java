@@ -1,14 +1,11 @@
-package org.example.sansam.notification.controller;
+package org.example.sansam.notification.testController;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.chat.repository.ChatMemberRepository;
 import org.example.sansam.chat.repository.ChatRoomRepository;
 import org.example.sansam.notification.event.email.PaymentCanceledEmailEvent;
-import org.example.sansam.notification.event.email.PaymentCompleteEmailEvent;
 import org.example.sansam.notification.event.sse.PaymentCancelEvent;
-import org.example.sansam.notification.event.sse.PaymentCompleteEvent;
-import org.example.sansam.notification.event.sse.ProductQuantityLowEvent;
 import org.example.sansam.product.domain.ProductDetail;
 import org.example.sansam.product.repository.ProductDetailJpaRepository;
 import org.example.sansam.product.repository.ProductJpaRepository;
