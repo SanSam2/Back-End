@@ -4,7 +4,7 @@ spring:
   application:
     name: SanSam
   profiles:
-    default: local  # 기본은 local로
+    default: prod  # 기본은 local로
     group:
       perf: [perf, prod]
       local: local
