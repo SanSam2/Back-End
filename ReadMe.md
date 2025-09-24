@@ -55,14 +55,14 @@
 ### ✅ 상태 (Status)
 - DB에서 이미 저장되어있는 상태 찾기
 
-여정기
+### 프로젝트 여정기
 
-- [[👨🏻‍💻 1. 재고 ERD 분리 과정|재고-ERD-분리-과정]]
-- [[👨🏻‍💻 2. 테스트코드 작성과 보상 OutBox 구현기|Jacoco-테스트커버리지-100%-달성기-(feat.-DLQ를-RDB로-구현해내기)]]
-- [[👨🏻‍💻 3. Order 트랜잭션 분리 & DB Indexing을 통한 최적화|Order-트랜잭션-분리-&-DB-Indexing을-통한-최적화]]
-- [[👨🏻‍💻 4. HikariCP 튜닝 및 테스트 툴 변경 |HikariCP-튜닝-및-테스트-툴-변경]]
-- [[👨🏻‍💻 5. 상태값 캐싱 & 재고 이벤트 비동기 처리(단일 서버)|상태값-캐싱-&-재고-이벤트-비동기-처리(단일-서버)]]
-- [[👨🏻‍💻 6. 재고 서버 분리 with RabbitMQ |Stock-서버-분리-여정기-(SanSam-주문---결제---상태-MSA-여정기)--(1)]]
+- [👨🏻‍💻 1. 재고 ERD 분리 과정] (https://github.com/SanSam2/Back-End/wiki/%EC%9E%AC%EA%B3%A0-ERD-%EB%B6%84%EB%A6%AC-%EA%B3%BC%EC%A0%95)
+- [👨🏻‍💻 2. 테스트코드 작성과 보상 OutBox 구현기] (https://github.com/SanSam2/Back-End/wiki/Jacoco-%ED%85%8C%EC%8A%A4%ED%8A%B8%EC%BB%A4%EB%B2%84%EB%A6%AC%EC%A7%80-100%25-%EB%8B%AC%EC%84%B1%EA%B8%B0-%28feat.-DLQ%EB%A5%BC-RDB%EB%A1%9C-%EA%B5%AC%ED%98%84%ED%95%B4%EB%82%B4%EA%B8%B0%29)
+- [👨🏻‍💻 3. Order 트랜잭션 분리 & DB Indexing을 통한 최적화] (https://github.com/SanSam2/Back-End/wiki/Order-%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98-%EB%B6%84%EB%A6%AC-%26-DB-Indexing%EC%9D%84-%ED%86%B5%ED%95%9C-%EC%B5%9C%EC%A0%81%ED%99%94)
+- [👨🏻‍💻 4. HikariCP 튜닝 및 테스트 툴 변경] (https://github.com/SanSam2/Back-End/wiki/HikariCP-%ED%8A%9C%EB%8B%9D-%EB%B0%8F-%ED%85%8C%EC%8A%A4%ED%8A%B8-%ED%88%B4-%EB%B3%80%EA%B2%BD)
+- [👨🏻‍💻 5. 상태값 캐싱 & 재고 이벤트 비동기 처리(단일 서버)] (https://github.com/SanSam2/Back-End/wiki/%EC%83%81%ED%83%9C%EA%B0%92-%EC%BA%90%EC%8B%B1-%26-%EC%9E%AC%EA%B3%A0-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%EB%B9%84%EB%8F%99%EA%B8%B0-%EC%B2%98%EB%A6%AC%28%EB%8B%A8%EC%9D%BC-%EC%84%9C%EB%B2%84%29)
+- [👨🏻‍💻 6. 재고 서버 분리 with RabbitMQ] (https://github.com/SanSam2/Back-End/wiki/Stock-%EC%84%9C%EB%B2%84-%EB%B6%84%EB%A6%AC-%EC%97%AC%EC%A0%95%EA%B8%B0-%28SanSam-%EC%A3%BC%EB%AC%B8---%EA%B2%B0%EC%A0%9C---%EC%83%81%ED%83%9C-MSA-%EC%97%AC%EC%A0%95%EA%B8%B0%29--%281%29)
 
 ---
 ## 호상
