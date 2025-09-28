@@ -12,11 +12,8 @@ import org.example.sansam.payment.compensation.service.PaymentCancelOutBoxServic
 import org.example.sansam.payment.dto.TossPaymentRequest;
 import org.example.sansam.payment.dto.TossPaymentResponse;
 import org.example.sansam.payment.util.IdempotencyKeyGenerator;
-import org.example.sansam.stockreservation.domain.StockReservation;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
@@ -31,8 +28,6 @@ public class PaymentService {
     private final AfterConfirmTransactionService afterConfirmTransactionService;
     private final PaymentCancelOutBoxService outboxService;
     private final IdempotencyKeyGenerator idemGen;
-    private final StockReservationGate stockReservationGate;
-
 
     private static final String DB_FAILED_REASON = "db-failed";
 
@@ -49,21 +44,7 @@ public class PaymentService {
             throw new CustomException(ErrorCode.ORDER_AND_PAY_NOT_EQUAL);
         }
 
-        //재고 감소에 대한 검증
-        Instant start = Instant.now();
-        StockReservation.Status status = stockReservationGate.waitStatus(orderNumber, 4500);
-
-
-        if (status != StockReservation.Status.CONFIRMED) {
-            if(status == StockReservation.Status.REJECTED) {
-                throw new CustomException(ErrorCode.NOT_ENOUGH_STOCK);
-            }else{
-                throw new CustomException(ErrorCode.STOCK_TIMEOUT);
-            }
-        }
-
-        long ms = Duration.between(start, Instant.now()).toMillis();
-        log.error("재고감소 확인 및 검증에 걸린 시간 = {}", ms);
+        //TODO : 재고 감소에 대한 검증 여기?? (어디서 재고 감소에 대한 검증(?)을 할 건지, 여기서 한다면, 어떻게 할건지)
 
         //토스 payment로부터 온 응답 수령
         Map<String, Object> response;
