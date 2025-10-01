@@ -139,6 +139,8 @@ dependencies {
 
     //Kafka 설정
     implementation "org.springframework.kafka:spring-kafka"
+    implementation 'org.apache.kafka:kafka-streams'
+
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
 
 

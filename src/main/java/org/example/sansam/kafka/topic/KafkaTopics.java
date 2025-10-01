@@ -11,7 +11,6 @@ public final class KafkaTopics {
     public static final String STOCK_INCREASE_REQUEST="stock.increase.requested";
     public static final String STOCK_INCREASE_DLT="stock.increase.requested.dlt";
 
-    public static final String STOCK_DECREASE_CONFIRM = "stock.decrease.confirmed";
-    public static final String STOCK_DECREASE_REJECTED = "stock.decrease.rejected";
-    public static final String STOCK_INCREASE_CONFIRM = "stock.increase.confirmed";
+    public static final String STOCK_DECREASE_RESULT = "stock.decrease.result";
+    public static final String STOCK_INCREASE_RESULT = "stock.increase.result";
 }

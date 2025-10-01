@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
+import org.example.sansam.global.event.StockDecreaseResultEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.payment.adapter.TossApprovalNormalizer;
@@ -12,8 +13,10 @@ import org.example.sansam.payment.compensation.service.PaymentCancelOutBoxServic
 import org.example.sansam.payment.dto.TossPaymentRequest;
 import org.example.sansam.payment.dto.TossPaymentResponse;
 import org.example.sansam.payment.util.IdempotencyKeyGenerator;
+import org.example.sansam.stockreservation.listener.StockResultView;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 
@@ -28,6 +31,8 @@ public class PaymentService {
     private final AfterConfirmTransactionService afterConfirmTransactionService;
     private final PaymentCancelOutBoxService outboxService;
     private final IdempotencyKeyGenerator idemGen;
+
+    private final StockResultView resultView;
 
     private static final String DB_FAILED_REASON = "db-failed";
 
@@ -44,7 +49,14 @@ public class PaymentService {
             throw new CustomException(ErrorCode.ORDER_AND_PAY_NOT_EQUAL);
         }
 
-        //TODO : 재고 감소에 대한 검증 여기?? (어디서 재고 감소에 대한 검증(?)을 할 건지, 여기서 한다면, 어떻게 할건지)
+
+        StockDecreaseResultEvent resultEvent = resultView.waitGet(request.getOrderId(), Duration.ofSeconds(2));
+        if (resultEvent == null) {
+            throw new CustomException(ErrorCode.STOCK_TIMEOUT);
+        }
+        if (!"CONFIRMED".equals(resultEvent.type())) {
+            throw new CustomException(ErrorCode.NOT_ENOUGH_STOCK);
+        }
 
         //토스 payment로부터 온 응답 수령
         Map<String, Object> response;

@@ -46,6 +46,14 @@ spring:
       properties:
         spring.json.add.type.headers: false
 
+    streams:
+      application-id: sansam-stock-view          # ★ 이게 있어야 StreamsBuilder가 생성됨
+      properties:
+        processing.guarantee: exactly_once_v2
+      state:
+        dir: /var/lib/kstreams                   # 컨테이너면 볼륨 마운트 권장
+
+
   cache:
     type: caffeine
     caffeine:
