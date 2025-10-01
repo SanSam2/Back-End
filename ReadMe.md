@@ -44,6 +44,9 @@
 ---
 ## 슬빈
 
+## 아키텍처 구성도 (Kafka Streams 도입 이후)
+<img width="3258" height="3840" alt="kafkaStreams도입이후_아키텍처" src="https://github.com/user-attachments/assets/b482e91a-b83f-4ef1-a3a5-cf322177a367" />
+
 ### ✅ 주문 및 결제 (Order / Payment)
 - 주문서 저장 / 삭제
 - 토스 API 연동 결제/결제 취소
