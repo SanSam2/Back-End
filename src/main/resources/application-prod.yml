@@ -2,6 +2,16 @@ server:
   port: 8080
   address: 0.0.0.0
 
+  tomcat:
+    max-connections: 10000
+    mbeanregistry:
+      enabled: true
+    threads:
+      max: 400
+    min-spare: 50
+    accept-count: 300
+    connection-timeout: 20000
+
   servlet:
     session:
       timeout: 120m
@@ -47,9 +57,12 @@ spring:
         spring.json.add.type.headers: false
 
     streams:
-      application-id: sansam-stock-view          # ★ 이게 있어야 StreamsBuilder가 생성됨
+      num.stream.threads: 6
+      application-id: sansam-stock-view          # 이게 있어야 StreamsBuilder가 생성됨
       properties:
-        processing.guarantee: exactly_once_v2
+        processing.guarantee: at_least_once
+        commit.interval.ms: 50
+        cache.max.bytes.buffering: 0
       state:
         dir: /var/lib/kstreams                   # 컨테이너면 볼륨 마운트 권장
 
@@ -116,9 +129,10 @@ spring:
 #            include-parameter-values: true
 
 toss:
-  secret-key: ${TOSS_SECRET_KEY}
-  confirm-url: ${TOSS_CONFIRM_URL}
-  cancel-url: ${TOSS_CANCEL_URL}
+  secret-key: "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6"
+  confirm-url: "https://api.tosspayments.com/v1/payments/confirm"
+  cancel-url: "https://api.tosspayments.com/v1/payments"
+
 
 
 management:

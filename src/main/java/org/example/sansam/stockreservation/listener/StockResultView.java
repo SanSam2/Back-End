@@ -51,9 +51,10 @@ public class StockResultView {
                 //워밍업 대기
             }
             try {
-                Thread.sleep(50);
+                Thread.sleep(10);
             } catch (InterruptedException ignored) {
-
+                Thread.currentThread().interrupt();
+                return null;
             }
         }
         return null;

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
-import org.example.sansam.global.event.StockDecreaseResultEvent;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.payment.adapter.TossApprovalNormalizer;
@@ -16,7 +15,6 @@ import org.example.sansam.payment.util.IdempotencyKeyGenerator;
 import org.example.sansam.stockreservation.listener.StockResultView;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 
@@ -45,17 +43,8 @@ public class PaymentService {
         String orderNumber = order.getOrderNumber();
 
         //다시 진행하는 가격검증
-        if(!Objects.equals(order.getTotalAmount(), request.getAmount())){
+        if(!Objects.equals(order.getTotalAmount(), request.getAmount())) {
             throw new CustomException(ErrorCode.ORDER_AND_PAY_NOT_EQUAL);
-        }
-
-
-        StockDecreaseResultEvent resultEvent = resultView.waitGet(request.getOrderId(), Duration.ofSeconds(2));
-        if (resultEvent == null) {
-            throw new CustomException(ErrorCode.STOCK_TIMEOUT);
-        }
-        if (!"CONFIRMED".equals(resultEvent.type())) {
-            throw new CustomException(ErrorCode.NOT_ENOUGH_STOCK);
         }
 
         //토스 payment로부터 온 응답 수령

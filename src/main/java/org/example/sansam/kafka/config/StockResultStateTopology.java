@@ -30,6 +30,7 @@ public class StockResultStateTopology {
                         .<String, StockDecreaseResultEvent, KeyValueStore<Bytes, byte[]>>as(SR_STORE)
                         .withKeySerde(Serdes.String())
                         .withValueSerde(srSerde)
+                        .withCachingDisabled()
         );
     }
 

@@ -20,7 +20,11 @@ public class KStreamsConfig {
     KafkaStreamsConfiguration kStreamsConfigs(KafkaProperties props,
                                               ObjectProvider<SslBundles> bundles) {
         HashMap<String, Object> conf = new HashMap<>(props.buildStreamsProperties(bundles.getIfAvailable()));
+        conf.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.AT_LEAST_ONCE);
         conf.put(StreamsConfig.APPLICATION_ID_CONFIG, "sansam-stock-view");
+        conf.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 100);
+        conf.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
+
         return new KafkaStreamsConfiguration(conf);
     }
 }

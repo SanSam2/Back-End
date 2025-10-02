@@ -4,8 +4,8 @@ spring:
   application:
     name: SanSam
   profiles:
-    default: prod  # 기본은 local로
+    default: local  # 기본은 local로
     group:
-      perf: [perf, prod]
+      perf: [prod,perf]
       local: local
       test: test
